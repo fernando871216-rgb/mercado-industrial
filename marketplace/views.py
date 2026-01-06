@@ -1,6 +1,21 @@
 from django.shortcuts import render
 import mercadopago
 
+from django.shortcuts import get_object_ some_object, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Product
+
+@login_required
+def borrar_producto(request, product_id):
+    # Buscamos el producto por su ID
+    producto = get_object_or_404(Product, id=product_id)
+    
+    # Verificamos si el que intenta borrar es el dueño o es un superusuario (tú)
+    if request.user == producto.seller or request.user.is_superuser:
+        producto.delete()
+    
+    return redirect('home')
+
 def home(request):
     # 1. Configurar Mercado Pago con tu Token
     sdk = mercadopago.SDK("APP_USR-8745749455028291-010612-0bf761bcaa29732f502581cc416ff981-3116392416")
@@ -44,3 +59,35 @@ def home(request):
             p.pago_url = response["init_point"]
 
     return render(request, 'marketplace/index.html', {'productos': productos})
+
+from .forms import ProductForm
+from django.shortcuts import redirect
+
+
+
+def subir_producto(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Guardamos el producto y le asignamos el usuario actual
+            producto = form.save(commit=False)
+            producto.seller = request.user
+            producto.save()
+            return redirect('home')
+    else:
+        form = ProductForm()
+    return render(request, 'marketplace/subir_producto.html', {'form': form})
+
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) # Inicia sesión automáticamente tras registrarse
+            return redirect('home')
+    else:
+        form = UserCreationForm()
+    return render(request, 'marketplace/registro.html', {'form': form})

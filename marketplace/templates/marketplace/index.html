@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+<nav style="background: #2c3e50; padding: 15px; color: white; display: flex; justify-content: space-between;">
+    <div><strong>Mercado Industrial</strong></div>
+    <div>
+        {% if user.is_authenticated %}
+            <span>Hola, {{ user.username }}</span> | 
+            <a href="{% url 'vender' %}" style="color: yellow;">+ Vender Equipo</a> |
+            <a href="/admin/logout/" style="color: white;">Salir</a>
+        {% else %}
+            <a href="{% url 'registro' %}" style="color: white;">Crear Cuenta</a> |
+            <a href="/admin/login/" style="color: white;">Entrar</a>
+        {% endif %}
+    </div>
+</nav>
+
     <title>Mercado Industrial</title>
     <style>
         body { font-family: sans-serif; margin: 40px; background: #f4f4f4; }
@@ -26,3 +41,19 @@
     {% endfor %}
 </body>
 </html>
+
+{% for p in productos %}
+    <div class="producto">
+        <div style="margin-top: 15px;">
+            <a href="{{ p.pago_url }}" style="background: #009ee3; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">Comprar</a>
+
+            {% if user == p.seller or user.is_superuser %}
+                <a href="{% url 'borrar_producto' p.id %}" 
+                   onclick="return confirm('¿Estás seguro de que quieres borrar este equipo?');"
+                   style="background: #e74c3c; color: white; padding: 10px; text-decoration: none; border-radius: 5px; margin-left: 10px;">
+                   Borrar Anuncio
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
