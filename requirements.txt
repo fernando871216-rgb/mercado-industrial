@@ -1,0 +1,7 @@
+django
+mercadopago
+gunicorn
+whitenoise
+dj-database-url
+psycopg2-binary
+Pillow

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mercado Industrial</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f4f4f4; }
+        .producto { background: white; padding: 20px; margin-bottom: 10px; border-radius: 8px; shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .precio { color: green; font-weight: bold; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Equipos Industriales Disponibles</h1>
+    {% for p in productos %}
+        <div class="producto">
+            <h2>{{ p.brand }} - {{ p.title }}</h2>
+            <p><strong>Modelo:</strong> {{ p.part_number }}</p>
+            <p>{{ p.description }}</p>
+            <p class="precio">${{ p.price }}</p>
+            <a href="{{ p.pago_url }}" style="background: #009ee3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+    Comprar con Mercado Pago
+</a>
+        </div>
+    {% empty %}
+        <p>No hay productos disponibles por ahora.</p>
+    {% endfor %}
+</body>
+</html>
