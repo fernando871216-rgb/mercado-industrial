@@ -3,13 +3,11 @@ from django.contrib.auth.models import User
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
-    
     def __str__(self):
         return self.name
 
 class Product(models.Model):
-    # ESTA LÍNEA ES LA QUE FALTA O ESTÁ MAL:
-    # Así debe quedar la línea 12:
+    # Asegúrate de que esta línea esté idéntica:
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
