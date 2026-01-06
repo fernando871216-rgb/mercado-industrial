@@ -25,8 +25,10 @@ def home(request):
             # ESTA ES LA MAGIA: Mercado Pago te separa esta parte a ti
             "marketplace_fee": comision,
             "back_urls": {
-                "success": "http://127.0.0.1:8000/",
-                "failure": "http://127.0.0.1:8000/",
+                # CAMBIA ESTO por tu link de Render:
+                "success": "https://mercado-industrial.onrender.com/", 
+                "failure": "https://mercado-industrial.onrender.com/",
+                "pending": "https://mercado-industrial.onrender.com/",
             },
             "auto_return": "approved",
         }
