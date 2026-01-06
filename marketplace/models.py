@@ -9,7 +9,8 @@ class Category(models.Model):
 
 class Product(models.Model):
     # ESTA LÍNEA ES LA QUE FALTA O ESTÁ MAL:
-    category = models.ForeignKey(Category, on_get_object_or_404=models.CASCADE, related_name='products', null=True, blank=True)
+    # Así debe quedar la línea 12:
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     brand = models.CharField(max_length=100)
