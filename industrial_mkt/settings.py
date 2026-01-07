@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'marketplace', # Agrega esta línea
+    # Tu aplicación debe estar aquí:
+    'marketplace', 
 ]
 
 MIDDLEWARE = [
@@ -144,4 +145,5 @@ CSRF_TRUSTED_ORIGINS = ['https://mercado-industrial.onrender.com']
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
