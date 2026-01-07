@@ -23,17 +23,17 @@
         </div>
         
         <div class="user-section">
-            {% if user.is_authenticated %}
-                <span>Hola, <strong>{{ user.username }}</strong></span>
-                <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 15px;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn" style="color: white; border: none; cursor: pointer;">Cerrar Sesión</button>
-                </form>
-            {% else %}
-                <a href="{% url 'registro' %}">Registrarse</a>
-                <a href="/admin/login/">Iniciar Sesión</a>
-            {% endif %}
-        </div>
+    {% if user.is_authenticated %}
+        <span>Hola, <strong>{{ user.username }}</strong></span>
+        <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 15px;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn" style="background: #d9534f; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Cerrar Sesión</button>
+        </form>
+    {% else %}
+        <a href="{% url 'registro' %}">Registrarse</a>
+        <a href="{% url 'login' %}">Iniciar Sesión</a>
+    {% endif %}
+</div>
     </nav>
 
     <div class="container">
