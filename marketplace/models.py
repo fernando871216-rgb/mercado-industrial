@@ -7,7 +7,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-class Product(models.Model):
+class Industrialproduct(models.Model):
     # Asegúrate de que esta línea esté idéntica:
     #category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
@@ -24,5 +24,6 @@ class Product(models.Model):
     def __str__(self):
 
         return f"{self.brand} - {self.title}"
+
 
 
