@@ -10,3 +10,19 @@
         {{ form.errors }}
     </div>
 {% endif %}
+
+<div class="login-box">
+    <h2>Crear Cuenta</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+            <div style="color: red; text-align: left; font-size: 0.8em;">
+                {{ form.errors }}
+            </div>
+        {% endif %}
+
+        {{ form.as_p }}
+        <button type="submit">Registrarse</button>
+    </form>
+</div>

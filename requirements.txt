@@ -5,3 +5,4 @@ whitenoise
 dj-database-url
 psycopg2-binary
 Pillow
+whitenoise==6.6.0
