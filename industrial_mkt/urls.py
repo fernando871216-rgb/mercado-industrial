@@ -18,9 +18,9 @@ urlpatterns = [
 from marketplace.views import home, subir_producto, registro # Importa registro
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls	),
     path('', home, name='home'),
-    path('vender/', subir_producto, name='vender'),
+    path('vender/', views.subir_producto, name='vender'), # El 'name' es vital,
     path('registro/', registro, name='registro'), # Nueva ruta
 ]
 

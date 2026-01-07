@@ -25,6 +25,26 @@
     </style>
 </head>
 <body>
+
+<nav style="background: #2c3e50; padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="margin: 0;">Mercado Industrial</h2>
+    </div>
+    
+    <div>
+        <a href="{% url 'vender' %}" style="background: #f1c40f; color: #2c3e50; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            + VENDER EQUIPO
+        </a>
+        
+        {% if user.is_authenticated %}
+            <span style="margin-left: 20px;">Hola, {{ user.username }}</span>
+            <a href="/admin/logout/" style="color: white; margin-left: 10px;">Salir</a>
+        {% else %}
+            <a href="/admin/login/" style="color: white; margin-left: 20px;">Entrar</a>
+        {% endif %}
+    </div>
+</nav>
+
     <h1>Equipos Industriales Disponibles</h1>
     {% for p in productos %}
         <div class="producto">
