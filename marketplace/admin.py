@@ -3,10 +3,11 @@ from .models import Category, Product
 
 admin.site.register(Category)
 
-#admin.site.register(Product)
+#admin.site.register(Industrialproduct)
 
-@admin.register(Product)
+@admin.register(Industrialproduct)
 class ProductAdmin(admin.ModelAdmin):
     # list_display = ('title', 'price', 'category') # Comenta esta línea con un #
     pass
+
 
