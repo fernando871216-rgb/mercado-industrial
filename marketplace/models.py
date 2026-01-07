@@ -10,7 +10,7 @@ class Category(models.Model):
 class Product(models.Model):
     # Asegúrate de que esta línea esté idéntica:
     #category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     brand = models.CharField(max_length=100)
@@ -24,4 +24,5 @@ class Product(models.Model):
     def __str__(self):
 
         return f"{self.brand} - {self.title}"
+
 
