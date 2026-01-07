@@ -4,3 +4,9 @@
     {{ form.as_p }}
     <button type="submit">Registrarme</button>
 </form>
+
+{% if form.errors %}
+    <div style="color: red; background: #ffeeee; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+        {{ form.errors }}
+    </div>
+{% endif %}

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.contrib import messages
 from .models import Product, Category
 from .forms import ProductForm
 import mercadopago
@@ -43,12 +44,18 @@ def registro(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
+            user = form.save() # Guardamos y obtenemos el usuario
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Cuenta creada para {username}. Ya puedes iniciar sesión.')
+            return redirect('login')
+        else:
+            # Si el formulario no es válido (ej. contraseña corta), 
+            # avisamos al usuario
+            messages.error(request, "Hubo un error en el registro. Revisa los datos.")
     else:
         form = UserCreationForm()
     return render(request, 'marketplace/registro.html', {'form': form})
+
 
 @login_required
 def subir_producto(request):
