@@ -1,22 +1,17 @@
-from django.contrib import admin
 from django.urls import path
-from marketplace import views 
-from django.contrib.auth import views as auth_views # Importante para login/logout
-from django.conf import settings
-from django.conf.urls.static import static
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Inicio y Detalles
     path('', views.home, name='home'),
     path('producto/<int:pk>/', views.product_detail, name='product_detail'),
+    
+    # Gestión de Productos
     path('subir/', views.subir_producto, name='subir_producto'),
-    path('vender/', views.subir_producto, name='vender'),
+    path('editar/<int:pk>/', views.editar_producto, name='editar_producto'),
+    path('borrar/<int:pk>/', views.borrar_producto, name='borrar_producto'),
+    
+    # Usuarios
     path('registro/', views.registro, name='registro'),
-    path('borrar/<int:product_id>/', views.borrar_producto, name='borrar_producto'),
-    path('login/', auth_views.LoginView.as_view(template_name='marketplace/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
+    path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
 ]
-
-if settings.DEBUG:
-
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
