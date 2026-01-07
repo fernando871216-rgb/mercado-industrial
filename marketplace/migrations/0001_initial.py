@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # 1. Crear la tabla de Categoría si no existe
         migrations.CreateModel(
             name='Category',
             fields=[
@@ -17,12 +16,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100)),
             ],
         ),
-        # 2. Comando especial para forzar la columna en la tabla existente
-        migrations.RunSQL(
-            sql='ALTER TABLE marketplace_product ADD COLUMN IF NOT EXISTS category_id integer;',
-            reverse_sql='ALTER TABLE marketplace_product DROP COLUMN IF EXISTS category_id;'
-        ),
-        # 3. Definir el modelo Product para que Django lo reconozca
         migrations.CreateModel(
             name='Product',
             fields=[
