@@ -1,6 +1,7 @@
-<h2>Publica tu equipo industrial</h2>
+<h1>Subir Nuevo Equipo Industrial</h1>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Publicar ahora</button>
+    <button type="submit">Publicar Producto</button>
 </form>
+<a href="{% url 'home' %}">Volver al inicio</a>
