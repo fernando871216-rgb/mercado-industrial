@@ -2,7 +2,20 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import IndustrialProduct, Category
 from .forms import ProductForm
+from django.contrib.auth.forms import UserCreationForm 
+from django.contrib.auth import login
 
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) # Inicia sesión automáticamente tras registrarse
+            return redirect('home')
+    else:
+        form = UserCreationForm()
+    return render(request, 'marketplace/registro.html', {'form': form})
+    
 # Vista de la página principal: Muestra todos los productos y categorías
 def home(request):
     # Obtenemos todos los productos de la nueva tabla
@@ -48,5 +61,6 @@ def subir_producto(request):
         form = ProductForm()
     
     return render(request, 'marketplace/subir_producto.html', {'form': form})
+
 
 
