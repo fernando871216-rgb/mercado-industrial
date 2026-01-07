@@ -1,78 +1,35 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
-from django.contrib import messages
-from .models import Product, Category
-from .forms import ProductForm
-import mercadopago
+from .models import IndustrialProduct, Category
 
+# Vista de la página principal: Muestra todos los productos y categorías
 def home(request):
-    categorias = Category.objects.all()
-    categoria_id = request.GET.get('categoria')
+    # Obtenemos todos los productos de la nueva tabla
+    products = IndustrialProduct.objects.all().order_by('-id')
+    # Obtenemos todas las categorías para el menú lateral o filtros
+    categories = Category.objects.all()
     
-    if categoria_id:
-        productos = Product.objects.filter(category_id=categoria_id)
-    else:
-        productos = Product.objects.all()
+    context = {
+        'products': products,
+        'categories': categories,
+    }
+    return render(request, 'marketplace/home.html', context)
 
-    # Configuración de Mercado Pago
-    sdk = mercadopago.SDK("APP_USR-8745749455028291-010612-0bf761bcaa29732f502581cc416ff981-3116392416")
+# Vista de detalle: Muestra la información completa de un solo equipo
+def product_detail(request, pk):
+    # Buscamos el producto por su ID (Primary Key)
+    product = get_object_or_404(IndustrialProduct, pk=pk)
+    return render(request, 'marketplace/product_detail.html', {'product': product})
+
+# Vista para filtrar por categoría (Opcional, muy útil para mercados)
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    products = IndustrialProduct.objects.filter(category=category).order_by('-id')
+    categories = Category.objects.all()
     
-    for p in productos:
-        comision = float(p.price) * 0.10
-        preference_data = {
-            "items": [{"title": p.title, "quantity": 1, "unit_price": float(p.price)}],
-            "marketplace_fee": comision,
-            "back_urls": {
-                "success": "https://mercado-industrial.onrender.com/",
-                "failure": "https://mercado-industrial.onrender.com/",
-                "pending": "https://mercado-industrial.onrender.com/",
-            },
-            "auto_return": "approved",
-        }
-        preference_response = sdk.preference().create(preference_data)
-        response = preference_response["response"]
-        p.pago_url = response.get("init_point", "#")
-
-    return render(request, 'marketplace/index.html', {
-        'productos': productos, 
-        'categorias': categorias
-    })
-
-def registro(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save() # Guardamos y obtenemos el usuario
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Cuenta creada para {username}. Ya puedes iniciar sesión.')
-            return redirect('login')
-        else:
-            # Si el formulario no es válido (ej. contraseña corta), 
-            # avisamos al usuario
-            messages.error(request, "Hubo un error en el registro. Revisa los datos.")
-    else:
-        form = UserCreationForm()
-    return render(request, 'marketplace/registro.html', {'form': form})
-
-
-@login_required
-def subir_producto(request):
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            producto = form.save(commit=False)
-            producto.seller = request.user
-            producto.save()
-            return redirect('home')
-    else:
-        form = ProductForm()
-    return render(request, 'marketplace/subir_producto.html', {'form': form})
-
-@login_required
-def borrar_producto(request, product_id):
-    producto = get_object_or_404(Product, id=product_id)
-    if request.user == producto.seller or request.user.is_superuser:
-        producto.delete()
-    return redirect('home')
+    context = {
+        'category': category,
+        'products': products,
+        'categories': categories,
+    }
+    return render(request, 'marketplace/home.html', context)
