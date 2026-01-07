@@ -10,8 +10,9 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(IndustrialProduct)
 class IndustrialProductAdmin(admin.ModelAdmin):
     # Mostramos los campos principales en la lista del administrador
-    list_display = ('title', 'brand', 'price', 'stock', 'category')
+    list_display = ('title', 'brand', 'price', 'stock', 'category','seller')
     # Permitimos filtrar por categoría y marca
     list_filter = ('category', 'brand')
     # Añadimos un buscador por título y número de parte
     search_fields = ('title', 'brand', 'description')
+
