@@ -58,9 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'cloudinary_storage',
     'cloudinary',
-    'marketplace',
     'django.contrib.staticfiles',
-    'marketplace', 
+    'marketplace',
+    'marketplace.apps.MarketplaceConfig'
 ]
 
 MIDDLEWARE = [
@@ -159,3 +159,4 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
