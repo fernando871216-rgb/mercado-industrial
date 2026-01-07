@@ -4,6 +4,7 @@ from .models import IndustrialProduct, Category
 from .forms import ProductForm
 from django.contrib.auth.forms import UserCreationForm 
 from django.contrib.auth import login
+from django.contrib import messages
 
 def registro(request):
     if request.method == 'POST':
@@ -62,5 +63,36 @@ def subir_producto(request):
     
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
+@login_required
+def borrar_producto(request, pk):
+    # Buscamos el producto en la nueva tabla IndustrialProduct
+    producto = get_object_or_404(IndustrialProduct, pk=pk)
+    
+    # Seguridad: Solo el dueño puede borrarlo
+    if producto.seller == request.user:
+        producto.delete()
+        messages.success(request, "Producto eliminado correctamente.")
+    else:
+        messages.error(request, "No tienes permiso para borrar este producto.")
+        
+    return redirect('home')
+
+@login_required
+def editar_producto(request, pk):
+    producto = get_object_or_404(IndustrialProduct, pk=pk)
+    
+    # Seguridad: Solo el dueño puede editar
+    if producto.seller != request.user:
+        return redirect('home')
+        
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=producto)
+        if form.as_valid():
+            form.save()
+            return redirect('product_detail', pk=producto.pk)
+    else:
+        form = ProductForm(instance=producto)
+        
+    return render(request, 'marketplace/subir_producto.html', {'form': form, 'editando': True})
 
 
