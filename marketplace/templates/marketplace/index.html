@@ -138,18 +138,7 @@
     <div class="nav-links">
         <a href="{% url 'vender' %}" class="btn-vender">+ VENDER EQUIPO</a>
         
-        {% if user.is_authenticated %}
-    <span style="margin-left: 20px;">Hola, <strong>{{ user.username }}</strong></span>
-    
-    <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 10px;">
-        {% csrf_token %} <button type="submit" class="logout-btn">
-            Salir
-        </button>
-    </form>
-{% else %}
-    <a href="{% url 'login' %}">Entrar</a>
-    <a href="{% url 'registro' %}">Registrarse</a>
-{% endif %}
+        
 
     </div>
 </nav>

@@ -10,6 +10,28 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import dj_database_url # Pon esto al puro principio del archivo
+import os
+from pathlib import Path
+
+# ... (otras configuraciones) ...
+
+# 1. BASE DE DATOS PROFESIONAL
+DATABASES = {
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3', 
+        conn_max_age=600
+    )
+}
+
+# 2. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (Para que el Admin se vea bien)
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# 3. SEGURIDAD PARA RENDER (HTTPS)
+CSRF_TRUSTED_ORIGINS = ['https://mercado-industrial.onrender.com']
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -70,19 +92,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'industrial_mkt.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-import dj_database_url # Añade este import al principio del archivo
-import os
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3',
-        conn_max_age=600
-    )
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
