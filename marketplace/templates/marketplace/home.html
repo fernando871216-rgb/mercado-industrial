@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mercado Industrial</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f4f4f4; }
+        .product-card { background: white; padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 300px; }
+        .container { display: flex; flex-wrap: wrap; }
+        <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mercado Industrial</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f4f4f4; }
+        .product-card { background: white; padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 300px; }
+        .container { display: flex; flex-wrap: wrap; }
+        nav { margin-bottom: 20px; background: #333; padding: 10px; border-radius: 5px; }
+        nav a { color: white; margin-right: 15px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Catálogo de Equipos Industriales</h1>
+    <nav>
+        <a href="{% url 'home' %}">Inicio</a>
+        <a href="{% url 'subir_producto' %}"> + Subir Producto</a>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="/admin/login/">Iniciar Sesión</a>
+        {% else %}
+            <span style="color: white;">Hola, {{ user.username }}</span>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        {% for product in products %}
+            <div class="product-card">
+                <h3>{{ product.title }}</h3>
+                <p><strong>Marca:</strong> {{ product.brand }}</p>
+                <p><strong>N° Parte:</strong> {{ product.part_number }}</p>
+                <p style="color: green; font-weight: bold;">${{ product.price }}</p>
+                <a href="{% url 'product_detail' product.id %}">Ver detalles</a>
+            </div>
+        {% empty %}
+            <p>No hay productos disponibles por ahora.</p>
+        {% endfor %}
+    </div>
+</body>
+</html> #333; padding: 10px; border-radius: 5px; }
+        nav a { color: white; margin-right: 15px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Catálogo de Equipos Industriales</h1>
+    <nav>
+        <a href="{% url 'home' %}">Inicio</a>
+        <a href="{% url 'subir_producto' %}"> + Subir Producto</a>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="/admin/login/">Iniciar Sesión</a>
+        {% else %}
+            <span style="color: white;">Hola, {{ user.username }}</span>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        {% for product in products %}
+            <div class="product-card">
+                <h3>{{ product.title }}</h3>
+                <p><strong>Marca:</strong> {{ product.brand }}</p>
+                <p><strong>N° Parte:</strong> {{ product.part_number }}</p>
+                <p style="color: green; font-weight: bold;">${{ product.price }}</p>
+                <a href="{% url 'product_detail' product.id %}">Ver detalles</a>
+            </div>
+        {% empty %}
+            <p>No hay productos disponibles por ahora.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

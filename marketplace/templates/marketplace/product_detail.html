@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ product.title }}</title></head>
+<body>
+    <h1>{{ product.title }}</h1>
+    {% if product.image %}
+        <img src="{{ product.image.url }}" width="300">
+    {% endif %}
+    <p><strong>Marca:</strong> {{ product.brand }}</p>
+    <p><strong>Descripción:</strong> {{ product.description }}</p>
+    <p><strong>Vendedor:</strong> {{ product.seller.username }}</p>
+    
+    {% if user == product.seller %}
+        <hr>
+        <a href="{% url 'editar_producto' product.id %}">Editar</a> | 
+        <a href="{% url 'borrar_producto' product.id %}" onclick="return confirm('¿Seguro?')">Borrar</a>
+    {% endif %}
+    <br><br>
+    <a href="{% url 'home' %}">Volver al inicio</a>
+</body>
+</html>

@@ -1,7 +1,7 @@
-<h1>Subir Nuevo Equipo Industrial</h1>
+<h2>{% if editando %}Editar{% else %}Subir Nuevo{% endif %} Producto</h2>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Publicar Producto</button>
+    <button type="submit">Guardar Producto</button>
 </form>
-<a href="{% url 'home' %}">Volver al inicio</a>
+<a href="{% url 'home' %}">Cancelar</a>
