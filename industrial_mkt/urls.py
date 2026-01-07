@@ -3,6 +3,7 @@ from django.urls import path
 from marketplace import views  # <--- ESTA LÍNEA ES LA QUE FALTA
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views # <--- AÑADE ESTO
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,6 +11,9 @@ urlpatterns = [
     path('vender/', views.subir_producto, name='vender'),
     path('registro/', views.registro, name='registro'),
     path('borrar/<int:product_id>/', views.borrar_producto, name='borrar_producto'),
+    path('login/', auth_views.LoginView.as_view(template_name='marketplace/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
+
 ]
 
 # Esto es para que se vean las fotos que subes
