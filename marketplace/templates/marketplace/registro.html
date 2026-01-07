@@ -1,9 +1,10 @@
-<h2>Crea tu cuenta de Vendedor Industrial</h2>
+<h2>Crear Cuenta en Mercado Industrial</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Registrarme</button>
+    <button type="submit">Registrarse</button>
 </form>
+<p>¿Ya tienes cuenta? <a href="/admin/login/">Inicia sesión aquí</a></p>
 
 {% if form.errors %}
     <div style="color: red; background: #ffeeee; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
@@ -25,4 +26,5 @@
         {{ form.as_p }}
         <button type="submit">Registrarse</button>
     </form>
+
 </div>
