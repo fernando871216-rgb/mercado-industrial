@@ -18,4 +18,32 @@
     <br><br>
     <a href="{% url 'home' %}">Volver al inicio</a>
 </body>
+    <div style="max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px;">
+    <h1>{{ product.title }}</h1>
+    
+    {% if product.image %}
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
+        </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <p><strong>Marca:</strong> {{ product.brand }}</p>
+            <p><strong>Modelo/N° Parte:</strong> {{ product.part_number }}</p>
+            <p><strong>Categoría:</strong> {{ product.category.name }}</p>
+        </div>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+            <p style="font-size: 1.5em; color: green;">${{ product.price }}</p>
+            <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
+        </div>
+    </div>
+    <hr>
+    <h3>Descripción Técnica</h3>
+    <p>{{ product.description|linebreaks }}</p>
+    <p><small>Publicado por: {{ product.seller.username }}</small></p>
+    
+    <a href="{% url 'home' %}" style="text-decoration: none; color: #3498db;">← Volver al catálogo</a>
+</div>
+
 </html>
