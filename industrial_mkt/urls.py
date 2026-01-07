@@ -8,6 +8,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
+    path('producto/<int:pk>/', views.product_detail, name='product_detail'),
+    path('subir/', views.subir_producto, name='subir_producto'),
     path('vender/', views.subir_producto, name='vender'),
     path('registro/', views.registro, name='registro'),
     path('borrar/<int:product_id>/', views.borrar_producto, name='borrar_producto'),
@@ -16,4 +18,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
