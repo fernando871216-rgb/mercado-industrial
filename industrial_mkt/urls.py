@@ -2,14 +2,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views # Importa las vistas de autenticación
 
 urlpatterns = [
-    # Ruta para el panel de administración
     path('admin/', admin.site.urls),
-    
-    # Redirige todo el tráfico de la web a la app marketplace
-    path('', include('marketplace.urls')), 
+    path('', include('marketplace.urls')),
+    # Agrega esta línea para el logout:
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
 ]
+
 
 # Configuración para servir archivos multimedia (imágenes de productos)
 if settings.DEBUG:
