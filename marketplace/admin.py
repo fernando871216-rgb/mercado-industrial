@@ -14,4 +14,4 @@ class IndustrialProductAdmin(admin.ModelAdmin):
     # Permitimos filtrar por categoría y marca
     list_filter = ('category', 'brand')
     # Añadimos un buscador por título y número de parte
-    search_fields = ('title', 'part_number')
+    search_fields = ('title', 'brand', 'description')
