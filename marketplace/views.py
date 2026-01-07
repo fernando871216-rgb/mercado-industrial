@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import IndustrialProduct, Category
+from .forms import ProductForm
 
 # Vista de la página principal: Muestra todos los productos y categorías
 def home(request):
@@ -37,7 +38,15 @@ def category_detail(request, category_id):
 @login_required
 def subir_producto(request):
     if request.method == 'POST':
-        # Aquí iría la lógica para procesar el formulario
-        pass
-    return render(request, 'marketplace/subir_producto.html')
+        form = ProductForm(request.POST, request.FILES) # request.FILES es vital para la imagen
+        if form.is_valid():
+            producto = form.save(commit=False)
+            producto.seller = request.user # Asignamos al usuario actual como vendedor
+            producto.save()
+            return redirect('home')
+    else:
+        form = ProductForm()
+    
+    return render(request, 'marketplace/subir_producto.html', {'form': form})
+
 
