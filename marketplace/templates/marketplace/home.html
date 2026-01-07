@@ -17,10 +17,23 @@
     <h1>Catálogo de Equipos Industriales</h1>
     
     <nav>
-        <div>
-            <a href="{% url 'home' %}">Inicio</a>
-            <a href="{% url 'subir_producto' %}">+ Subir Producto</a>
-        </div>
+    <div>
+        <a href="{% url 'home' %}">Inicio</a>
+        <a href="{% url 'subir_producto' %}">+ Subir Producto</a>
+    </div>
+    <div>
+        {% if user.is_authenticated %}
+            <span style="color: white; margin-right: 10px;">Hola, <strong>{{ user.username }}</strong></span>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Cerrar Sesión</button>
+            </form>
+        {% else %}
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="{% url 'login' %}" style="background: #3498db; padding: 5px 10px; border-radius: 4px;">Iniciar Sesión</a>
+        {% endif %}
+    </div>
+</nav>
         
         <div class="user-section">
     {% if user.is_authenticated %}
