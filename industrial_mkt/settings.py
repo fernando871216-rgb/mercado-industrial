@@ -145,5 +145,4 @@ CSRF_TRUSTED_ORIGINS = ['https://mercado-industrial.onrender.com']
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

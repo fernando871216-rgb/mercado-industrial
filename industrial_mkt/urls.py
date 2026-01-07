@@ -17,3 +17,4 @@ if settings.DEBUG:
 else:
     # En Render (producción), esto ayuda a que las imágenes se sirvan si usas WhiteNoise
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
