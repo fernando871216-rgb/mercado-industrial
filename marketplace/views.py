@@ -33,3 +33,11 @@ def category_detail(request, category_id):
         'categories': categories,
     }
     return render(request, 'marketplace/home.html', context)
+
+@login_required
+def subir_producto(request):
+    if request.method == 'POST':
+        # Aquí iría la lógica para procesar el formulario
+        pass
+    return render(request, 'marketplace/subir_producto.html')
+
