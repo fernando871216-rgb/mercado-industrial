@@ -15,6 +15,12 @@ import os
 from pathlib import Path
 
 # ... (otras configuraciones) ...
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 2. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (Para que el Admin se vea bien)
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # 1. BASE DE DATOS PROFESIONAL
 DATABASES = {
@@ -24,19 +30,10 @@ DATABASES = {
     )
 }
 
-# 2. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (Para que el Admin se vea bien)
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 # 3. SEGURIDAD PARA RENDER (HTTPS)
 CSRF_TRUSTED_ORIGINS = ['https://mercado-industrial.onrender.com']
-
-from pathlib import Path
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
