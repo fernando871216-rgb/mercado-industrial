@@ -3,4 +3,32 @@
     <h1>¡Pago Confirmado!</h1>
     <p>Gracias por tu compra. El vendedor ha sido notificado.</p>
     <a href="{% url 'home' %}" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px;">Volver al Catálogo</a>
+
 </div>
+
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 5rem auto; text-align: center; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    
+    <div style="width: 80px; height: 80px; background: #27ae60; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 40px;">
+        ✓
+    </div>
+
+    <h1 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Procesado con Éxito!</h1>
+    <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+        Gracias por tu compra en <strong>Mercado Industrial</strong>. El vendedor ha sido notificado y se pondrá en contacto contigo a la brevedad para coordinar la entrega.
+    </p>
+
+    <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 5px solid #27ae60;">
+        <p style="margin: 0; font-weight: bold; color: #2c3e50;">¿Qué sigue?</p>
+        <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #666;">Puedes revisar el estado de tu pedido en tu correo electrónico o contactar directamente al vendedor vía WhatsApp.</p>
+    </div>
+
+    <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center;">
+        <a href="{% url 'home' %}" style="padding: 12px 25px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Volver al Inicio
+        </a>
+    </div>
+</div>
+{% endblock %}
