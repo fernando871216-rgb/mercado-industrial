@@ -11,39 +11,50 @@ def home(request):
     products = IndustrialProduct.objects.all().order_by('-created_at')
     return render(request, 'marketplace/home.html', {'products': products})
 
-# 2. DETALLE DEL PRODUCTO + MERCADO PAGO
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
     
-    # Configurar SDK de Mercado Pago con tu Token de Render
-    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN'))
+    # 1. Obtener llaves de las variables de entorno de Render
+    access_token = os.environ.get('MP_ACCESS_TOKEN')
+    public_key = os.environ.get('MP_PUBLIC_KEY')
 
-    # Crear preferencia de pago
-    preference_data = {
-        "items": [
-            {
-                "title": product.title,
-                "quantity": 1,
-                "unit_price": float(product.price),
-                "currency_id": "MXN"  # Cambia a tu moneda si es necesario
-            }
-        ],
-        "back_urls": {
-            "success": request.build_absolute_uri('/pago-exitoso/'),
-            "failure": request.build_absolute_uri('/'),
-            "pending": request.build_absolute_uri('/'),
-        },
-        "auto_return": "approved",
-    }
+    try:
+        sdk = mercadopago.SDK(access_token)
 
-    preference_response = sdk.preference().create(preference_data)
-    preference_id = preference_response["response"]["id"]
-    print(f"Public Key: {os.environ.get('MP_PUBLIC_KEY')}")
+        preference_data = {
+            "items": [
+                {
+                    "title": product.title,
+                    "quantity": 1,
+                    "unit_price": float(product.price),
+                    "currency_id": "MXN"
+                }
+            ],
+            "back_urls": {
+                "success": request.build_absolute_uri('/pago-exitoso/'),
+                "failure": request.build_absolute_uri('/'),
+                "pending": request.build_absolute_uri('/'),
+            },
+            "auto_return": "approved",
+        }
+
+        preference_response = sdk.preference().create(preference_data)
+        
+        # Verificamos si la respuesta fue exitosa antes de pedir el ID
+        if "response" in preference_response:
+            preference_id = preference_response["response"]["id"]
+        else:
+            preference_id = None
+            print("Error en Mercado Pago:", preference_response)
+
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+        preference_id = None
 
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
         'preference_id': preference_id,
-        'public_key': os.environ.get('MP_PUBLIC_KEY')
+        'public_key': public_key
     })
 
 # 3. PÁGINA DE ÉXITO TRAS EL PAGO
@@ -100,4 +111,5 @@ def borrar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, seller=request.user)
     producto.delete()
     return redirect('home')
+
 
