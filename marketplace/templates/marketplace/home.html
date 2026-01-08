@@ -26,28 +26,18 @@
         /* Contenedor de Productos */
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        <div style="display: flex; gap: 5px; margin-top: 10px;">
-    <a href="{% url 'product_detail' product_id=product.id %}" style="flex: 1; background: #3498db; color: white; text-align: center; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 0.8em;">
-    Ver Especificaciones
-</a>
-    
-    <a href="https://wa.me/522225858320?text=Hola,%20estoy%20interesado%20en%20el%20equipo:%20{{ product.title }}" 
-       target="_blank" 
-       style="flex: 1; background: #25D366; color: white; text-align: center; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 0.8em; font-weight: bold;">
-       WhatsApp
-    </a>
-</div>
         
         /* Tarjeta de Producto */
-        .product-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .product-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; }
         .product-card:hover { transform: translateY(-5px); }
-        .product-img { width: 100%; height: 200px; object-fit: cover; background-color: #eee; }
-        .product-info { padding: 1.5rem; }
-        .product-info h3 { margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--primary); }
-        .product-info .brand { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 1rem; }
-        .product-info .price { font-size: 1.5rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem; }
+        .product-img { width: 100%; height: 200px; object-fit: contain; background-color: #fff; padding: 10px; box-sizing: border-box; }
+        .product-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-info h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--primary); height: 2.4em; overflow: hidden; }
+        .product-info .brand { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .product-info .price { font-size: 1.4rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem; margin-top: auto; }
         
-        .btn-detail { display: block; text-align: center; background: var(--accent); color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; }
+        .btn-detail { display: block; text-align: center; background: var(--accent); color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em; }
+        .btn-whatsapp { display: block; text-align: center; background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em; }
 
         .empty-msg { text-align: center; grid-column: 1 / -1; padding: 3rem; color: #7f8c8d; }
     </style>
@@ -88,28 +78,28 @@
                     {% endif %}
                     
                     <div class="product-info">
-    <h3>{{ product.title }}</h3>
-    <p class="brand">Marca: {{ product.brand }}</p>
-    <p class="price">${{ product.price }}</p>
-    
-    <div style="display: flex; gap: 10px;">
-        <a href="{% url 'product_detail' product.id %}" class="btn-detail" style="flex: 1;">Detalles</a>
-        <button onclick="alert('Función de carrito en desarrollo')" style="flex: 1; background: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Comprar</button>
-    </div>
-</div>
+                        <h3>{{ product.title }}</h3>
+                        <p class="brand">Marca: {{ product.brand }}</p>
+                        <p class="price">${{ product.price }}</p>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{% url 'product_detail' product_id=product.id %}" class="btn-detail" style="flex: 1;">Detalles</a>
+                            
+                            <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa%20el%20equipo:%20{{ product.title }}" 
+                               target="_blank" class="btn-whatsapp" style="flex: 1;">
+                                WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
             {% empty %}
                 <div class="empty-msg">
                     <p style="font-size: 1.2rem;">Aún no hay equipos industriales publicados.</p>
                     <a href="{% url 'subir_producto' %}" style="color: var(--accent);">¡Sé el primero en subir un producto!</a>
                 </div>
             {% endfor %}
-            </div>
+        </div>
     </div>
 
 </body>
 </html>
-
-
-
-
-
