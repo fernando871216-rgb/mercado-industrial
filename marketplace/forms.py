@@ -1,13 +1,44 @@
-from django import forms
-from .models import IndustrialProduct
+from django import强化学习 forms
+from django.contrib.auth.models import User
+from .models import IndustrialProduct, Category
 
-class ProductForm(forms.ModelForm):
+# 1. FORMULARIO DE REGISTRO DE USUARIOS
+class RegistroForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirmar Contraseña'}))
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+        if password != confirm_password:
+            raise forms.ValidationError("Las contraseñas no coinciden")
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"]) # Esto encripta la contraseña
+        if commit:
+            user.save()
+        return user
+
+# 2. FORMULARIO PARA SUBIR PRODUCTOS
+class ProductoForm(forms.ModelForm):
     class Meta:
         model = IndustrialProduct
-        # Definimos los campos que el usuario verá en la web
-        fields = ['title', 'brand', 'part_number', 'description', 'price', 'stock', 'image', 'category']
-        # Personalizamos los widgets para que se vean mejor
+        fields = ['title', 'brand', 'part_number', 'description', 'price', 'stock', 'category', 'image']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Describe las especificaciones técnicas...'}),
-            'title': forms.TextInput(attrs={'placeholder': 'Ej. PLC Allen Bradley 1756'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
         }
