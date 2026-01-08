@@ -5,52 +5,48 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from .models import IndustrialProduct, Category
 from .forms import RegistroForm, ProductoForm
-from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
+    # Cambié 'home.html' por 'inicio.html' porque es el nombre que usamos en los pasos anteriores
     products = IndustrialProduct.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/home.html', {'products': products})
+    return render(request, 'marketplace/inicio.html', {'products': products})
 
+# 2. DETALLE DEL PRODUCTO (Aquí se genera el pago)
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    
-    # 1. Obtener llaves de las variables de entorno de Render
-    access_token = os.environ.get('MP_ACCESS_TOKEN')
+    preference_id = None
     public_key = os.environ.get('MP_PUBLIC_KEY')
+    access_token = os.environ.get('MP_ACCESS_TOKEN')
 
-    try:
-        sdk = mercadopago.SDK(access_token)
-
-        preference_data = {
-            "items": [
-                {
-                    "title": product.title,
-                    "quantity": 1,
-                    "unit_price": float(product.price),
-                    "currency_id": "MXN"
-                }
-            ],
-            "back_urls": {
-                "success": request.build_absolute_uri('/pago-exitoso/'),
-                "failure": request.build_absolute_uri('/'),
-                "pending": request.build_absolute_uri('/'),
-            },
-            "auto_return": "approved",
-        }
-
-        preference_response = sdk.preference().create(preference_data)
-        
-        # Verificamos si la respuesta fue exitosa antes de pedir el ID
-        if "response" in preference_response:
-            preference_id = preference_response["response"]["id"]
-        else:
-            preference_id = None
-            print("Error en Mercado Pago:", preference_response)
-
-    except Exception as e:
-        print(f"Error de conexión: {e}")
-        preference_id = None
+    # Solo creamos la preferencia si el usuario está logueado y hay stock
+    if request.user.is_authenticated and product.stock > 0:
+        try:
+            sdk = mercadopago.SDK(access_token)
+            preference_data = {
+                "items": [
+                    {
+                        "title": product.title,
+                        "quantity": 1,
+                        "unit_price": float(product.price),
+                        "currency_id": "MXN"
+                    }
+                ],
+                # INDISPENSABLE para que el stock baje en pago_exitoso
+                "external_reference": str(product.id),
+                "back_urls": {
+                    "success": request.build_absolute_uri(reverse('pago_exitoso')),
+                    "failure": request.build_absolute_uri(reverse('pago_fallido')),
+                    "pending": request.build_absolute_uri(reverse('home')),
+                },
+                "auto_return": "approved",
+            }
+            preference_response = sdk.preference().create(preference_data)
+            if "response" in preference_response:
+                preference_id = preference_response["response"]["id"]
+        except Exception as e:
+            print(f"Error Mercado Pago: {e}")
 
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
@@ -58,21 +54,33 @@ def detalle_producto(request, product_id):
         'public_key': public_key
     })
 
-# 3. PÁGINA DE ÉXITO TRAS EL PAGO
+# 3. PÁGINA DE ÉXITO (Baja de Stock)
 def pago_exitoso(request):
-    # Obtenemos el ID del producto que mandamos en la URL (external_reference)
-    # Si no lo pasaste en la preferencia, podemos intentar obtenerlo de los parámetros
+    # Recuperamos el ID que enviamos en 'external_reference'
     producto_id = request.GET.get('external_reference')
     
     if producto_id:
-        producto = get_object_or_404(IndustrialProduct, id=producto_id)
-        if producto.stock > 0:
-            producto.stock -= 1  # Restamos uno al inventario
-            producto.save()
+        try:
+            producto = IndustrialProduct.objects.get(id=producto_id)
+            if producto.stock > 0:
+                producto.stock -= 1
+                producto.save()
+        except IndustrialProduct.DoesNotExist:
+            print("Producto no encontrado tras el pago")
             
     return render(request, 'marketplace/pago_exitoso.html')
 
-# 4. SUBIR PRODUCTO (Requiere estar logueado)
+# 4. PÁGINA DE FALLO
+def pago_fallido(request):
+    return render(request, 'marketplace/pago_fallido.html')
+
+# 5. MI INVENTARIO
+@login_required
+def mi_inventario(request):
+    productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
+
+# 6. SUBIR PRODUCTO
 @login_required
 def subir_producto(request):
     if request.method == 'POST':
@@ -80,31 +88,13 @@ def subir_producto(request):
         if form.is_valid():
             producto = form.save(commit=False)
             producto.seller = request.user
-            producto.save() # Aquí se sube la imagen a Cloudinary automáticamente
+            producto.save()
             return redirect('home')
     else:
         form = ProductoForm()
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
-# 5. REGISTRO DE NUEVOS USUARIOS
-def registro(request):
-    if request.method == 'POST':
-        form = RegistroForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = RegistroForm()
-    return render(request, 'marketplace/registro.html', {'form': form})
-
-# 6. FILTRO POR CATEGORÍA
-def category_detail(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = IndustrialProduct.objects.filter(category=category)
-    return render(request, 'marketplace/home.html', {'products': products, 'category': category})
-
-# 7. EDITAR Y BORRAR (Opcionales para gestión)
+# 7. EDITAR PRODUCTO
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, seller=request.user)
@@ -117,54 +107,27 @@ def editar_producto(request, pk):
         form = ProductoForm(instance=producto)
     return render(request, 'marketplace/subir_producto.html', {'form': form, 'edit': True})
 
-def detalle_producto(request, product_id):
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    preference_id = None
-    public_key = os.environ.get('MP_PUBLIC_KEY')
-
-    # SOLO creamos la preferencia si el usuario ha iniciado sesión
-    if request.user.is_authenticated:
-        try:
-            sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN'))
-            preference_data = {
-                "items": [
-                    {
-                        "title": product.title,
-                        "quantity": 1,
-                        "unit_price": float(product.price),
-                        "currency_id": "MXN"
-                    }
-                ],
-                "back_urls": {
-                    "success": request.build_absolute_uri('/pago-exitoso/'),
-                    "failure": request.build_absolute_uri('/'),
-                },
-                "auto_return": "approved",
-            }
-            preference_response = sdk.preference().create(preference_data)
-            preference_id = preference_response["response"]["id"]
-        except Exception as e:
-            print(f"Error MP: {e}")
-
-    return render(request, 'marketplace/product_detail.html', {
-        'product': product,
-        'preference_id': preference_id,
-        'public_key': public_key
-    })
-
+# 8. BORRAR PRODUCTO
 @login_required
 def borrar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, seller=request.user)
     producto.delete()
-    return redirect('home')
+    return redirect('mi_inventario')
 
-@login_required
-def mi_inventario(request):
-    # Filtramos los productos donde el vendedor es el usuario actual
-    productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
-    return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
+# 9. REGISTRO
+def registro(request):
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = RegistroForm()
+    return render(request, 'marketplace/registro.html', {'form': form})
 
-def pago_fallido(request):
-    return render(request, 'marketplace/pago_fallido.html')
-
-
+# 10. CATEGORÍAS
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    products = IndustrialProduct.objects.filter(category=category)
+    return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
