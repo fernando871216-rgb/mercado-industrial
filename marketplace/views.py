@@ -164,5 +164,7 @@ def mi_inventario(request):
     productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
     return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
 
+def pago_fallido(request):
+    return render(request, 'marketplace/pago_fallido.html')
 
 
