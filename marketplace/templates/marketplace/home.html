@@ -1,61 +1,76 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<style>
-    /* Mantenemos tus estilos específicos para las tarjetas de esta página */
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    
-    .product-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; height: 100%; }
-    .product-card:hover { transform: translateY(-5px); }
-    
-    .product-img { width: 100%; height: 200px; object-fit: contain; background-color: #fff; padding: 10px; box-sizing: border-box; }
-    
-    .product-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
-    .product-info h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #2c3e50; height: 2.4em; overflow: hidden; }
-    .product-info .brand { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 0.5rem; }
-    .product-info .price { font-size: 1.4rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem; margin-top: auto; }
-    
-    .btn-detail { display: block; text-align: center; background: #3498db; color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em; flex: 1; }
-    .btn-whatsapp { display: block; text-align: center; background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em; flex: 1; }
+<div style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 60px 20px; text-align: center; margin-bottom: 40px; border-radius: 0 0 20px 20px;">
+    <h1 style="font-size: 2.8rem; margin-bottom: 15px; letter-spacing: -1px;">Mercado Industrial</h1>
+    <p style="font-size: 1.2rem; opacity: 0.9; max-width: 700px; margin: 0 auto;">
+        Compra y venta de maquinaria y componentes industriales especializados.
+    </p>
+</div>
 
-    .empty-msg { text-align: center; grid-column: 1 / -1; padding: 3rem; color: #7f8c8d; }
-</style>
-
-<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
-    <h2 style="margin-bottom: 1.5rem; color: #2c3e50;">Catálogo de Equipos Disponibles</h2>
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
     
-    <div class="product-grid">
-        {% for product in products %}
-            <div class="product-card">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" class="product-img">
-                {% else %}
-                    <div class="product-img" style="display: flex; align-items: center; justify-content: center; color: #999; background: #eee;">
-                        Sin Imagen
-                    </div>
-                {% endif %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+        <h2 style="color: #2c3e50; margin: 0; font-size: 1.5rem;">
+            <i class="fas fa-th-large"></i> Equipos Disponibles
+        </h2>
+        {% if category %}
+            <span style="background: #3498db; color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                Categoría: {{ category.name }}
+            </span>
+        {% endif %}
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px;">
+        {% for producto in products %}
+            <div class="card-producto" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%; transition: 0.3s;">
                 
-                <div class="product-info">
-                    <h3>{{ product.title }}</h3>
-                    <p class="brand">Marca: {{ product.brand }}</p>
-                    <p class="price">${{ product.price }}</p>
+                <div style="height: 200px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                    {% if producto.image %}
+                        <img src="{{ producto.image.url }}" alt="{{ producto.title }}" style="width: 100%; height: 100%; object-fit: cover; {% if producto.stock <= 0 %}filter: grayscale(100%); opacity: 0.6;{% endif %}">
+                    {% else %}
+                        <i class="fas fa-image" style="font-size: 3rem; color: #ced4da;"></i>
+                    {% endif %}
+
+                    {% if producto.stock <= 0 %}
+                        <div style="position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">
+                            AGOTADO
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
+                    <span style="font-size: 0.7rem; color: #3498db; font-weight: bold; text-transform: uppercase;">{{ producto.brand }}</span>
+                    <h3 style="margin: 5px 0 15px 0; font-size: 1.1rem; color: #2c3e50; height: 3rem; overflow: hidden;">{{ producto.title }}</h3>
                     
-                    <div style="display: flex; gap: 8px;">
-                        <a href="{% url 'product_detail' product_id=product.id %}" class="btn-detail">Detalles</a>
-                        
-                        <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa%20el%20equipo:%20{{ product.title }}" 
-                           target="_blank" class="btn-whatsapp">
-                            WhatsApp
-                        </a>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f1f1; padding-top: 15px;">
+                        {% if producto.stock > 0 %}
+                            <span style="font-size: 1.4rem; font-weight: 800; color: #27ae60;">
+                                ${{ producto.price }}
+                            </span>
+                            <a href="{% url 'product_detail' producto.id %}" 
+                               style="background: #2c3e50; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+                               Detalles
+                            </a>
+                        {% else %}
+                            <span style="font-size: 1.2rem; font-weight: bold; color: #95a5a6;">
+                                No disponible
+                            </span>
+                            <a href="{% url 'product_detail' producto.id %}" 
+                               style="background: #bdc3c7; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+                               Ver
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         {% empty %}
-            <div class="empty-msg">
-                <p style="font-size: 1.2rem;">Aún no hay equipos industriales publicados.</p>
-                <a href="{% url 'subir_producto' %}" style="color: #3498db; font-weight: bold;">¡Sé el primero en subir un producto!</a>
-            </div>
+            <p style="grid-column: 1/-1; text-align: center; color: #7f8c8d; padding: 50px;">No hay productos disponibles.</p>
         {% endfor %}
     </div>
 </div>
+
+<style>
+    .card-producto:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important; }
+</style>
 {% endblock %}
