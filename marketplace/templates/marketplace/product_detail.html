@@ -15,6 +15,8 @@
         <div style="flex: 1; min-width: 300px;">
             <h1 style="margin-top: 0; color: #2c3e50;">{{ product.title }}</h1>
             <p style="color: #666;">Marca: <strong>{{ product.brand }}</strong> | Parte: {{ product.part_number }}</p>
+            <p style="font-size: 0.9rem; color: #34495e;">
+                <i class="fas fa-store"></i> Vendido por: <strong>{{ product.seller.username }}</strong>
             <h2 style="color: #27ae60; font-size: 2.5rem; margin: 15px 0;">${{ product.price }}</h2>
             <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
@@ -61,3 +63,4 @@
 {% endif %}
 
 {% endblock %}
+
