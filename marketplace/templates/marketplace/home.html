@@ -2,70 +2,95 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mercado Industrial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Industrial | Inicio</title>
     <style>
-        body { font-family: sans-serif; margin: 40px; background: #f4f4f4; }
-        nav { margin-bottom: 20px; background: #333; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        nav a { color: white; margin-right: 15px; text-decoration: none; font-weight: bold; }
-        .user-section { color: #fff; }
-        .logout-btn { background: #d9534f; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; }
-        .product-card { background: white; padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 250px; }
-        .container { display: flex; flex-wrap: wrap; }
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --light: #f4f7f6;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); color: #333; }
+        
+        /* Navegación */
+        nav { background: var(--primary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        nav a { color: white; text-decoration: none; margin-right: 1.5rem; font-weight: 500; transition: color 0.3s; }
+        nav a:hover { color: var(--accent); }
+        
+        .user-menu { display: flex; align-items: center; gap: 1rem; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+
+        /* Contenedor de Productos */
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        
+        /* Tarjeta de Producto */
+        .product-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-img { width: 100%; height: 200px; object-fit: cover; background-color: #eee; }
+        .product-info { padding: 1.5rem; }
+        .product-info h3 { margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--primary); }
+        .product-info .brand { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 1rem; }
+        .product-info .price { font-size: 1.5rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem; }
+        
+        .btn-detail { display: block; text-align: center; background: var(--accent); color: white; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; }
+
+        .empty-msg { text-align: center; grid-column: 1 / -1; padding: 3rem; color: #7f8c8d; }
     </style>
 </head>
 <body>
-    <h1>Catálogo de Equipos Industriales</h1>
-    
+
     <nav>
-    <div>
-        <a href="{% url 'home' %}">Inicio</a>
-        <a href="{% url 'subir_producto' %}">+ Subir Producto</a>
-    </div>
-    <div>
-        {% if user.is_authenticated %}
-            <span style="color: white; margin-right: 10px;">Hola, <strong>{{ user.username }}</strong></span>
-            <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Cerrar Sesión</button>
-            </form>
-        {% else %}
-            <a href="{% url 'registro' %}">Registrarse</a>
-            <a href="{% url 'login' %}" style="background: #3498db; padding: 5px 10px; border-radius: 4px;">Iniciar Sesión</a>
-        {% endif %}
-    </div>
-</nav>
-        
-        <div class="user-section">
-    {% if user.is_authenticated %}
-        <span>Hola, <strong>{{ user.username }}</strong></span>
-        <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 15px;">
-            {% csrf_token %}
-            <button type="submit" class="logout-btn" style="background: #d9534f; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Cerrar Sesión</button>
-        </form>
-    {% else %}
-        <a href="{% url 'registro' %}">Registrarse</a>
-        <a href="{% url 'login' %}">Iniciar Sesión</a>
-    {% endif %}
-</div>
+        <div>
+            <a href="{% url 'home' %}" style="font-size: 1.2rem; font-weight: bold;">MERCADO INDUSTRIAL</a>
+            <a href="{% url 'subir_producto' %}">+ Publicar Equipo</a>
+        </div>
+        <div class="user-menu">
+            {% if user.is_authenticated %}
+                <span>Hola, <strong>{{ user.username }}</strong></span>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Cerrar Sesión</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Iniciar Sesión</a>
+                <a href="{% url 'registro' %}" style="background: var(--accent); padding: 8px 15px; border-radius: 4px;">Crear Cuenta</a>
+            {% endif %}
+        </div>
     </nav>
 
-    <div class="product-card">
-    {% if product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px;">
-    {% else %}
-        <div style="width: 100%; height: 200px; background: #eee; display: flex; align-items: center; justify-content: center; color: #999;">
-            Sin imagen
-        </div>
-    {% endif %}
-    <h3>{{ product.title }}</h3>
-    <p><strong>Marca:</strong> {{ product.brand }}</p>
-    <p style="color: green; font-weight: bold;">${{ product.price }}</p>
-    <a href="{% url 'product_detail' product.id %}">Ver detalles</a>
-</div>
-        {% empty %}
-            <p>No hay productos disponibles por ahora.</p>
-        {% endfor %}
+    <div class="container">
+        <h2 style="margin-bottom: 1.5rem;">Catálogo de Equipos Disponibles</h2>
+        
+        <div class="product-grid">
+            {% for product in products %}
+                <div class="product-card">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" class="product-img">
+                    {% else %}
+                        <div class="product-img" style="display: flex; align-items: center; justify-content: center; color: #999;">
+                            Sin Imagen Disponible
+                        </div>
+                    {% endif %}
+                    
+                    <div class="product-info">
+                        <h3>{{ product.title }}</h3>
+                        <p class="brand">Marca: {{ product.brand }}</p>
+                        <p class="price">${{ product.price }}</p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn-detail">Ver Especificaciones</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-msg">
+                    <p style="font-size: 1.2rem;">Aún no hay equipos industriales publicados.</p>
+                    <a href="{% url 'subir_producto' %}" style="color: var(--accent);">¡Sé el primero en subir un producto!</a>
+                </div>
+            {% endfor %}
+            </div>
     </div>
-</body>
 
+</body>
 </html>
