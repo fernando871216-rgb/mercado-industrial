@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .models import IndustrialProduct, Category
 from .forms import RegistroForm, ProductoForm
 from django.urls import reverse
+from .models import Sale 
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
@@ -67,15 +68,24 @@ def detalle_producto(request, product_id):
 
 # 3. PÁGINA DE ÉXITO (Baja de Stock)
 def pago_exitoso(request):
-    # Recuperamos el ID que enviamos en 'external_reference'
     producto_id = request.GET.get('external_reference')
+    payment_id = request.GET.get('collection_id') # ID que nos da Mercado Pago
     
     if producto_id:
         try:
             producto = IndustrialProduct.objects.get(id=producto_id)
             if producto.stock > 0:
+                # 1. Restar stock
                 producto.stock -= 1
                 producto.save()
+                
+                # 2. CREAR REGISTRO DE VENTA
+                Sale.objects.create(
+                    product=producto,
+                    buyer=request.user,
+                    amount=producto.price,
+                    mp_payment_id=payment_id
+                )
         except IndustrialProduct.DoesNotExist:
             pass
             
@@ -142,6 +152,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
