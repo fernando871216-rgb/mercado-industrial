@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Industrial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --light: #f4f7f6;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background-color: var(--light); 
+            color: #333; 
+        }
+
+        /* Navbar */
+        nav { 
+            background: var(--primary); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+
+        nav a { 
+            color: white; 
+            text-decoration: none; 
+            margin-right: 1.5rem; 
+            font-weight: 500; 
+        }
+
+        .btn-post {
+            background: var(--accent);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .user-menu { display: flex; align-items: center; gap: 15px; }
+
+        .btn-logout {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div>
+            <a href="{% url 'home' %}" style="font-size: 1.3rem; font-weight: bold;">MERCADO INDUSTRIAL</a>
+            <a href="{% url 'subir_producto' %}" class="btn-post">+ Publicar</a>
+        </div>
+
+        <div class="user-menu">
+            {% if user.is_authenticated %}
+                <span><i class="fas fa-user"></i> {{ user.username }}</span>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Salir</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Ingresar</a>
+                <a href="{% url 'registro' %}" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">Registrarse</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Mercado Industrial - Compra y Venta de Equipo Especializado</p>
+    </footer>
+
+</body>
+</html>
