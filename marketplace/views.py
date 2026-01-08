@@ -11,7 +11,7 @@ from django.urls import reverse
 def home(request):
     # Cambié 'home.html' por 'inicio.html' porque es el nombre que usamos en los pasos anteriores
     products = IndustrialProduct.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/inicio.html', {'products': products})
+    return render(request, 'marketplace/home.html', {'products': products})
 
 # 2. DETALLE DEL PRODUCTO (Aquí se genera el pago)
 def detalle_producto(request, product_id):
@@ -131,4 +131,5 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
