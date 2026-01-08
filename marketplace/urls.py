@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from marketplace import views # O el nombre de tu carpeta de app
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,6 +23,6 @@ urlpatterns = [
     path('registro/', views.registro, name='registro'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
 
-]
+
 
 
