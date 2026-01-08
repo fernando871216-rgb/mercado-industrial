@@ -74,6 +74,31 @@
             <p style="font-size: 1.5em; color: green;">${{ product.price }}</p>
             <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
         </div>
+
+    <div class="actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+    
+    <a href="https://wa.me/521XXXXXXXXXX?text=Hola,%20me%20interesa%20el%20equipo%20{{ product.title }}" 
+       target="_blank"
+       style="background: #25D366; color: white; padding: 15px; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold;">
+       💬 Contactar por WhatsApp
+    </a>
+
+    <div id="wallet_container"></div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+  const mp = new MercadoPago("{{ public_key }}", {
+    locale: "es-MX",
+  });
+
+  mp.bricks().create("wallet", "wallet_container", {
+    initialization: {
+      preferenceId: "{{ preference_id }}",
+    },
+  });
+</script>
+    
     </div>
     <hr>
     <h3>Descripción Técnica</h3>
@@ -84,4 +109,5 @@
 </div>
 
 </html>
+
 
