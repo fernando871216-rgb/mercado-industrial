@@ -143,4 +143,7 @@ def category_detail(request, category_id):
     products = IndustrialProduct.objects.filter(category=category)
 
     return render(request, 'marketplace/home.html', {'products': products, 'selected_category': category})
+    
+def pago_exitoso(request):
+    return render(request, 'marketplace/pago_exitoso.html')
 
