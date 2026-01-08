@@ -25,7 +25,7 @@ class RegistroForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"]) # Esto encripta la contraseña
+        user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
         return user
@@ -42,4 +42,3 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
-
