@@ -5,6 +5,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from .models import IndustrialProduct, Category
 from .forms import RegistroForm, ProductoForm
+from django.shortcuts import get_object_or_404, render
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
@@ -59,6 +60,16 @@ def detalle_producto(request, product_id):
 
 # 3. PÁGINA DE ÉXITO TRAS EL PAGO
 def pago_exitoso(request):
+    # Obtenemos el ID del producto que mandamos en la URL (external_reference)
+    # Si no lo pasaste en la preferencia, podemos intentar obtenerlo de los parámetros
+    producto_id = request.GET.get('external_reference')
+    
+    if producto_id:
+        producto = get_object_or_404(IndustrialProduct, id=producto_id)
+        if producto.stock > 0:
+            producto.stock -= 1  # Restamos uno al inventario
+            producto.save()
+            
     return render(request, 'marketplace/pago_exitoso.html')
 
 # 4. SUBIR PRODUCTO (Requiere estar logueado)
@@ -152,5 +163,6 @@ def mi_inventario(request):
     # Filtramos los productos donde el vendedor es el usuario actual
     productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
     return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
+
 
 
