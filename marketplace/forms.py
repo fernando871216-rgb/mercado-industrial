@@ -1,4 +1,4 @@
-from django import强化学习 forms
+from django import forms
 from django.contrib.auth.models import User
 from .models import IndustrialProduct, Category
 
@@ -42,3 +42,4 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
