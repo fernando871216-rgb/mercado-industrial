@@ -66,7 +66,7 @@ def pago_exitoso(request):
                 producto.stock -= 1
                 producto.save()
         except IndustrialProduct.DoesNotExist:
-            print("Producto no encontrado tras el pago")
+            pass
             
     return render(request, 'marketplace/pago_exitoso.html')
 
@@ -131,3 +131,4 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
