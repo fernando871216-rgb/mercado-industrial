@@ -38,6 +38,7 @@ def detalle_producto(request, product_id):
 
     preference_response = sdk.preference().create(preference_data)
     preference_id = preference_response["response"]["id"]
+    print(f"Public Key: {os.environ.get('MP_PUBLIC_KEY')}")
 
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
@@ -99,3 +100,4 @@ def borrar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, seller=request.user)
     producto.delete()
     return redirect('home')
+
