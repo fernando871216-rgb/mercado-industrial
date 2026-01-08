@@ -1,5 +1,12 @@
 from django.contrib import admin
 from .models import Category, IndustrialProduct
+from .models import Sale
+
+@admin.register(Sale)
+class SaleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'product', 'buyer', 'amount', 'created_at', 'mp_payment_id')
+    list_filter = ('created_at',)
+    search_fields = ('mp_payment_id', 'buyer__username', 'product__title')
 
 # Registro de Categorías
 @admin.register(Category)
@@ -15,4 +22,5 @@ class IndustrialProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'brand')
     # Añadimos un buscador por título y número de parte
     search_fields = ('title', 'brand', 'description')
+
 
