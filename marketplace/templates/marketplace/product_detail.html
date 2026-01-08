@@ -27,6 +27,43 @@
         </div>
     {% endif %}
 
+    {% extends 'marketplace/base.html' %} {% block content %}
+<div class="container" style="max-width: 900px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div>
+            {% if product.image %}
+                <img src="{{ product.image.url }}" style="width: 100%; border-radius: 8px;">
+            {% endif %}
+        </div>
+
+        <div>
+            <h1>{{ product.title }}</h1>
+            <p style="font-size: 1.2rem; color: #7f8c8d;">Marca: {{ product.brand }} | Modelo: {{ product.part_number }}</p>
+            <hr>
+            <p style="font-size: 2rem; color: #27ae60; font-weight: bold;">${{ product.price }}</p>
+            <p><strong>Disponibilidad:</strong> {{ product.stock }} unidades</p>
+            
+            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px;">
+                <button style="padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                    ⚡ Comprar Ahora
+                </button>
+                <button style="padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                    🛒 Añadir al Carrito
+                </button>
+                <a href="https://wa.me/TUNUMERO" style="text-align: center; padding: 10px; color: #25D366; text-decoration: none; font-weight: bold;">
+                    💬 Contactar al vendedor por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 2rem;">
+        <h3>Descripción del Producto</h3>
+        <p>{{ product.description|linebreaks }}</p>
+    </div>
+</div>
+{% endblock %}
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div>
             <p><strong>Marca:</strong> {{ product.brand }}</p>
@@ -47,3 +84,4 @@
 </div>
 
 </html>
+
