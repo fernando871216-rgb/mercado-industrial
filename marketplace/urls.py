@@ -14,6 +14,7 @@ urlpatterns = [
     # Detalle de Producto y Mercado Pago
     path('producto/<int:product_id>/', views.detalle_producto, name='product_detail'),
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
+    path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     
     # Gestión de Productos
     path('subir/', views.subir_producto, name='subir_producto'),
@@ -24,5 +25,6 @@ urlpatterns = [
     # Filtros
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
 ]
+
 
 
