@@ -1,54 +1,56 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestionar Producto - Mercado Industrial</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 40px; }
-        .form-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
-        h2 { color: #2c3e50; text-align: center; }
-        form p { margin-bottom: 15px; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #1a252f; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #3498db; text-decoration: none; }
-    </style>
-</head>
-<body>
-<div class="form-container">
-    <h2>{% if editando %}Editar Equipo{% else %}Registrar Nuevo Equipo{% endif %}</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">{% if editando %}Actualizar Cambios{% else %}Publicar en el Mercado{% endif %}</button>
-    </form>
-    <a href="{% url 'home' %}" class="back-link">← Cancelar y volver</a>
-</div>
-
 {% extends 'marketplace/base.html' %}
+
 {% block content %}
-<div class="container" style="max-width: 600px; margin: 3rem auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <h2>{% if edit %}Editar{% else %}Subir Nuevo{% endif %} Equipo</h2>
+<div class="container" style="max-width: 800px; margin: 3rem auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
     
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #2c3e50;">{% if edit %}Editar Equipo{% else %}Publicar Nuevo Equipo{% endif %}</h2>
+        <p style="color: #7f8c8d;">Completa la ficha técnica para que los compradores puedan encontrar tu equipo.</p>
+    </div>
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
-        {% for field in form %}
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px;">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-                {% for error in field.errors %}<p style="color: red; font-size: 0.8rem;">{{ error }}</p>{% endfor %}
-            </div>
-        {% endfor %}
-        
-        <button type="submit" style="width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
-            {% if edit %}Guardar Cambios{% else %}Publicar Producto{% endif %}
-        </button>
-    </form>
-</div>
-{% endblock %}
-    
-</body>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            {% for field in form %}
+                <div style="margin-bottom: 15px; {% if field.name == 'description' %}grid-column: span 2;{% endif %}">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px;">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
 
-</html>
+        <div style="margin-top: 30px;">
+            <button type="submit" style="width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                {% if edit %}Guardar Cambios{% else %}Publicar Ahora{% endif %}
+            </button>
+        </div>
+    </form>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="{% url 'home' %}" style="color: #95a5a6; text-decoration: none; font-size: 0.9rem;">Cancelar y volver</a>
+    </div>
+</div>
+
+<style>
+    /* Estilos para los campos del formulario */
+    input[type="text"], input[type="number"], select, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #dcdde1;
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    textarea { height: 120px; resize: vertical; }
+    input[type="file"] { padding: 10px 0; }
+    input:focus { border-color: #3498db; outline: none; box-shadow: 0 0 5px rgba(52, 152, 219, 0.2); }
+</style>
+{% endblock %}
