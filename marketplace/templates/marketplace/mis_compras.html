@@ -1,0 +1,52 @@
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 3rem auto; padding: 0 1rem;">
+    <h2 style="color: #2c3e50; margin-bottom: 2rem;">
+        <i class="fas fa-shopping-bag"></i> Mi Historial de Compras
+    </h2>
+
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                    <th style="padding: 15px;">Producto</th>
+                    <th style="padding: 15px;">Fecha</th>
+                    <th style="padding: 15px;">Monto</th>
+                    <th style="padding: 15px;">ID Transacción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 15px;">
+                        <strong>{{ compra.product.title|default:"Producto eliminado" }}</strong>
+                    </td>
+                    <td style="padding: 15px; color: #7f8c8d;">
+                        {{ compra.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                    <td style="padding: 15px; font-weight: bold; color: #27ae60;">
+                        ${{ compra.amount }}
+                    </td>
+                    <td style="padding: 15px; font-family: monospace; font-size: 0.85rem; color: #95a5a6;">
+                        {{ compra.mp_payment_id }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 40px; text-align: center; color: #bdc3c7;">
+                        Aún no has realizado ninguna compra.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">
+            ← Volver al catálogo
+        </a>
+    </div>
+</div>
+{% endblock %}
