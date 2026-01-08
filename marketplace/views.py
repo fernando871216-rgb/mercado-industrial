@@ -9,9 +9,20 @@ from django.urls import reverse
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
-    # Cambié 'home.html' por 'inicio.html' porque es el nombre que usamos en los pasos anteriores
-    products = IndustrialProduct.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/home.html', {'products': products})
+    # Obtener el término de búsqueda desde la URL (?q=...)
+    query = request.GET.get('q')
+    
+    if query:
+        # Filtramos por título o marca (icontains ignora mayúsculas/minúsculas)
+        products = IndustrialProduct.objects.filter(
+            title__icontains=query
+        ) | IndustrialProduct.objects.filter(
+            brand__icontains=query
+        )
+    else:
+        products = IndustrialProduct.objects.all().order_by('-created_at')
+        
+    return render(request, 'marketplace/home.html', {'products': products, 'query': query})
 
 # 2. DETALLE DEL PRODUCTO (Aquí se genera el pago)
 def detalle_producto(request, product_id):
@@ -131,5 +142,6 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
