@@ -66,6 +66,12 @@ def detalle_producto(request, product_id):
         'public_key': public_key
     })
 
+@login_required
+def mis_compras(request):
+    # Obtenemos todas las ventas donde el comprador es el usuario logueado
+    compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mis_compras.html', {'compras': compras})
+
 # 3. PÁGINA DE ÉXITO (Baja de Stock)
 def pago_exitoso(request):
     producto_id = request.GET.get('external_reference')
@@ -152,6 +158,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
