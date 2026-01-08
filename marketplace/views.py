@@ -147,5 +147,10 @@ def borrar_producto(request, pk):
     producto.delete()
     return redirect('home')
 
+@login_required
+def mi_inventario(request):
+    # Filtramos los productos donde el vendedor es el usuario actual
+    productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
 
 
