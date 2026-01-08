@@ -114,6 +114,61 @@
 </head>
 <body>
 
+{% extends 'marketplace/base.html' %}
+{% block content %}
+<div class="container" style="max-width: 450px; margin: 4rem auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #2c3e50; margin-bottom: 10px;">Crear Cuenta</h2>
+        <p style="color: #7f8c8d;">Únete al marketplace de equipo industrial más grande.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px;">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" style="width: 100%; padding: 14px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+            Registrarse ahora
+        </button>
+    </form>
+
+    <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+        <p style="color: #7f8c8d;">¿Ya tienes una cuenta? 
+            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Inicia sesión aquí</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    /* Estilos para que los campos del formulario se vean modernos */
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #dcdde1;
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box; /* Evita que el padding ensanche el input */
+    }
+    .form-control:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+</style>
+{% endblock %}
+    
 <div class="register-container">
     <h2>Crear Cuenta Nueva</h2>
     
@@ -143,4 +198,5 @@
 </div>
 
 </body>
+
 </html>
