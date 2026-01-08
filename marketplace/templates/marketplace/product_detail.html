@@ -1,33 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head><title>{{ product.title }}</title></head>
-<body>
-    <h1>{{ product.title }}</h1>
-    {% if product.image %}
-        <img src="{{ product.image.url }}" width="300">
-    {% endif %}
-    <p><strong>Marca:</strong> {{ product.brand }}</p>
-    <p><strong>Descripción:</strong> {{ product.description }}</p>
-    <p><strong>Vendedor:</strong> {{ product.seller.username }}</p>
-    
-    {% if user == product.seller %}
-        <hr>
-        <a href="{% url 'editar_producto' product.id %}">Editar</a> | 
-        <a href="{% url 'borrar_producto' product.id %}" onclick="return confirm('¿Seguro?')">Borrar</a>
-    {% endif %}
-    <br><br>
-    <a href="{% url 'home' %}">Volver al inicio</a>
-</body>
-    <div style="max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px;">
-    <h1>{{ product.title }}</h1>
-    
-    {% if product.image %}
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
-        </div>
-    {% endif %}
+{% extends 'marketplace/base.html' %}
 
-    {% extends 'marketplace/base.html' %}
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <div style="display: flex; gap: 40px; flex-wrap: wrap;">
@@ -41,17 +13,17 @@
         </div>
 
         <div style="flex: 1; min-width: 300px;">
-            <h1 style="margin-top: 0;">{{ product.title }}</h1>
+            <h1 style="margin-top: 0; color: #2c3e50;">{{ product.title }}</h1>
             <p style="color: #666;">Marca: <strong>{{ product.brand }}</strong> | Parte: {{ product.part_number }}</p>
-            <h2 style="color: #27ae60; font-size: 2.5rem;">${{ product.price }}</h2>
-            <p>Stock disponible: {{ product.stock }} unidades</p>
-            <hr>
+            <h2 style="color: #27ae60; font-size: 2.5rem; margin: 15px 0;">${{ product.price }}</h2>
+            <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
             
-            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
                 <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa%20el%20producto:%20{{ product.title }}" 
                    target="_blank" 
-                   style="background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                   💬 Contactar Vendedor
+                   style="background: #25D366; color: white; text-align: center; padding: 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">
+                   <i class="fab fa-whatsapp"></i> Contactar Vendedor
                 </a>
 
                 <div id="wallet_container"></div>
@@ -59,70 +31,10 @@
         </div>
     </div>
 
-    <div style="margin-top: 40px;">
-        <h3>Descripción Técnica</h3>
-        <p style="line-height: 1.6;">{{ product.description|linebreaks }}</p>
+    <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+        <h3 style="color: #2c3e50;">Descripción Técnica</h3>
+        <p style="line-height: 1.6; color: #444;">{{ product.description|linebreaks }}</p>
     </div>
-</div>
-
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-<script>
-  const mp = new MercadoPago("{{ public_key }}", { locale: "es-MX" });
-  mp.bricks().create("wallet", "wallet_container", {
-    initialization: { preferenceId: "{{ preference_id }}" },
-  });
-</script>
-{% endblock %}
-        </div>
-
-        <div>
-            <h1>{{ product.title }}</h1>
-            <p style="font-size: 1.2rem; color: #7f8c8d;">Marca: {{ product.brand }} | Modelo: {{ product.part_number }}</p>
-            <hr>
-            <p style="font-size: 2rem; color: #27ae60; font-weight: bold;">${{ product.price }}</p>
-            <p><strong>Disponibilidad:</strong> {{ product.stock }} unidades</p>
-            
-            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px;">
-                <button style="padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
-                    ⚡ Comprar Ahora
-                </button>
-                <button style="padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
-                    🛒 Añadir al Carrito
-                </button>
-                <a href="https://wa.me/TUNUMERO" style="text-align: center; padding: 10px; color: #25D366; text-decoration: none; font-weight: bold;">
-                    💬 Contactar al vendedor por WhatsApp
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div style="margin-top: 2rem;">
-        <h3>Descripción del Producto</h3>
-        <p>{{ product.description|linebreaks }}</p>
-    </div>
-</div>
-{% endblock %}
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-            <p><strong>Marca:</strong> {{ product.brand }}</p>
-            <p><strong>Modelo/N° Parte:</strong> {{ product.part_number }}</p>
-            <p><strong>Categoría:</strong> {{ product.category.name }}</p>
-        </div>
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
-            <p style="font-size: 1.5em; color: green;">${{ product.price }}</p>
-            <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
-        </div>
-
-    <div class="actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-    
-    <a href="https://wa.me/521XXXXXXXXXX?text=Hola,%20me%20interesa%20el%20equipo%20{{ product.title }}" 
-       target="_blank"
-       style="background: #25D366; color: white; padding: 15px; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold;">
-       💬 Contactar por WhatsApp
-    </a>
-
-    <div id="wallet_container"></div>
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -134,21 +46,8 @@
   mp.bricks().create("wallet", "wallet_container", {
     initialization: {
       preferenceId: "{{ preference_id }}",
+      redirectMode: "modal",
     },
   });
 </script>
-    
-    </div>
-    <hr>
-    <h3>Descripción Técnica</h3>
-    <p>{{ product.description|linebreaks }}</p>
-    <p><small>Publicado por: {{ product.seller.username }}</small></p>
-    
-    <a href="{% url 'home' %}" style="text-decoration: none; color: #3498db;">← Volver al catálogo</a>
-</div>
-
-</html>
-
-
-
-
+{% endblock %}
