@@ -27,13 +27,52 @@
         </div>
     {% endif %}
 
-    {% extends 'marketplace/base.html' %} {% block content %}
-<div class="container" style="max-width: 900px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-        <div>
+    {% extends 'marketplace/base.html' %}
+{% block content %}
+<div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+        
+        <div style="flex: 1; min-width: 300px;">
             {% if product.image %}
-                <img src="{{ product.image.url }}" style="width: 100%; border-radius: 8px;">
+                <img src="{{ product.image.url }}" style="width: 100%; border-radius: 8px; border: 1px solid #eee;">
+            {% else %}
+                <div style="width: 100%; height: 300px; background: #f4f4f4; display: flex; align-items: center; justify-content: center;">Sin imagen</div>
             {% endif %}
+        </div>
+
+        <div style="flex: 1; min-width: 300px;">
+            <h1 style="margin-top: 0;">{{ product.title }}</h1>
+            <p style="color: #666;">Marca: <strong>{{ product.brand }}</strong> | Parte: {{ product.part_number }}</p>
+            <h2 style="color: #27ae60; font-size: 2.5rem;">${{ product.price }}</h2>
+            <p>Stock disponible: {{ product.stock }} unidades</p>
+            <hr>
+            
+            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <a href="https://wa.me/521XXXXXXXXXX?text=Hola,%20me%20interesa%20el%20producto:%20{{ product.title }}" 
+                   target="_blank" 
+                   style="background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                   💬 Contactar Vendedor
+                </a>
+
+                <div id="wallet_container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <h3>Descripción Técnica</h3>
+        <p style="line-height: 1.6;">{{ product.description|linebreaks }}</p>
+    </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+  const mp = new MercadoPago("{{ public_key }}", { locale: "es-MX" });
+  mp.bricks().create("wallet", "wallet_container", {
+    initialization: { preferenceId: "{{ preference_id }}" },
+  });
+</script>
+{% endblock %}
         </div>
 
         <div>
@@ -109,5 +148,6 @@
 </div>
 
 </html>
+
 
 
