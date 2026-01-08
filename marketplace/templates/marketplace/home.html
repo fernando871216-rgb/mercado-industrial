@@ -16,6 +16,12 @@
                 <i class="fas fa-search"></i> Buscar
             </button>
         </form>
+        <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+    <span style="font-size: 0.9rem; align-self: center; opacity: 0.8;">Sugerencias:</span>
+    <a href="/?q=Bomba" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">Bombas</a>
+    <a href="/?q=Motor" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">Motores</a>
+    <a href="/?q=Valvula" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">Válvulas</a>
+</div>
         {% if query %}
             <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
                 Resultados para: "<strong>{{ query }}</strong>" | <a href="{% url 'home' %}" style="color: white; text-decoration: underline;">Limpiar búsqueda</a>
@@ -114,4 +120,5 @@
     }
 </style>
 {% endblock %}
+
 
