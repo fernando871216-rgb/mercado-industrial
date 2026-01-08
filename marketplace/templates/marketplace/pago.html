@@ -1,0 +1,19 @@
+<div class="container" style="text-align: center; padding: 50px;">
+    <h2>Estás a un paso de adquirir: {{ product.title }}</h2>
+    <p>Precio total: <strong>${{ product.price }}</strong></p>
+    
+    <div id="wallet_container"></div>
+
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script>
+        const mp = new MercadoPago('TU_PUBLIC_KEY_AQUÍ', {
+            locale: 'es-MX'
+        });
+
+        mp.bricks().create("wallet", "wallet_container", {
+            initialization: {
+                preferenceId: "{{ preference_id }}",
+            },
+        });
+    </script>
+</div>
