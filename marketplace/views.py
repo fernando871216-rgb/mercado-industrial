@@ -11,6 +11,16 @@ import os
 from django.conf import settings
 
 def detalle_producto(request, product_id):
+    preference_data = {
+        "items": [ ... ],
+        "back_urls": {
+            # Aquí le decimos a dónde ir tras el pago
+            "success": request.build_absolute_uri('/pago-exitoso/'), 
+            "failure": request.build_absolute_uri('/'),
+            "pending": request.build_absolute_uri('/'),
+        },
+        "auto_return": "approved",
+    }
     product = get_object_or_404(IndustrialProduct, id=product_id)
     
     # Configurar Mercado Pago
@@ -146,4 +156,5 @@ def category_detail(request, category_id):
     
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
 
