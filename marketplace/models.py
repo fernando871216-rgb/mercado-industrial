@@ -23,10 +23,12 @@ class IndustrialProduct(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True) # auto_now llena el campo solo
 
     def __str__(self):
         return f"{self.title} - {self.brand}"
     
 
  
+
 
