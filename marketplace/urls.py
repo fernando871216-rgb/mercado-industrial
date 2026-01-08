@@ -21,10 +21,12 @@ urlpatterns = [
     path('editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('borrar/<int:pk>/', views.borrar_producto, name='borrar_producto'),
     path('mi-inventario/', views.mi_inventario, name='mi_inventario'),
+    path('mis-compras/', views.mis_compras, name='mis_compras'),
     
     # Filtros
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
 ]
+
 
 
 
