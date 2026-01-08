@@ -106,10 +106,46 @@ def editar_producto(request, pk):
         form = ProductoForm(instance=producto)
     return render(request, 'marketplace/subir_producto.html', {'form': form, 'edit': True})
 
+def detalle_producto(request, product_id):
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    preference_id = None
+    public_key = os.environ.get('MP_PUBLIC_KEY')
+
+    # SOLO creamos la preferencia si el usuario ha iniciado sesión
+    if request.user.is_authenticated:
+        try:
+            sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN'))
+            preference_data = {
+                "items": [
+                    {
+                        "title": product.title,
+                        "quantity": 1,
+                        "unit_price": float(product.price),
+                        "currency_id": "MXN"
+                    }
+                ],
+                "back_urls": {
+                    "success": request.build_absolute_uri('/pago-exitoso/'),
+                    "failure": request.build_absolute_uri('/'),
+                },
+                "auto_return": "approved",
+            }
+            preference_response = sdk.preference().create(preference_data)
+            preference_id = preference_response["response"]["id"]
+        except Exception as e:
+            print(f"Error MP: {e}")
+
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product,
+        'preference_id': preference_id,
+        'public_key': public_key
+    })
+
 @login_required
 def borrar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, seller=request.user)
     producto.delete()
     return redirect('home')
+
 
 
