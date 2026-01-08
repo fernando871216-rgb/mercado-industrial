@@ -6,13 +6,30 @@
     <p style="font-size: 1.2rem; opacity: 0.9; max-width: 700px; margin: 0 auto; line-height: 1.5;">
         La red de confianza para la compra y venta de maquinaria y componentes industriales especializados.
     </p>
+
+    <div style="max-width: 600px; margin: 30px auto 0 auto;">
+        <form action="{% url 'home' %}" method="GET" style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="Buscar por nombre, marca o modelo..." 
+                   value="{{ query|default:'' }}"
+                   style="flex: 1; padding: 12px 20px; border-radius: 8px; border: none; font-size: 1rem; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); color: #333;">
+            <button type="submit" style="background: #3498db; color: white; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </form>
+        {% if query %}
+            <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                Resultados para: "<strong>{{ query }}</strong>" | <a href="{% url 'home' %}" style="color: white; text-decoration: underline;">Limpiar búsqueda</a>
+            </p>
+        {% endif %}
+    </div>
 </div>
 
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
         <h2 style="color: #2c3e50; margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-th-large"></i> Equipos Disponibles
+            <i class="fas fa-th-large"></i> 
+            {% if query %} Resultados de búsqueda {% else %} Equipos Disponibles {% endif %}
         </h2>
         {% if category %}
             <span style="background: #3498db; color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
@@ -81,9 +98,10 @@
             </div>
         {% empty %}
             <div style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; background: white; border-radius: 12px; border: 2px dashed #eee;">
-                <i class="fas fa-box-open" style="font-size: 4rem; color: #dee2e6; margin-bottom: 20px;"></i>
-                <h3 style="color: #95a5a6;">No hay productos publicados</h3>
-                <p style="color: #bdc3c7;">Pronto tendremos nuevos equipos disponibles.</p>
+                <i class="fas fa-search" style="font-size: 4rem; color: #dee2e6; margin-bottom: 20px;"></i>
+                <h3 style="color: #95a5a6;">No encontramos resultados</h3>
+                <p style="color: #bdc3c7;">Intenta con palabras más generales.</p>
+                <a href="{% url 'home' %}" style="color: #3498db; font-weight: bold; text-decoration: none;">Ver todo el catálogo</a>
             </div>
         {% endfor %}
     </div>
