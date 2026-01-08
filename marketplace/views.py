@@ -5,8 +5,43 @@ from django.contrib.auth import login
 from django.contrib import messages
 from .models import IndustrialProduct, Category
 from .forms import ProductForm
-import mercadopago
 from django.shortcuts import render, get_object_or_404
+import mercadopago
+import os
+from django.conf import settings
+
+def detalle_producto(request, product_id):
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    
+    # Configurar Mercado Pago
+    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN'))
+
+    # Crear la preferencia de pago
+    preference_data = {
+        "items": [
+            {
+                "title": product.title,
+                "quantity": 1,
+                "unit_price": float(product.price),
+                "currency_id": "MXN"  # Cambia a tu moneda local
+            }
+        ],
+        "back_urls": {
+            "success": request.build_absolute_uri('/'),
+            "failure": request.build_absolute_uri('/'),
+            "pending": request.build_absolute_uri('/'),
+        },
+        "auto_return": "approved",
+    }
+
+    preference_response = sdk.preference().create(preference_data)
+    preference_id = preference_response["response"]["id"]
+
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product,
+        'preference_id': preference_id,
+        'public_key': os.environ.get('MP_PUBLIC_KEY')
+    })
 
 def crear_pago(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
@@ -108,3 +143,4 @@ def category_detail(request, category_id):
     products = IndustrialProduct.objects.filter(category=category)
 
     return render(request, 'marketplace/home.html', {'products': products, 'selected_category': category})
+
