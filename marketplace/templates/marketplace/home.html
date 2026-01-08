@@ -77,12 +77,15 @@
                     {% endif %}
                     
                     <div class="product-info">
-                        <h3>{{ product.title }}</h3>
-                        <p class="brand">Marca: {{ product.brand }}</p>
-                        <p class="price">${{ product.price }}</p>
-                        <a href="{% url 'product_detail' product.id %}" class="btn-detail">Ver Especificaciones</a>
-                    </div>
-                </div>
+    <h3>{{ product.title }}</h3>
+    <p class="brand">Marca: {{ product.brand }}</p>
+    <p class="price">${{ product.price }}</p>
+    
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'product_detail' product.id %}" class="btn-detail" style="flex: 1;">Detalles</a>
+        <button onclick="alert('Función de carrito en desarrollo')" style="flex: 1; background: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Comprar</button>
+    </div>
+</div>
             {% empty %}
                 <div class="empty-msg">
                     <p style="font-size: 1.2rem;">Aún no hay equipos industriales publicados.</p>
@@ -94,3 +97,4 @@
 
 </body>
 </html>
+
