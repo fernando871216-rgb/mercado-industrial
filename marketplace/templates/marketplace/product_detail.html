@@ -6,48 +6,62 @@
         
         <div style="flex: 1; min-width: 300px;">
             {% if product.image %}
-                <img src="{{ product.image.url }}" style="width: 100%; border-radius: 8px; border: 1px solid #eee;">
+                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; border-radius: 8px; border: 1px solid #eee; object-fit: contain; max-height: 400px;">
             {% else %}
-                <div style="width: 100%; height: 300px; background: #f4f4f4; display: flex; align-items: center; justify-content: center;">Sin imagen</div>
+                <div style="width: 100%; height: 300px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                    <span style="color: #999;">Sin imagen disponible</span>
+                </div>
             {% endif %}
         </div>
 
         <div style="flex: 1; min-width: 300px;">
-            <h1 style="margin-top: 0; color: #2c3e50;">{{ product.title }}</h1>
-            <p style="color: #666;">Marca: <strong>{{ product.brand }}</strong> | Parte: {{ product.part_number }}</p>
-            <h2 style="color: #27ae60; font-size: 2.5rem; margin: 15px 0;">${{ product.price }}</h2>
-            <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
+            <h1 style="margin-top: 0; color: #2c3e50; font-size: 1.8rem;">{{ product.title }}</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">Marca: <strong>{{ product.brand }}</strong></p>
+            <p style="color: #666; font-size: 0.9rem;">Número de Parte: {{ product.part_number }}</p>
+            
+            <h2 style="color: #27ae60; font-size: 2.5rem; margin: 20px 0;">${{ product.price }}</h2>
+            
+            <div style="background: #fff9db; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ffec99;">
+                <p style="margin: 0; font-size: 0.9rem; color: #856404;"><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
+            </div>
+
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
             
-            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-                <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa%20el%20producto:%20{{ product.title }}" 
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa%20el%20equipo:%20{{ product.title }}" 
                    target="_blank" 
-                   style="background: #25D366; color: white; text-align: center; padding: 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">
+                   style="background: #25D366; color: white; text-align: center; padding: 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 1rem;">
                    <i class="fab fa-whatsapp"></i> Contactar Vendedor
                 </a>
 
-                <div id="wallet_container"></div>
+                {% if user.is_authenticated %}
+                    <div id="wallet_container"></div>
+                {% else %}
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #ced4da; text-align: center;">
+                        <p style="margin: 0 0 15px 0; color: #495057; font-size: 0.95rem;">Para comprar este equipo de forma segura:</p>
+                        <a href="{% url 'login' %}?next={{ request.path }}" 
+                           style="display: block; background: #2c3e50; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                           Iniciar Sesión para Comprar
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-        <h3 style="color: #2c3e50;">Descripción Técnica</h3>
-        <p style="line-height: 1.6; color: #444;">{{ product.description|linebreaks }}</p>
+    <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 25px;">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Descripción Técnica</h3>
+        <div style="line-height: 1.7; color: #444;">
+            {{ product.description|linebreaks }}
+        </div>
     </div>
 </div>
 
+{% if user.is_authenticated and preference_id %}
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
   const mp = new MercadoPago("{{ public_key }}", {
     locale: "es-MX",
   });
 
-  mp.bricks().create("wallet", "wallet_container", {
-    initialization: {
-      preferenceId: "{{ preference_id }}",
-      redirectMode: "modal",
-    },
-  });
-</script>
-{% endblock %}
+  mp
