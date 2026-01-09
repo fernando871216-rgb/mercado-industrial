@@ -69,10 +69,23 @@
 <body>
 
     <nav>
-        <a href="{% url 'home' %}" class="logo-container">
-            <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span style="font-size: 1.4rem; font-weight: bold; color: #2c3e50;">INITRE</span>
-        </a>
+    <a href="{% url 'home' %}" class="logo-container">
+        <img src="{% static 'INITRELOGO.jpg' %}" alt="Mercado Industrial INITRE" class="logo-img" style="height: 100px; width: auto;">
+        
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <span style="font-size: 1.6rem; font-weight: 800; color: #2c3e50; line-height: 1.1;">
+                MERCADO INDUSTRIAL
+            </span>
+            <span style="font-size: 1.2rem; font-weight: 400; color: #34495e; letter-spacing: 2px;">
+                INITRE
+            </span>
+        </div>
+    </a>
+    
+    <div class="nav-links">
+        ...
+    </div>
+</nav>
         
         <div class="nav-links">
             <a href="{% url 'home' %}">Catálogo</a>
@@ -104,3 +117,4 @@
 
 </body>
 </html>
+
