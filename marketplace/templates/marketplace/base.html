@@ -3,31 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace Industrial INITRE</title>
+    <title>Marketplace Industrial</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; }
         
-        /* BARRA DE NAVEGACIÓN */
-        nav { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo { font-size: 1.5rem; font-weight: bold; color: #27ae60; text-decoration: none; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
-        .nav-links a:hover { color: #27ae60; }
+        /* BARRA DE NAVEGACIÓN MEJORADA */
+        nav { 
+            background-color: white; 
+            padding: 10px 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-        /* BOTÓN DE SALIR (ARREGLO PARA ERROR 403) */
-        .logout-button { background: none; border: none; color: #e74c3c; cursor: pointer; font-family: inherit; font-size: 0.9rem; padding: 0; font-weight: bold; }
-        .logout-button:hover { color: #c0392b; text-decoration: underline; }
+        /* CONTENEDOR DEL LOGO */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
 
-        .btn-user { background: #34495e; padding: 5px 12px; border-radius: 5px; border: 1px solid #5d6d7e; }
+        .logo-img {
+            height: 60px; /* Ajusta este tamaño según prefieras */
+            width: auto;
+            margin-right: 15px;
+        }
+
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { 
+            color: #2c3e50; 
+            text-decoration: none; 
+            font-size: 0.95rem; 
+            font-weight: 500;
+            transition: 0.3s; 
+        }
+        .nav-links a:hover { color: #3498db; }
+
+        .btn-perfil {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            color: #2c3e50 !important;
+        }
+
+        .btn-salir {
+            background: #e74c3c;
+            color: white !important;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
         
-        footer { text-align: center; padding: 40px; color: #7f8c8d; font-size: 0.8rem; }
+        main { padding: 20px 5%; }
     </style>
 </head>
 <body>
 
     <nav>
-        <a href="{% url 'home' %}" class="logo"><i class="fas fa-industry"></i> Market Industrial INITRE</a>
+        <a href="{% url 'home' %}" class="logo-container">
+            <img src="https://tu-sitio.com/ruta-al-logo.png" alt="Logo INITRE" class="logo-img">
+            <span style="font-size: 1.4rem; font-weight: bold; color: #2c3e50;">INITRE</span>
+        </a>
         
         <div class="nav-links">
             <a href="{% url 'home' %}">Catálogo</a>
@@ -37,22 +81,17 @@
                 <a href="{% url 'mis_ventas' %}">Ventas</a>
                 <a href="{% url 'mis_compras' %}">Compras</a>
                 
-                <div class="btn-user">
-                    <a href="{% url 'editar_perfil' %}">
-                        <i class="fas fa-user-circle"></i> 
-                        {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}
-                    </a>
-                </div>
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil">
+                    <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+                </a>
 
-                <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 10px;">
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="logout-button">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
+                    <button type="submit" class="btn-salir">Salir</button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}">Iniciar Sesión</a>
-                <a href="{% url 'registro' %}" style="background: #27ae60; padding: 8px 15px; border-radius: 5px; font-weight: bold;">Registrarse</a>
+                <a href="{% url 'login' %}">Entrar</a>
+                <a href="{% url 'registro' %}" style="background: #3498db; color: white !important; padding: 8px 15px; border-radius: 8px;">Registro</a>
             {% endif %}
         </div>
     </nav>
@@ -62,10 +101,5 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 Marketplace de Equipos Industriales - Todos los derechos reservados</p>
-    </footer>
-
 </body>
 </html>
-
