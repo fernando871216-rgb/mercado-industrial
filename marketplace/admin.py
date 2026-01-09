@@ -1,26 +1,31 @@
 from django.contrib import admin
-from .models import Category, IndustrialProduct
-from .models import Sale
+from .models import Category, Profile, IndustrialProduct, Sale
 
+# 1. Registro de Ventas
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'buyer', 'amount', 'created_at', 'mp_payment_id')
-    list_filter = ('created_at',)
-    search_fields = ('mp_payment_id', 'buyer__username', 'product__title')
+    list_display = ('id', 'product', 'buyer', 'seller', 'price', 'created_at')
+    list_filter = ('created_at', 'seller')
+    search_fields = ('product__title', 'buyer__username', 'seller__username')
 
-# Registro de Categorías
+# 2. Registro de Productos Industriales (Configuración Unificada)
+@admin.register(IndustrialProduct)
+class IndustrialProductAdmin(admin.ModelAdmin):
+    # Mostramos los campos clave, incluyendo el Número de Parte
+    list_display = ('title', 'brand', 'part_number', 'price', 'stock', 'category', 'seller')
+    # Filtros laterales útiles
+    list_filter = ('category', 'brand', 'created_at')
+    # Buscador potente para el administrador
+    search_fields = ('title', 'brand', 'part_number', 'description')
+
+# 3. Registro de Categorías
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    search_fields = ('name',)
 
-# Registro del nuevo modelo IndustrialProduct
-@admin.register(IndustrialProduct)
-class IndustrialProductAdmin(admin.ModelAdmin):
-    # Mostramos los campos principales en la lista del administrador
-    list_display = ('title', 'brand', 'price', 'stock', 'category','seller')
-    # Permitimos filtrar por categoría y marca
-    list_filter = ('category', 'brand')
-    # Añadimos un buscador por título y número de parte
-    search_fields = ('title', 'brand', 'description')
-
-
+# 4. Registro de Perfiles de Usuario
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'phone_number')
+    search_fields = ('user__username', 'phone_number')
