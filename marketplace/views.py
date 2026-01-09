@@ -11,11 +11,10 @@ from django.db.models import Q
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 
-# --- 1. INICIO Y DETALLES (CON MERCADO PAGO) ---
+# --- 1. INICIO Y BÚSQUEDA ---
 def home(request):
     query = request.GET.get('q')
     if query:
-        # Busca por título, marca o número de parte
         products = IndustrialProduct.objects.filter(
             Q(title__icontains=query) | 
             Q(brand__icontains=query) | 
@@ -28,10 +27,15 @@ def home(request):
         'products': products, 
         'query': query
     })
+
+# --- 2. DETALLE DEL PRODUCTO (LA QUE DABA ERROR) ---
+def detalle_producto(request, product_id):
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    preference_id = None
     
     # Configuración de Mercado Pago
-    # Reemplaza con tu Access Token real entre las comillas
-    sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
+    # Asegúrate de poner tu Access Token real aquí
+    sdk = mercadopago.SDK("TU_ACCESS_TOKEN_AQUÍ")
     
     preference_data = {
         "items": [
@@ -47,7 +51,6 @@ def home(request):
             "failure": request.build_absolute_uri(reverse('pago_fallido')),
         },
         "auto_return": "approved",
-        "external_reference": str(product.id)
     }
     
     try:
@@ -61,7 +64,7 @@ def home(request):
         'preference_id': preference_id
     })
 
-# --- 2. GESTIÓN DE VENTAS Y COMPRAS ---
+# --- 3. GESTIÓN DE VENTAS Y COMPRAS ---
 @login_required
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
@@ -79,7 +82,6 @@ def cambiar_estado_venta(request, venta_id):
     venta.save()
     return redirect('mis_ventas')
 
-# --- 3. FUNCIONES DE APOYO ---
 @login_required
 def procesar_pago(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
@@ -89,9 +91,10 @@ def procesar_pago(request, product_id):
     )
     return redirect('mis_compras')
 
+# --- 4. INVENTARIO ---
 @login_required
 def mi_inventario(request):
-    productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
+    productos = IndustrialProduct.objects.filter(seller=request.user).order_at('-created_at')
     return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
 
 @login_required
@@ -125,6 +128,7 @@ def borrar_producto(request, pk):
     producto.delete()
     return redirect('mi_inventario')
 
+# --- 5. USUARIOS Y OTROS ---
 @login_required
 def editar_perfil(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -161,5 +165,3 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
-
-
