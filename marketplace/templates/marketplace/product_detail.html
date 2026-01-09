@@ -35,9 +35,21 @@
                 <strong style="font-size: 1.1rem; color: #2c3e50;">{{ product.part_number|default:"S/N" }}</strong>
             </div>
 
-            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 25px;">
+            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 10px;">
                 ${{ product.price }}
                 <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;"> MXN</span>
+            </div>
+
+            <div style="margin-bottom: 25px; padding: 5px 0;">
+                {% if product.stock > 0 %}
+                    <span style="color: #27ae60; font-weight: bold; background: #eafaf1; padding: 5px 12px; border-radius: 5px;">
+                        <i class="fas fa-boxes"></i> Disponibles: {{ product.stock }} unidades
+                    </span>
+                {% else %}
+                    <span style="color: #e74c3c; font-weight: bold; background: #fdf2f2; padding: 5px 12px; border-radius: 5px;">
+                        <i class="fas fa-times-circle"></i> ¡PRODUCTO AGOTADO!
+                    </span>
+                {% endif %}
             </div>
 
             <div style="margin-bottom: 30px;">
@@ -49,22 +61,34 @@
 
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 
-                {% if preference_id %}
-                    <div id="wallet_container"></div>
-                    <script src="https://sdk.mercadopago.com/js/v2"></script>
-                    <script>
-                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
-                        const bricksBuilder = mp.bricks();
-                        bricksBuilder.create("wallet", "wallet_container", {
-                            initialization: {
-                                preferenceId: "{{ preference_id }}",
-                                redirectMode: "modal"
-                            },
-                        });
-                    </script>
+                {% if product.stock > 0 %}
+                    
+                    {% if preference_id %}
+                        <div id="wallet_container"></div>
+                        <script src="https://sdk.mercadopago.com/js/v2"></script>
+                        <script>
+                            const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                            const bricksBuilder = mp.bricks();
+                            bricksBuilder.create("wallet", "wallet_container", {
+                                initialization: {
+                                    preferenceId: "{{ preference_id }}",
+                                    redirectMode: "modal"
+                                },
+                            });
+                        </script>
+                    {% endif %}
+
+                    <form action="{% url 'procesar_pago' product.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                            <i class="fas fa-shopping-cart"></i> Confirmar Intención de Compra
+                        </button>
+                    </form>
+
                 {% else %}
-                    <div style="padding: 15px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; color: #c53030; font-size: 0.9rem;">
-                        <i class="fas fa-exclamation-circle"></i> El botón de pago seguro se está generando... si no aparece, contacta al vendedor.
+                    <div style="padding: 20px; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 10px; text-align: center; color: #7f8c8d;">
+                        <i class="fas fa-hourglass-end" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        Este producto no está disponible para compra inmediata por falta de existencias.
                     </div>
                 {% endif %}
 
@@ -83,17 +107,8 @@
                     {% endif %}
                 </div>
 
-                <form action="{% url 'procesar_pago' product.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">
-                        <i class="fas fa-shopping-cart"></i> Confirmar Intención de Compra
-                    </button>
-                </form>
-
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-
-
