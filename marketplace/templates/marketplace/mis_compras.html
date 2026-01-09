@@ -2,55 +2,38 @@
 
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 50px auto; padding: 0 20px;">
-    
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
-        <i class="fas fa-shopping-bag" style="font-size: 2rem; color: #2c3e50;"></i>
-        <h2 style="margin: 0; color: #2c3e50;">Mi Historial de Compras</h2>
-    </div>
+    <h2 style="margin-bottom: 30px; color: #2c3e50;"><i class="fas fa-shopping-bag"></i> Mis Compras</h2>
 
-    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #edf2f7;">
+        <table style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7;">
-                    <th style="padding: 15px 20px; color: #718096; font-weight: 600;">Producto</th>
-                    <th style="padding: 15px 20px; color: #718096; font-weight: 600;">Fecha</th>
-                    <th style="padding: 15px 20px; color: #718096; font-weight: 600;">Vendedor</th>
-                    <th style="padding: 15px 20px; color: #718096; font-weight: 600;">Monto</th>
-                    <th style="padding: 15px 20px; color: #718096; font-weight: 600;">Estado</th>
+                    <th style="padding: 15px; text-align: left;">Producto</th>
+                    <th style="padding: 15px; text-align: left;">Vendedor</th>
+                    <th style="padding: 15px; text-align: left;">Precio</th>
+                    <th style="padding: 15px; text-align: left;">Estado</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras %}
-                <tr style="border-bottom: 1px solid #edf2f7; transition: background 0.2s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 15px 20px;">
-                        <div style="font-weight: bold; color: #2d3748;">{{ compra.product.title }}</div>
-                        <div style="font-size: 0.8rem; color: #a0aec0;">P/N: {{ compra.product.part_number|default:"N/A" }}</div>
-                    </td>
-                    <td style="padding: 15px 20px; color: #4a5568;">{{ compra.created_at|date:"d/m/Y H:i" }}</td>
-                    <td style="padding: 15px 20px; color: #4a5568;">{{ compra.seller.username }}</td>
-                    <td style="padding: 15px 20px; font-weight: bold; color: #27ae60;">${{ compra.price }}</td>
-                    <td style="padding: 15px 20px;">
-                        <span style="background: #e6fffa; color: #234e52; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">
-                            Confirmado
+                <tr style="border-bottom: 1px solid #edf2f7;">
+                    <td style="padding: 15px; font-weight: bold;">{{ compra.product.title }}</td>
+                    <td style="padding: 15px;">{{ compra.seller.username }}</td>
+                    <td style="padding: 15px;">${{ compra.price }}</td>
+                    <td style="padding: 15px;">
+                        <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; 
+                            {% if compra.status == 'completado' %} background: #e6fffa; color: #234e52; {% else %} background: #fff3cd; color: #856404; {% endif %}">
+                            {{ compra.status|capfirst }}
                         </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding: 40px; text-align: center; color: #a0aec0;">
-                        <i class="fas fa-ghost" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
-                        Aún no has realizado ninguna compra.
-                    </td>
+                    <td colspan="4" style="padding: 40px; text-align: center; color: #a0aec0;">Aún no has realizado compras.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <div style="margin-top: 20px;">
-        <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-size: 0.9rem;">
-            <i class="fas fa-arrow-left"></i> Volver al catálogo
-        </a>
     </div>
 </div>
 {% endblock %}
