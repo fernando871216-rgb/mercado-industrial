@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from cloudinary.models import CloudinaryField
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -10,6 +13,24 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=15, verbose_name="Número de Celular")
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+
+# Esto crea automáticamente un perfil cuando se crea un usuario
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
 
 class IndustrialProduct(models.Model):
     title = models.CharField(max_length=200)
@@ -44,6 +65,7 @@ class Sale(models.Model):
     
 
  
+
 
 
 
