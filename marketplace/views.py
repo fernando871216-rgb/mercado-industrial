@@ -7,6 +7,7 @@ from .models import IndustrialProduct, Category
 from .forms import RegistroForm, ProductoForm
 from django.urls import reverse
 from .models import Sale 
+from django.core.mail import send_mail
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
@@ -81,7 +82,7 @@ def mis_ventas(request):
 # 3. PÁGINA DE ÉXITO (Baja de Stock)
 def pago_exitoso(request):
     producto_id = request.GET.get('external_reference')
-    payment_id = request.GET.get('collection_id') # ID que nos da Mercado Pago
+    payment_id = request.GET.get('collection_id') 
     
     if producto_id:
         try:
@@ -97,6 +98,15 @@ def pago_exitoso(request):
                     buyer=request.user,
                     amount=producto.price,
                     mp_payment_id=payment_id
+                )
+
+                # 3. ENVIAR CORREO (Debe estar indentado dentro del IF)
+                send_mail(
+                    '¡Vendiste un producto!',
+                    f'Hola {producto.seller.username}, el usuario {request.user.username} ha comprado {producto.title}. Ponte en contacto en: {request.user.email}',
+                    'tu-email@gmail.com',  # Cambia esto por tu correo de settings.py
+                    [producto.seller.email],
+                    fail_silently=False,
                 )
         except IndustrialProduct.DoesNotExist:
             pass
@@ -164,6 +174,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
