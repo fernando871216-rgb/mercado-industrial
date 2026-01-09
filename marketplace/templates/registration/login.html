@@ -1,0 +1,57 @@
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin: 80px auto; padding: 0 20px;">
+    
+    <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #edf2f7; text-align: center;">
+        
+        <div style="background: #f8f9fa; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-lock" style="font-size: 2rem; color: #2c3e50;"></i>
+        </div>
+
+        <h2 style="color: #2c3e50; margin-bottom: 10px;">Iniciar Sesión</h2>
+        <p style="color: #7f8c8d; margin-bottom: 30px;">Accede a tu panel de Mercado Industrial</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Usuario</label>
+                {{ form.username }}
+            </div>
+
+            <div style="text-align: left; margin-bottom: 30px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Contraseña</label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
+                Entrar al Sistema
+            </button>
+        </form>
+
+        <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="color: #7f8c8d; font-size: 0.9rem;">
+                ¿Aún no tienes cuenta? <a href="{% url 'registro' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e0;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    button:hover { background: #1a252f !important; }
+</style>
+{% endblock %}
