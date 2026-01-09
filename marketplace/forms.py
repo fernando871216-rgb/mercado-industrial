@@ -1,6 +1,23 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import IndustrialProduct, Category
+from django import forms
+from django.contrib.auth.models import User
+from .models import Profile
+
+class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField(required=True) # Obligatorio
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+
+class ProfileUpdateForm(forms.ModelForm):
+    phone_number = forms.CharField(required=True) # Obligatorio
+
+    class Meta:
+        model = Profile
+        fields = ['phone_number']
 
 # 1. FORMULARIO DE REGISTRO DE USUARIOS
 class RegistroForm(forms.ModelForm):
@@ -42,3 +59,4 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
