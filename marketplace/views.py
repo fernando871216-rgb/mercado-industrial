@@ -108,6 +108,14 @@ def pago_exitoso(request):
                     [producto.seller.email],
                     fail_silently=False,
                 )
+                # 3. CORREO PARA EL COMPRADOR (A su cuenta personal)
+                send_mail(
+                    'Confirmación de tu compra en Mercado Industrial',
+                    f'Hola {request.user.username},\n\nTu pago por "{producto.title}" ha sido confirmado.\n\nDatos del vendedor para coordinar entrega:\n- Vendedor: {producto.seller.username}\n- Email: {producto.seller.email}',
+                    'tu-correo-de-settings@gmail.com', # Este es el remitente
+                    [request.user.email], # ESTO ENVÍA EL CORREO AL CLIENTE
+                    fail_silently=False,
+                )
         except IndustrialProduct.DoesNotExist:
             pass
             
@@ -174,6 +182,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
