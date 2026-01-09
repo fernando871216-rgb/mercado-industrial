@@ -214,3 +214,10 @@ def panel_administrador(request):
         'total_ventas': total_ventas,
         'tus_ganancias': tus_ganancias,
     })
+
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = not venta.pagado_a_vendedor # Cambia de Sí a No y viceversa
+    venta.save()
+    return redirect('panel_admin')
