@@ -69,9 +69,16 @@ class Sale(models.Model):
     class Meta:
         verbose_name = "Venta"
         verbose_name_plural = "Ventas" # También corregí esto para que el admin diga "Ventas"
-    
+
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = not venta.pagado_a_vendedor # Cambia de Sí a No y viceversa
+    venta.save()
+    return redirect('panel_admin')
 
  
+
 
 
 
