@@ -28,7 +28,7 @@ def detalle_producto(request, product_id):
     
     # Configuración de Mercado Pago
     # Reemplaza con tu Access Token real entre las comillas
-    sdk = mercadopago.SDK("TU_ACCESS_TOKEN_AQUÍ")
+    sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
     
     preference_data = {
         "items": [
@@ -158,3 +158,4 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
