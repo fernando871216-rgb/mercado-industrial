@@ -6,7 +6,7 @@
     <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 0.9rem; display: inline-block; margin-bottom: 20px;">
         <i class="fas fa-arrow-left"></i> Volver al catálogo
     </a>
-
+    
     <div style="display: flex; gap: 40px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); flex-wrap: wrap;">
         
         <div style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: center; background: #fdfdfd; border-radius: 10px; border: 1px solid #f1f1f1;">
@@ -49,51 +49,26 @@
                 <p style="line-height: 1.7; color: #4a5568; white-space: pre-line;">{{ product.description }}</p>
             </div>
 
-            <div style="background: #fdf6e3; padding: 20px; border-radius: 12px; border: 1px solid #faebcc; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 15px 0; color: #856404; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-address-card"></i> Información del Vendedor
-                </h4>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
                 
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <p style="margin: 0; font-size: 0.95rem;">
-                        <i class="fas fa-user" style="width: 20px; color: #a88a3d;"></i> 
-                        Vendido por: <strong>{{ product.seller.username }}</strong>
-                    </p>
-                    
+                {% if preference_id %}
+                    <div id="wallet_container"></div>
+                    <script src="https://sdk.mercadopago.com/js/v2"></script>
+                    <script>
+                        const mp = new MercadoPago('{{ public_key }}');
+                        mp.bricks().create("wallet", "wallet_container", {
+                            initialization: {
+                                preferenceId: '{{ preference_id }}',
+                            },
+                        });
+                    </script>
+                {% endif %}
+
+                <div style="background: #fdf6e3; padding: 15px; border-radius: 12px; border: 1px solid #faebcc;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 0.9rem;">
+                        <i class="fas fa-address-card"></i> Contacto Directo
+                    </h4>
                     {% if product.seller.profile.phone_number %}
-                        <p style="margin: 0; font-size: 0.95rem;">
-                            <i class="fas fa-phone-alt" style="width: 20px; color: #a88a3d;"></i> 
-                            WhatsApp: <strong>{{ product.seller.profile.phone_number }}</strong>
-                        </p>
-                        
-                        <a href="https://wa.me/52{{ product.seller.profile.phone_number }}?text=Hola%20{{ product.seller.username }},%20me%20interesa%20tu%20producto:%20{{ product.title }}%20(P/N:%20{{ product.part_number|default:'N/A' }})%20que%20vi%20en%20Mercado%20Industrial." 
+                        <a href="https://wa.me/52{{ product.seller.profile.phone_number }}?text=Hola%20{{ product.seller.username }},%20me%20interesa%20tu%20producto:%20{{ product.title }}" 
                            target="_blank"
-                           style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);">
-                            <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Contactar por WhatsApp
-                        </a>
-                    {% else %}
-                        <div style="background: #fff5f5; color: #c53030; padding: 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #feb2b2;">
-                            <i class="fas fa-exclamation-circle"></i> El vendedor aún no ha registrado un teléfono de contacto.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <form action="{% url 'procesar_pago' product.id %}" method="POST">
-                {% csrf_token %}
-                <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <i class="fas fa-shopping-cart"></i> Comprar Ahora
-                </button>
-            </form>
-            <p style="text-align: center; font-size: 0.8rem; color: #95a5a6; margin-top: 10px;">
-                <i class="fas fa-shield-alt"></i> Transacción protegida por Mercado Industrial
-            </p>
-        </div>
-    </div>
-</div>
-
-<style>
-    a:hover { opacity: 0.9; }
-    button:hover { background: #34495e !important; transform: translateY(-2px); }
-</style>
-{% endblock %}
+                           style="display: flex; align-items: center; justify-content
