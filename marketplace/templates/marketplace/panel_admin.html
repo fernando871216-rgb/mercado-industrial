@@ -9,7 +9,7 @@
             <i class="fas fa-university"></i> Centro de Liquidaciones INITRE
         </h1>
         <div style="background: #003366; color: white; padding: 15px 25px; border-radius: 12px; text-align: right; box-shadow: 0 4px 15px rgba(0,51,102,0.3);">
-            <span style="display: block; font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">Tu Comisión Acumulada (5%)</span>
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">Tu Ganancia Neta Acumulada</span>
             <span style="font-size: 1.8rem; font-weight: 800; color: #f39c12;">${{ tus_ganancias|stringformat:".2f" }}</span>
         </div>
     </div>
@@ -18,54 +18,47 @@
         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
             <thead>
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7; text-align: left;">
-                    <th style="padding: 18px;">Fecha / ID</th>
-                    <th style="padding: 18px;">Vendedor (A quien depositas)</th>
-                    <th style="padding: 18px;">Comprador</th>
+                    <th style="padding: 18px;">Estado Pago</th>
+                    <th style="padding: 18px;">Vendedor</th>
                     <th style="padding: 18px;">Producto</th>
                     <th style="padding: 18px;">Total Venta</th>
                     <th style="padding: 18px; color: #e67e22;">Tu 5%</th>
                     <th style="padding: 18px; background: #eafaf1; color: #27ae60;">Monto a Transferir</th>
+                    <th style="padding: 18px;">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
-                <tr style="border-bottom: 1px solid #f6f8fa; transition: 0.2s;" onmouseover="this.style.background='#fcfdfe'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 18px;">
-                        <span style="color: #95a5a6; font-size: 0.8rem;">{{ venta.created_at|date:"d/m/y" }}</span><br>
-                        <strong>#{{ venta.id }}</strong>
+                <tr style="border-bottom: 1px solid #f6f8fa; {% if venta.pagado_a_vendedor %}opacity: 0.6; background: #fafafa;{% endif %}">
+                    <td style="padding: 18px; text-align: center;">
+                        {% if venta.pagado_a_vendedor %}
+                            <i class="fas fa-check-circle" style="color: #27ae60; font-size: 1.5rem;"></i>
+                        {% else %}
+                            <i class="fas fa-clock" style="color: #f39c12; font-size: 1.5rem;"></i>
+                        {% endif %}
                     </td>
                     <td style="padding: 18px;">
-                        <div style="font-weight: bold; color: #2c3e50;">{{ venta.product.user.username }}</div>
-                        <div style="font-size: 0.75rem; color: #7f8c8d;">{{ venta.product.user.email }}</div>
+                        <strong>{{ venta.product.user.username }}</strong><br>
+                        <span style="font-size: 0.75rem; color: #7f8c8d;">{{ venta.product.user.email }}</span>
                     </td>
-                    <td style="padding: 18px; color: #34495e;">{{ venta.buyer.username }}</td>
-                    <td style="padding: 18px; color: #003366; font-weight: 500;">{{ venta.product.title|truncatechars:25 }}</td>
+                    <td style="padding: 18px;">{{ venta.product.title|truncatechars:20 }}</td>
                     <td style="padding: 18px; font-weight: bold;">${{ venta.price }}</td>
-                    <td style="padding: 18px; color: #e67e22; font-weight: bold;">+${{ venta.price|calcular_tu_comision|stringformat:".2f" }}</td>
-                    <td style="padding: 18px; background: #f4fff9;">
-                        <div style="font-weight: 900; color: #27ae60; font-size: 1.1rem;">
-                            ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
-                        </div>
-                        <span style="font-size: 0.7rem; color: #95a5a6; text-transform: uppercase;">Neto tras MP y 5%</span>
+                    <td style="padding: 18px; color: #e67e22;">+${{ venta.price|calcular_tu_comision|stringformat:".2f" }}</td>
+                    <td style="padding: 18px; background: #f4fff9; font-weight: 800; color: #27ae60;">
+                        ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
+                    </td>
+                    <td style="padding: 18px;">
+                        <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" style="background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; width: 100%;">
+                                {% if venta.pagado_a_vendedor %}Desmarcar{% else %}Marcar Pago{% endif %}
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        
-        {% if not ventas %}
-        <div style="text-align: center; padding: 60px;">
-            <i class="fas fa-inbox" style="font-size: 3rem; color: #e2e8f0; margin-bottom: 15px;"></i>
-            <p style="color: #95a5a6;">Aún no se han realizado ventas en la plataforma.</p>
-        </div>
-        {% endif %}
-    </div>
-
-    <div style="margin-top: 25px; background: #fff5e6; border: 1px solid #ffe8cc; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px;">
-        <i class="fas fa-exclamation-triangle" style="color: #f39c12; font-size: 1.5rem;"></i>
-        <p style="margin: 0; color: #664d03; font-size: 0.85rem;">
-            <strong>Nota de Seguridad:</strong> Los montos en la columna verde ya tienen descontada la comisión de Mercado Pago (3.49% + IVA + $4.64) y tu comisión del 5%. Ese es el dinero exacto que el vendedor espera recibir en su cuenta bancaria.
-        </p>
     </div>
 </div>
 {% endblock %}
