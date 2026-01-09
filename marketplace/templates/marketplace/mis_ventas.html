@@ -8,81 +8,100 @@
             <i class="fas fa-hand-holding-usd" style="font-size: 2rem; color: #2c3e50;"></i>
             <h2 style="margin: 0; color: #2c3e50;">Panel de Ventas Recibidas</h2>
         </div>
-        <span style="background: #2c3e50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">
-            Vendedor: {{ user.username }}
+        <span style="background: #2c3e50; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;">
+            <i class="fas fa-user"></i> Vendedor: {{ user.username }}
         </span>
     </div>
 
-    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #edf2f7;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7;">
-                    <th style="padding: 15px 20px; color: #718096;">Estado</th> 
-                    <th style="padding: 15px 20px; color: #718096;">Equipo / P/N</th>
-                    <th style="padding: 15px 20px; color: #718096;">Comprador</th>
-                    <th style="padding: 15px 20px; color: #718096;">Contacto</th>
-                    <th style="padding: 15px 20px; color: #718096;">Monto</th>
-                    <th style="padding: 15px 20px; color: #718096;">Fecha</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Estado</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Equipo / Marca</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Comprador</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Contacto WhatsApp</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Monto</th>
+                    <th style="padding: 15px 20px; color: #718096; font-size: 0.85rem; text-transform: uppercase;">Fecha</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
-                <tr style="border-bottom: 1px solid #edf2f7;">
-                    <td style="padding: 15px 20px;">
+                <tr style="border-bottom: 1px solid #edf2f7; transition: 0.3s;">
+                    <td style="padding: 15px 20px; min-width: 140px;">
                         {% if venta.status == 'pendiente' %}
-                            <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; text-align: center;">
+                            <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 8px; text-align: center; border: 1px solid #ffeeba;">
                                 Pendiente
                             </span>
                             <a href="{% url 'cambiar_estado_venta' venta.id %}" 
-                               style="background: #27ae60; color: white; padding: 5px 8px; border-radius: 4px; text-decoration: none; font-size: 0.65rem; font-weight: bold; display: block; text-align: center;">
-                               Confirmar
+                               style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.7rem; font-weight: bold; display: block; text-align: center; transition: 0.3s;"
+                               onmouseover="this.style.background='#219150'" 
+                               onmouseout="this.style.background='#27ae60'">
+                               <i class="fas fa-check"></i> Confirmar
                             </a>
                         {% else %}
-                            <span style="background: #e6fffa; color: #234e52; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; text-align: center;">
-                                Completado <i class="fas fa-check"></i>
+                            <span style="background: #e6fffa; color: #234e52; padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; text-align: center; border: 1px solid #b2f5ea;">
+                                Completado <i class="fas fa-check-double"></i>
                             </span>
-                            <a href="{% url 'cambiar_estado_venta' venta.id %}" style="display: block; text-align: center; color: #a0aec0; font-size: 0.6rem; margin-top: 5px; text-decoration: none;">Deshacer</a>
+                            <a href="{% url 'cambiar_estado_venta' venta.id %}" style="display: block; text-align: center; color: #a0aec0; font-size: 0.65rem; margin-top: 8px; text-decoration: none;">
+                                <i class="fas fa-undo"></i> Deshacer
+                            </a>
                         {% endif %}
                     </td>
 
                     <td style="padding: 15px 20px;">
-                        <div style="font-weight: bold; color: #2d3748;">{{ venta.product.title }}</div>
-                        <div style="font-size: 0.8rem; color: #718096;">Marca: {{ venta.product.brand }}</div>
+                        <div style="font-weight: bold; color: #2d3748; font-size: 1rem;">{{ venta.product.title }}</div>
+                        <div style="font-size: 0.8rem; color: #718096; margin-top: 3px;">
+                            <span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Marca: {{ venta.product.brand }}</span>
+                        </div>
                     </td>
 
-                    <td style="padding: 15px 20px;">
-                        <i class="fas fa-user-circle"></i> {{ venta.buyer.username }}
+                    <td style="padding: 15px 20px; color: #4a5568;">
+                        <i class="fas fa-user-circle" style="color: #cbd5e0;"></i> {{ venta.buyer.username }}
                     </td>
 
                     <td style="padding: 15px 20px;">
                         {% if venta.buyer.profile.phone_number %}
-                            <a href="https://wa.me/52{{ venta.buyer.profile.phone_number }}" target="_blank" 
-                               style="color: #25D366; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                                <i class="fab fa-whatsapp"></i> {{ venta.buyer.profile.phone_number }}
+                            <a href="https://wa.me/52{{ venta.buyer.profile.phone_number }}?text=Hola%20{{ venta.buyer.username }},%20te%20contacto%20desde%20Mercado%20Industrial%20por%20tu%20compra%20de:%20{{ venta.product.title|urlencode }}" 
+                               target="_blank" 
+                               style="color: #25D366; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; background: #e9f7ef; padding: 8px 12px; border-radius: 8px; transition: 0.3s; border: 1px solid #d4edda;"
+                               onmouseover="this.style.background='#d4edda'" 
+                               onmouseout="this.style.background='#e9f7ef'">
+                                <i class="fab fa-whatsapp" style="font-size: 1.1rem;"></i> 
+                                <span>Chat</span>
                             </a>
                         {% else %}
-                            <span style="color: #a0aec0; font-size: 0.85rem;">Sin teléfono</span>
+                            <span style="color: #a0aec0; font-size: 0.8rem; font-style: italic;">
+                                <i class="fas fa-phone-slash"></i> Sin teléfono
+                            </span>
                         {% endif %}
                     </td>
 
-                    <td style="padding: 15px 20px; font-weight: bold; color: #2c3e50;">
+                    <td style="padding: 15px 20px; font-weight: 800; color: #2d3748; font-size: 1.1rem;">
                         ${{ venta.price }}
                     </td>
 
-                    <td style="padding: 15px 20px; color: #718096; font-size: 0.9rem;">
-                        {{ venta.created_at|date:"d M Y" }}
+                    <td style="padding: 15px 20px; color: #718096; font-size: 0.85rem;">
+                        {{ venta.created_at|date:"d M, Y" }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="padding: 50px; text-align: center; color: #a0aec0;">
-                        <i class="fas fa-inbox" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
-                        Aún no has recibido ventas.
+                    <td colspan="6" style="padding: 60px; text-align: center; color: #a0aec0;">
+                        <i class="fas fa-inbox" style="font-size: 4rem; display: block; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <h3 style="margin: 0;">No tienes ventas registradas</h3>
+                        <p style="margin-top: 10px;">Tus ventas aparecerán aquí cuando alguien compre tus productos.</p>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{% url 'home' %}" style="color: #718096; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver al catálogo principal
+        </a>
     </div>
 </div>
 {% endblock %}
