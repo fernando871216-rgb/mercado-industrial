@@ -1,202 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Cuenta - Mercado Industrial</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --bg-color: #f4f7f6;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        .register-container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 450px;
-        }
-
-        h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        /* Estilo para las etiquetas y campos del formulario de Django */
-        form p {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: bold;
-        }
-
-        input[type="text"], 
-        input[type="password"], 
-        input[type="email"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
-
-        .helptext, .errorlist {
-            font-size: 0.85em;
-            color: #777;
-            margin-top: 5px;
-            display: block;
-        }
-
-        .errorlist {
-            color: #e74c3c;
-            padding-left: 0;
-            list-style: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #1a252f;
-        }
-
-        .footer-links {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 0.9em;
-        }
-
-        .footer-links a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
 {% extends 'marketplace/base.html' %}
+
 {% block content %}
-<div class="container" style="max-width: 450px; margin: 4rem auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-    <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="color: #2c3e50; margin-bottom: 10px;">Crear Cuenta</h2>
-        <p style="color: #7f8c8d;">Únete al marketplace de equipo industrial más grande.</p>
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
+<div class="container" style="max-width: 600px; margin: 60px auto; padding: 0 20px;">
+    
+    <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #edf2f7;">
         
-        {% for field in form %}
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">
-                    {{ field.label }}
-                </label>
-                {{ field }}
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px;">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: #e6fffa; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fas fa-user-plus" style="font-size: 2rem; color: #27ae60;"></i>
             </div>
-        {% endfor %}
+            <h2 style="color: #2c3e50; margin: 0;">Crear Nueva Cuenta</h2>
+            <p style="color: #7f8c8d; margin-top: 5px;">Únete a la red de comercio industrial más grande.</p>
+        </div>
 
-        <button type="submit" style="width: 100%; padding: 14px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
-            Registrarse ahora
-        </button>
-    </form>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-registro">
+                {% for field in form %}
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small style="color: #a0aec0; display: block; margin-top: 5px; font-size: 0.8rem;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p style="color: #e74c3c; font-size: 0.8rem; margin-top: 5px;">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
 
-    <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-        <p style="color: #7f8c8d;">¿Ya tienes una cuenta? 
-            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Inicia sesión aquí</a>
-        </p>
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; margin-top: 10px;">
+                Finalizar Registro
+            </button>
+        </form>
+
+        <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="color: #7f8c8d; font-size: 0.9rem;">
+                ¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color: #2c3e50; text-decoration: none; font-weight: bold;">Inicia sesión</a>
+            </p>
+        </div>
     </div>
 </div>
 
 <style>
-    /* Estilos para que los campos del formulario se vean modernos */
-    .form-control {
+    /* Estilos para campos generados por Django */
+    .form-registro input {
         width: 100%;
-        padding: 12px;
-        border: 1px solid #dcdde1;
-        border-radius: 6px;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e0;
         font-size: 1rem;
-        box-sizing: border-box; /* Evita que el padding ensanche el input */
+        box-sizing: border-box;
     }
-    .form-control:focus {
-        border-color: #3498db;
+    .form-registro input:focus {
         outline: none;
-        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        border-color: #27ae60;
+        box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
     }
+    button:hover { background: #219150 !important; transform: translateY(-1px); }
 </style>
 {% endblock %}
-    
-<div class="register-container">
-    <h2>Crear Cuenta Nueva</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        
-        {% for field in form %}
-            <p>
-                {{ field.label_tag }}
-                {{ field }}
-                {% if field.help_text %}
-                    <span class="helptext">{{ field.help_text|safe }}</span>
-                {% endif %}
-                {% for error in field.errors %}
-                    <span class="errorlist">{{ error }}</span>
-                {% endfor %}
-            </p>
-        {% endfor %}
-
-        <button type="submit">Registrarse como Vendedor</button>
-    </form>
-
-    <div class="footer-links">
-        <p>¿Ya tienes cuenta? <a href="/admin/login/">Inicia Sesión</a></p>
-        <p><a href="{% url 'home' %}">← Volver al Catálogo</a></p>
-    </div>
-</div>
-
-</body>
-
-</html>
