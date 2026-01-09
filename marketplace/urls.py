@@ -21,6 +21,7 @@ urlpatterns = [
     # Compras y Ventas
     path('compras/', views.mis_compras, name='mis_compras'),
     path('ventas/', views.mis_ventas, name='mis_ventas'),
+    path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
     
     # Procesamiento de Pagos e Intenciones
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
@@ -30,4 +31,5 @@ urlpatterns = [
     # Gestión de Estados (Aquí estaba el error corregido)
     path('venta/cambiar-estado/<int:venta_id>/', views.cambiar_estado_venta, name='cambiar_estado_venta'),
 ]
+
 
