@@ -50,14 +50,14 @@ class IndustrialProduct(models.Model):
         return f"{self.title} - {self.brand}"
 
 class Sale(models.Model):
-    product = models.ForeignKey(IndustrialProduct, on_delete=models.SET_NULL, null=True, verbose_name="Producto")
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Comprador")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Monto Pagado")
-    mp_payment_id = models.CharField(max_length=100, verbose_name="ID Pago Mercado Pago") 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Venta")
+    product = models.ForeignKey(IndustrialProduct, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='compras')
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ventas') # <--- Asegúrate que exista este
+    price = models.DecimalField(max_digits=12, decimal_places=2) # <--- Y este
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Venta {self.id} - {self.product.title if self.product else 'Producto Eliminado'}"
+        return f"{self.product.title} - {self.buyer.username}"
 
     class Meta:
         verbose_name = "Venta"
@@ -65,6 +65,7 @@ class Sale(models.Model):
     
 
  
+
 
 
 
