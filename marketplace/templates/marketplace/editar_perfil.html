@@ -1,63 +1,66 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 50px auto; padding: 0 20px;">
-    
-    <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #edf2f7;">
+<div class="container" style="max-width: 700px; margin: 50px auto; padding: 0 20px;">
+    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee;">
         
         <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background: #ebf5ff; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-                <i class="fas fa-user-cog" style="font-size: 2.5rem; color: #3498db;"></i>
+            <div style="background: #f0f7ff; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fas fa-user-cog" style="font-size: 2rem; color: #3498db;"></i>
             </div>
             <h2 style="color: #2c3e50; margin: 0;">Configuración de Mi Perfil</h2>
-            <p style="color: #7f8c8d; margin-top: 5px;">Actualiza tus datos para que los compradores puedan contactarte.</p>
+            <p style="color: #95a5a6; font-size: 0.9rem;">Actualiza tus datos personales y de contacto.</p>
         </div>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST">
             {% csrf_token %}
             
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; margin-bottom: 20px; font-size: 1rem;">
+                <i class="fas fa-id-card"></i> Datos Personales
+            </h4>
+
+            <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 0.9rem; font-weight: bold;">Nombre(s)</label>
+                    <input type="text" name="first_name" value="{{ u_form.first_name.value|default:'' }}" 
+                           style="width: 100%; padding: 12px; border: 1px solid #dfe6e9; border-radius: 8px; outline: none;" required>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 0.9rem; font-weight: bold;">Apellidos</label>
+                    <input type="text" name="last_name" value="{{ u_form.last_name.value|default:'' }}" 
+                           style="width: 100%; padding: 12px; border: 1px solid #dfe6e9; border-radius: 8px; outline: none;" required>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 0.9rem; font-weight: bold;">Nombre de Usuario</label>
+                <input type="text" name="username" value="{{ u_form.username.value }}" 
+                       style="width: 100%; padding: 12px; border: 1px solid #dfe6e9; border-radius: 8px; background: #f8f9fa;" readonly>
+                <small style="color: #95a5a6;">El nombre de usuario es único y no se puede cambiar.</small>
+            </div>
+
             <div style="margin-bottom: 30px;">
-                <h3 style="font-size: 1.1rem; color: #34495e; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; margin-bottom: 20px;">
-                    <i class="fas fa-id-card"></i> Información de la Cuenta
-                </h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="form-group">
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Nombre de Usuario</label>
-                        {{ u_form.username }}
-                        <small style="color: #a0aec0; font-size: 0.8rem;">Como aparecerás en tus publicaciones.</small>
-                    </div>
-                    <div class="form-group">
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Correo Electrónico</label>
-                        {{ u_form.email }}
-                    </div>
-                </div>
+                <label style="display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 0.9rem; font-weight: bold;">Correo Electrónico</label>
+                <input type="email" name="email" value="{{ u_form.email.value|default:'' }}" 
+                       style="width: 100%; padding: 12px; border: 1px solid #dfe6e9; border-radius: 8px;" required>
             </div>
 
-            <div style="margin-bottom: 40px; background: #fdfdfd; padding: 25px; border-radius: 10px; border: 1px solid #f1f1f1;">
-                <h3 style="font-size: 1.1rem; color: #34495e; margin-bottom: 20px;">
-                    <i class="fab fa-whatsapp" style="color: #25D366;"></i> Información de Contacto
-                </h3>
-                
-                <div class="form-group">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Número de WhatsApp</label>
-                    <div style="position: relative;">
-                        <span style="position: absolute; left: 12px; top: 12px; color: #a0aec0; font-weight: bold;">+52</span>
-                        <div style="margin-left: 5px;">
-                            {{ p_form.phone_number }}
-                        </div>
-                    </div>
-                    <p style="color: #e67e22; font-size: 0.85rem; margin-top: 10px;">
-                        <i class="fas fa-info-circle"></i> Ingresa tus 10 dígitos (ej. 8712345678). No incluyas guiones ni espacios.
-                    </p>
-                </div>
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; margin-bottom: 20px; font-size: 1rem;">
+                <i class="fab fa-whatsapp"></i> Información de Contacto
+            </h4>
+
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 0.9rem; font-weight: bold;">Número de WhatsApp</label>
+                <input type="text" name="phone_number" value="{{ p_form.phone_number.value|default:'' }}" 
+                       placeholder="Ej. 8711234567" style="width: 100%; padding: 12px; border: 1px solid #dfe6e9; border-radius: 8px;">
+                <small style="color: #e67e22;"><i class="fas fa-info-circle"></i> Ingresa los 10 dígitos para que los clientes puedan contactarte.</small>
             </div>
 
-            <div style="display: flex; gap: 15px; border-top: 1px solid #f1f1f1; padding-top: 25px;">
-                <button type="submit" style="flex: 2; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
-                    Guardar Cambios
+            <div style="display: flex; gap: 15px;">
+                <button type="submit" style="flex: 2; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;">
+                    Actualizar Perfil
                 </button>
-                <a href="{% url 'home' %}" style="flex: 1; text-align: center; background: #edf2f7; color: #4a5568; text-decoration: none; padding: 15px; border-radius: 8px; font-weight: bold; transition: 0.3s;">
+                <a href="{% url 'home' %}" style="flex: 1; text-align: center; background: #ecf0f1; color: #7f8c8d; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
                     Cancelar
                 </a>
             </div>
@@ -66,23 +69,7 @@
 </div>
 
 <style>
-    /* Estilos para que los inputs de Django se vean bonitos */
-    input[type="text"], input[type="email"], input[type="number"], select {
-        width: 100%;
-        padding: 12px 15px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e0;
-        font-size: 1rem;
-        box-sizing: border-box;
-        transition: border-color 0.3s;
-    }
-    
-    input[type="text"]:focus, input[type="email"]:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
     button:hover { background: #219150 !important; transform: translateY(-2px); }
+    input:focus { border-color: #3498db !important; box-shadow: 0 0 5px rgba(52,152,219,0.2); }
 </style>
 {% endblock %}
