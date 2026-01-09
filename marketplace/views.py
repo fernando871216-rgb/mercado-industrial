@@ -112,3 +112,12 @@ def procesar_pago(request, product_id):
             )
         except Exception as e:
             print(f"Error al enviar correo: {e}")
+
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
+    return render(request, 'marketplace/home.html', {
+        'products': products, 
+        'category': category
+    })
+
