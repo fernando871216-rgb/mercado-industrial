@@ -20,24 +20,38 @@
         }
 
         .logo-container { display: flex; align-items: center; text-decoration: none; }
-        .logo-img { height: 100px; width: auto; margin-right: 15px; }
+        .logo-img { height: 90px; width: auto; margin-right: 15px; }
 
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: #2c3e50; text-decoration: none; font-weight: 500; }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a { color: #2c3e50; text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+        .nav-links a:hover { color: #003366; }
 
-        /* Estilo para el botón de salir corregido */
         .logout-form { display: inline; }
         .btn-salir {
             background-color: #e74c3c;
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
             font-family: inherit;
+            font-size: 0.85rem;
         }
         .btn-salir:hover { background-color: #c0392b; }
+
+        .admin-link {
+            color: #f39c12 !important;
+            font-weight: bold !important;
+            border: 1px solid #f39c12;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .admin-link:hover {
+            background: #f39c12;
+            color: white !important;
+        }
     </style>
 </head>
 <body>
@@ -46,19 +60,27 @@
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
             <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 1.5rem; font-weight: 800; color: #003366; line-height: 1;">MERCADO INDUSTRIAL</span>
-                <span style="font-size: 1.1rem; font-weight: 400; color: #2c3e50; letter-spacing: 2px;">INITRE</span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #003366; line-height: 1;">MERCADO INDUSTRIAL</span>
+                <span style="font-size: 1rem; font-weight: 400; color: #2c3e50; letter-spacing: 2px;">INITRE</span>
             </div>
         </a>
         
         <div class="nav-links">
             <a href="{% url 'home' %}">Catálogo</a>
+            
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}">Mis Productos</a>
                 <a href="{% url 'mis_ventas' %}">Ventas</a>
                 <a href="{% url 'mis_compras' %}">Compras</a>
-                <a href="{% url 'editar_perfil' %}">
-                    <i class="fas fa-user"></i> {{ user.username }}
+                
+                {% if user.is_staff %}
+                <a href="{% url 'panel_admin' %}" class="admin-link">
+                    <i class="fas fa-chart-pie"></i> MI GANANCIA
+                </a>
+                {% endif %}
+
+                <a href="{% url 'editar_perfil' %}" style="color: #34495e;">
+                    <i class="fas fa-user-circle"></i> {{ user.username }}
                 </a>
 
                 <form action="{% url 'logout' %}" method="post" class="logout-form">
@@ -67,7 +89,7 @@
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Entrar</a>
-                <a href="{% url 'registro' %}" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 5px;">Registro</a>
+                <a href="{% url 'registro' %}" style="background: #003366; color: white; padding: 8px 15px; border-radius: 5px;">Registro</a>
             {% endif %}
         </div>
     </nav>
