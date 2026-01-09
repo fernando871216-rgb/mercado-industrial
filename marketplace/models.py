@@ -35,7 +35,7 @@ def save_user_profile(sender, instance, **kwargs):
 class IndustrialProduct(models.Model):
     title = models.CharField(max_length=200)
     brand = models.CharField(max_length=100)
-    part_number = models.CharField(max_length=100, blank=True, null=True)
+    part_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Número de Parte")
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
@@ -65,6 +65,7 @@ class Sale(models.Model):
     
 
  
+
 
 
 
