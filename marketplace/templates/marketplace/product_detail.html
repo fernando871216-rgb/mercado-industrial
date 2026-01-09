@@ -71,4 +71,30 @@
                     {% if product.seller.profile.phone_number %}
                         <a href="https://wa.me/52{{ product.seller.profile.phone_number }}?text=Hola%20{{ product.seller.username }},%20me%20interesa%20tu%20producto:%20{{ product.title }}" 
                            target="_blank"
-                           style="display: flex; align-items: center; justify-content
+                           style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s;">
+                            <i class="fab fa-whatsapp"></i> Preguntar por WhatsApp
+                        </a>
+                    {% else %}
+                        <p style="color: #c53030; font-size: 0.8rem; margin: 0;">Vendedor sin teléfono registrado.</p>
+                    {% endif %}
+                </div>
+
+                <form action="{% url 'procesar_pago' product.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <i class="fas fa-shopping-cart"></i> Confirmar Intención de Compra
+                    </button>
+                </form>
+
+                <p style="text-align: center; font-size: 0.8rem; color: #95a5a6; margin-top: 5px;">
+                    <i class="fas fa-shield-alt"></i> Transacción gestionada por Mercado Industrial
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    button:hover { background: #34495e !important; transform: translateY(-2px); }
+</style>
+{% endblock %}
