@@ -26,6 +26,25 @@ def home(request):
         
     return render(request, 'marketplace/home.html', {'products': products, 'query': query})
 
+@login_required
+def editar_perfil(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('home') # O a una página de "Perfil actualizado"
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    return render(request, 'marketplace/editar_perfil.html', {
+        'u_form': u_form,
+        'p_form': p_form
+    })
+    
 # 2. DETALLE DEL PRODUCTO (Aquí se genera el pago)
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
@@ -182,6 +201,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
