@@ -169,7 +169,9 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'fernando871216@gmail.com'  # Tu cuenta de Gmail
-EMAIL_HOST_PASSWORD = 'EMAIL_PASSWORD' # No es tu contraseña normal, es una especial de Google
+EMAIL_HOST_PASSWORD = ' pgwj tvdh mwjz pyrc' # No es tu contraseña normal, es una especial de Google
+DEFAULT_FROM_EMAIL = 'Mercado Industrial <tu-correo@gmail.com>'
+
 
 
 
