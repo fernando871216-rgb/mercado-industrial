@@ -9,7 +9,32 @@ from django.urls import reverse
 from .models import Sale 
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.shortcuts import redirect, get_object_ some_list_or_object
+from .models import IndustrialProduct, Sale
 
+@login_required
+def procesar_pago(request, product_id):
+    if request.method == 'POST':
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        # 1. Crear el registro de venta
+        Sale.objects.create(
+            product=producto,
+            buyer=request.user,
+            seller=producto.seller,
+            price=producto.price
+        )
+        
+        # 2. Restar stock (opcional si manejas inventario)
+        if producto.stock > 0:
+            producto.stock -= 1
+            producto.save()
+            
+        # 3. Redirigir a una página de éxito (ej: Mis Compras)
+        return redirect('mis_compras')
+    
+    return redirect('home')
+    
 # 1. VISTA DE INICIO (HOME)
 def home(request):
     query = request.GET.get('q')
@@ -201,6 +226,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
