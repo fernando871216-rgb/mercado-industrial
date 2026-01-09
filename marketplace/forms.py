@@ -5,26 +5,27 @@ import re
 
 # --- FORMULARIOS DE PERFIL ---
 class UserUpdateForm(forms.ModelForm):
-    email = forms.EmailField(label="Correo Electrónico", required=True)
+    # Definimos estos campos para asegurar que Django los reconozca en el formulario
     first_name = forms.CharField(label="Nombre(s)", required=True)
     last_name = forms.CharField(label="Apellidos", required=True)
-    
+    email = forms.EmailField(label="Correo Electrónico", required=True)
 
     class Meta:
         model = User
+        # Agregamos first_name y last_name a la lista de campos
         fields = ['username', 'first_name', 'last_name', 'email']
         labels = {
             'username': 'Nombre de Usuario',
         }
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
 class ProfileUpdateForm(forms.ModelForm):
-    phone_number = forms.CharField(required=True)
+    phone_number = forms.CharField(label="Número de WhatsApp", required=True)
 
     class Meta:
         model = Profile
@@ -33,7 +34,7 @@ class ProfileUpdateForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 5512345678'}),
         }
 
-    # Validación extra para el celular
+    # Tu validación extra para el celular (está perfecta)
     def clean_phone_number(self):
         phone = self.cleaned_data.get('phone_number')
         # Quita espacios o guiones si el usuario los pone
@@ -90,4 +91,3 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
-
