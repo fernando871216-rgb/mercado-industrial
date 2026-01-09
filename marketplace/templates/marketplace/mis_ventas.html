@@ -1,35 +1,61 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 3rem auto; padding: 0 1rem;">
-    <h2 style="color: #2c3e50; margin-bottom: 2rem;">
-        <i class="fas fa-hand-holding-usd"></i> Mis Ventas Realizadas
-    </h2>
+<div class="container" style="max-width: 1100px; margin: 50px auto; padding: 0 20px;">
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-hand-holding-usd" style="font-size: 2rem; color: #2c3e50;"></i>
+            <h2 style="margin: 0; color: #2c3e50;">Panel de Ventas Recibidas</h2>
+        </div>
+        <span style="background: #2c3e50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">
+            Vendedor: {{ user.username }}
+        </span>
+    </div>
 
     <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
-                <tr style="background: #27ae60; color: white;">
-                    <th style="padding: 15px;">Producto</th>
-                    <th style="padding: 15px;">Comprador</th>
-                    <th style="padding: 15px;">Email Comprador</th>
-                    <th style="padding: 15px;">Fecha</th>
-                    <th style="padding: 15px;">Monto Líquido</th>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7;">
+                    <th style="padding: 15px 20px; color: #718096;">Equipo / P/N</th>
+                    <th style="padding: 15px 20px; color: #718096;">Comprador</th>
+                    <th style="padding: 15px 20px; color: #718096;">Contacto Cliente</th>
+                    <th style="padding: 15px 20px; color: #718096;">Monto</th>
+                    <th style="padding: 15px 20px; color: #718096;">Fecha</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 15px;"><strong>{{ venta.product.title }}</strong></td>
-                    <td style="padding: 15px;">{{ venta.buyer.username }}</td>
-                    <td style="padding: 15px;"><a href="mailto:{{ venta.buyer.email }}">{{ venta.buyer.email }}</a></td>
-                    <td style="padding: 15px; color: #7f8c8d;">{{ venta.created_at|date:"d/m/Y" }}</td>
-                    <td style="padding: 15px; font-weight: bold; color: #27ae60;">${{ venta.amount }}</td>
+                <tr style="border-bottom: 1px solid #edf2f7;">
+                    <td style="padding: 15px 20px;">
+                        <div style="font-weight: bold; color: #2d3748;">{{ venta.product.title }}</div>
+                        <div style="font-size: 0.8rem; color: #718096;">Marca: {{ venta.product.brand }}</div>
+                    </td>
+                    <td style="padding: 15px 20px;">
+                        <i class="fas fa-user-circle"></i> {{ venta.buyer.username }}
+                    </td>
+                    <td style="padding: 15px 20px;">
+                        {% if venta.buyer.profile.phone_number %}
+                            <a href="https://wa.me/52{{ venta.buyer.profile.phone_number }}" target="_blank" 
+                               style="color: #25D366; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                                <i class="fab fa-whatsapp"></i> {{ venta.buyer.profile.phone_number }}
+                            </a>
+                        {% else %}
+                            <span style="color: #a0aec0; font-size: 0.85rem;">Sin teléfono</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px 20px; font-weight: bold; color: #2c3e50;">
+                        ${{ venta.price }}
+                    </td>
+                    <td style="padding: 15px 20px; color: #718096; font-size: 0.9rem;">
+                        {{ venta.created_at|date:"d M Y" }}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding: 40px; text-align: center; color: #bdc3c7;">
-                        Aún no has realizado ventas. ¡Tu primer pedido llegará pronto!
+                    <td colspan="5" style="padding: 50px; text-align: center; color: #a0aec0;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
+                        Aún no has recibido ventas. ¡Sigue publicando equipos!
                     </td>
                 </tr>
                 {% endfor %}
