@@ -5,11 +5,17 @@ import re
 
 # --- FORMULARIOS DE PERFIL ---
 class UserUpdateForm(forms.ModelForm):
-    email = forms.EmailField(required=True) 
+    email = forms.EmailField(label="Correo Electrónico", required=True)
+    first_name = forms.CharField(label="Nombre(s)", required=True)
+    last_name = forms.CharField(label="Apellidos", required=True)
+    
 
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
+        labels = {
+            'username': 'Nombre de Usuario',
+        }
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -84,3 +90,4 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
