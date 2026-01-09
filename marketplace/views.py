@@ -64,13 +64,11 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    # CORRECCIÓN: Filtramos por el dueño del producto (product__user)
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
 def cambiar_estado_venta(request, venta_id):
-    # CORRECCIÓN: Cambiamos 'seller' por 'product__user'
     venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
     venta.status = 'completado' if venta.status == 'pendiente' else 'pendiente'
     venta.save()
@@ -79,45 +77,107 @@ def cambiar_estado_venta(request, venta_id):
 @login_required
 def procesar_pago(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
-    
     if producto.stock > 0:
-        # CORRECCIÓN: El modelo Sale no tiene campo 'seller' directo, se saca del producto
         Sale.objects.create(
             product=producto, 
             buyer=request.user, 
             price=producto.price, 
             status='pendiente'
         )
-        
         producto.stock -= 1
         producto.save()
+        return redirect('mis_compras')
+    return redirect('home')
 
-        # NOTIFICACIÓN POR EMAIL
-        try:
-            asunto = f"¡Nueva venta! - {producto.title}"
-            mensaje = (
-                f"Hola {producto.user.username},\n\n"
-                f"Has recibido una nueva venta en MarketIndustrial.\n\n"
-                f"Producto: {producto.title}\n"
-                f"Comprador: {request.user.username}\n"
-                f"Quedan {producto.stock} unidades.\n\n"
-                f"Ponte en contacto para la entrega."
-            )
-            send_mail(
-                asunto,
-                mensaje,
-                'tu-correo@gmail.com',
-                [producto.user.email],
-                fail_silently=True,
-            )
-        except Exception as e:
-            print(f"Error al enviar correo: {e}")
+@login_required
+def mi_inventario(request):
+    productos = IndustrialProduct.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
+
+@login_required
+def subir_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            producto = form.save(commit=False)
+            producto.user = request.user
+            producto.save()
+            return redirect('mi_inventario')
+    else:
+        form = ProductoForm()
+    return render(request, 'marketplace/subir_producto.html', {'form': form})
+
+@login_required
+def editar_producto(request, pk):
+    producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
+    if request.method == "POST":
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('mi_inventario')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'marketplace/subir_producto.html', {'form': form, 'edit': True})
+
+@login_required
+def borrar_producto(request, pk):
+    producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
+    producto.delete()
+    return redirect('mi_inventario')
+
+@login_required
+def editar_perfil(request):
+    Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('home')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+    return render(request, 'marketplace/editar_perfil.html', {'u_form': u_form, 'p_form': p_form})
+
+def registro(request):
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = RegistroForm()
+    return render(request, 'marketplace/registro.html', {'form': form})
 
 def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
-    return render(request, 'marketplace/home.html', {
-        'products': products, 
-        'category': category
+    return render(request, 'marketplace/home.html', {'products': products, 'category': category})
+
+def pago_fallido(request):
+    return render(request, 'marketplace/pago_fallido.html')
+
+@login_required
+def pago_exitoso(request):
+    return render(request, 'marketplace/pago_exitoso.html')
+
+@staff_member_required
+def panel_administrador(request):
+    ventas = Sale.objects.all().order_by('-created_at')
+    resumen = ventas.aggregate(Sum('price'))
+    total_ventas = resumen['price__sum'] or 0
+    tus_ganancias = float(total_ventas) * 0.05
+    return render(request, 'marketplace/panel_admin.html', {
+        'ventas': ventas,
+        'total_ventas': total_ventas,
+        'tus_ganancias': tus_ganancias,
     })
 
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
+    venta.save()
+    return redirect('panel_admin')
