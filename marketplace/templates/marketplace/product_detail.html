@@ -1,66 +1,99 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+<div class="container" style="max-width: 1100px; margin: 40px auto; padding: 0 20px;">
+    
+    <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 0.9rem; display: inline-block; margin-bottom: 20px;">
+        <i class="fas fa-arrow-left"></i> Volver al catálogo
+    </a>
+
+    <div style="display: flex; gap: 40px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); flex-wrap: wrap;">
         
-        <div style="flex: 1; min-width: 300px;">
+        <div style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: center; background: #fdfdfd; border-radius: 10px; border: 1px solid #f1f1f1;">
             {% if product.image %}
-                <img src="{{ product.image.url }}" style="width: 100%; border-radius: 8px; border: 1px solid #eee;">
+                <img src="{{ product.image.url }}" alt="{{ product.title }}" 
+                     style="width: 100%; max-height: 500px; object-fit: contain; border-radius: 10px;">
             {% else %}
-                <div style="width: 100%; height: 300px; background: #f4f4f4; display: flex; align-items: center; justify-content: center;">Sin imagen</div>
+                <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ced4da;">
+                    <i class="fas fa-image" style="font-size: 5rem;"></i>
+                    <p>Sin imagen disponible</p>
+                </div>
             {% endif %}
         </div>
 
         <div style="flex: 1; min-width: 300px;">
-            <h1 style="margin-top: 0; color: #2c3e50;">{{ product.title }}</h1>
-            <p style="color: #666;">Marca: <strong>{{ product.brand }}</strong> | Parte: {{ product.part_number }}</p>
-            <p style="font-size: 0.9rem; color: #34495e;">
-                <i class="fas fa-store"></i> Vendido por: <strong>{{ product.seller.username }}</strong>
-            <h2 style="color: #27ae60; font-size: 2.5rem; margin: 15px 0;">${{ product.price }}</h2>
-            <p><strong>Stock disponible:</strong> {{ product.stock }} unidades</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            
-            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-                <a href="https://wa.me/522225858320?text=Hola,%20me%20interesa:%20{{ product.title }}" 
-                   target="_blank" 
-                   style="background: #25D366; color: white; text-align: center; padding: 15px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                   <i class="fab fa-whatsapp"></i> Contactar Vendedor
-                </a>
-
-                {% if user.is_authenticated %}
-                    <div id="wallet_container"></div>
-                {% else %}
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #ced4da; text-align: center;">
-                        <p style="margin-bottom: 15px;">Inicia sesión para comprar este equipo.</p>
-                        <a href="{% url 'login' %}?next={{ request.path }}" 
-                           style="background: #2c3e50; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold;">
-                           Iniciar Sesión
-                        </a>
-                    </div>
-                {% endif %}
+            <div style="margin-bottom: 10px;">
+                <span style="background: #ebf5ff; color: #3498db; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase;">
+                    {{ product.brand }}
+                </span>
             </div>
-        </div>
-    </div>
 
-    <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-        <h3 style="color: #2c3e50;">Descripción Técnica</h3>
-        <p style="line-height: 1.6; color: #444;">{{ product.description|linebreaks }}</p>
+            <h1 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 2rem; line-height: 1.2;">{{ product.title }}</h1>
+            
+            {% if product.part_number %}
+                <div style="background: #f8f9fa; padding: 12px 18px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #2c3e50;">
+                    <span style="color: #7f8c8d; font-size: 0.85rem; display: block; margin-bottom: 2px;">Número de Parte (P/N):</span>
+                    <strong style="font-size: 1.1rem; color: #2c3e50;">{{ product.part_number }}</strong>
+                </div>
+            {% endif %}
+
+            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 25px;">
+                ${{ product.price }}
+                <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;"> MXN</span>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="font-size: 1.1rem; color: #2c3e50; border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; margin-bottom: 15px;">
+                    Descripción del equipo
+                </h3>
+                <p style="line-height: 1.7; color: #4a5568; white-space: pre-line;">{{ product.description }}</p>
+            </div>
+
+            <div style="background: #fdf6e3; padding: 20px; border-radius: 12px; border: 1px solid #faebcc; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 15px 0; color: #856404; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-address-card"></i> Información del Vendedor
+                </h4>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="margin: 0; font-size: 0.95rem;">
+                        <i class="fas fa-user" style="width: 20px; color: #a88a3d;"></i> 
+                        Vendido por: <strong>{{ product.seller.username }}</strong>
+                    </p>
+                    
+                    {% if product.seller.profile.phone_number %}
+                        <p style="margin: 0; font-size: 0.95rem;">
+                            <i class="fas fa-phone-alt" style="width: 20px; color: #a88a3d;"></i> 
+                            WhatsApp: <strong>{{ product.seller.profile.phone_number }}</strong>
+                        </p>
+                        
+                        <a href="https://wa.me/52{{ product.seller.profile.phone_number }}?text=Hola%20{{ product.seller.username }},%20me%20interesa%20tu%20producto:%20{{ product.title }}%20(P/N:%20{{ product.part_number|default:'N/A' }})%20que%20vi%20en%20Mercado%20Industrial." 
+                           target="_blank"
+                           style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);">
+                            <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Contactar por WhatsApp
+                        </a>
+                    {% else %}
+                        <div style="background: #fff5f5; color: #c53030; padding: 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #feb2b2;">
+                            <i class="fas fa-exclamation-circle"></i> El vendedor aún no ha registrado un teléfono de contacto.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form action="{% url 'procesar_pago' product.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-shopping-cart"></i> Comprar Ahora
+                </button>
+            </form>
+            <p style="text-align: center; font-size: 0.8rem; color: #95a5a6; margin-top: 10px;">
+                <i class="fas fa-shield-alt"></i> Transacción protegida por Mercado Industrial
+            </p>
+        </div>
     </div>
 </div>
 
-{% if user.is_authenticated and preference_id %}
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <script>
-      const mp = new MercadoPago("{{ public_key }}", { locale: "es-MX" });
-      mp.bricks().create("wallet", "wallet_container", {
-        initialization: {
-          preferenceId: "{{ preference_id }}",
-          redirectMode: "modal",
-        },
-      });
-    </script>
-{% endif %}
-
+<style>
+    a:hover { opacity: 0.9; }
+    button:hover { background: #34495e !important; transform: translateY(-2px); }
+</style>
 {% endblock %}
-
