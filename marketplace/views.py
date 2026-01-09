@@ -104,7 +104,7 @@ def pago_exitoso(request):
                 send_mail(
                     '¡Vendiste un producto!',
                     f'Hola {producto.seller.username}, el usuario {request.user.username} ha comprado {producto.title}. Ponte en contacto en: {request.user.email}',
-                    'tu-email@gmail.com',  # Cambia esto por tu correo de settings.py
+                    'fernando871216@gmail.com',  # Cambia esto por tu correo de settings.py
                     [producto.seller.email],
                     fail_silently=False,
                 )
@@ -174,6 +174,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
