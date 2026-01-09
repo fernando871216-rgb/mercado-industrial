@@ -198,15 +198,15 @@ def pago_fallido(request):
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
 
-
-@staff_member_required # Solo tú puedes entrar
+@staff_member_required
 def panel_administrador(request):
+    # Traemos todas las ventas del sitio, ordenadas por la más reciente
     ventas = Sale.objects.all().order_by('-created_at')
     
-    # Calculamos el total de dinero que ha pasado por la plataforma
+    # Suma total de lo vendido en toda la página
     total_ventas = ventas.aggregate(Sum('price'))['price__sum'] or 0
     
-    # Tu ganancia bruta (5% de todo)
+    # Tu ganancia del 5%
     tus_ganancias = float(total_ventas) * 0.05
     
     return render(request, 'marketplace/panel_admin.html', {
@@ -214,7 +214,3 @@ def panel_administrador(request):
         'total_ventas': total_ventas,
         'tus_ganancias': tus_ganancias,
     })
-
-
-
-
