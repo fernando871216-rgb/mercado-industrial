@@ -1,9 +1,10 @@
-{% INITRELOGO.jpg %} <!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace Industrial</title>
+    <title>Marketplace Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; }
@@ -29,7 +30,7 @@
         }
 
         .logo-img {
-            height: 60px; /* Ajusta este tamaño según prefieras */
+            height: 60px; /* Tamaño del logo */
             width: auto;
             margin-right: 15px;
         }
@@ -69,7 +70,7 @@
 
     <nav>
         <a href="{% url 'home' %}" class="logo-container">
-            <img src="https://tu-sitio.com/ruta-al-logo.png" alt="Logo INITRE" class="logo-img">
+            <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
             <span style="font-size: 1.4rem; font-weight: bold; color: #2c3e50;">INITRE</span>
         </a>
         
@@ -103,5 +104,3 @@
 
 </body>
 </html>
-
-
