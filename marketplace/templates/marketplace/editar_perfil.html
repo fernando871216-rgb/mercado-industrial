@@ -1,0 +1,14 @@
+{% extends 'marketplace/base.html' %}
+{% block content %}
+<div style="max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <h2>Editar mi Cuenta</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ u_form.as_p }}
+        {{ p_form.as_p }}
+        <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%;">
+            Guardar Cambios
+        </button>
+    </form>
+</div>
+{% endblock %}
