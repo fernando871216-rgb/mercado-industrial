@@ -75,40 +75,52 @@ def cambiar_estado_venta(request, venta_id):
 
 @login_required
 def procesar_pago(request, product_id):
+    # 1. Buscamos el producto
     producto = get_object_or_404(IndustrialProduct, id=product_id)
     
-    # 1. Creamos el registro de la venta en la base de datos
-    venta = Sale.objects.create(
-        product=producto, 
-        buyer=request.user, 
-        seller=producto.seller,
-        price=producto.price, 
-        status='pendiente'
-    )
-    
-    # 2. NOTIFICACIÓN POR EMAIL AL VENDEDOR
-    try:
-        asunto = f"¡Nueva venta realizada! - {producto.title}"
-        mensaje = (
-            f"Hola {producto.seller.username},\n\n"
-            f"Has recibido una nueva intención de compra en MarketIndustrial.\n\n"
-            f"Producto: {producto.title}\n"
-            f"Comprador: {request.user.username} ({request.user.email})\n"
-            f"Precio: ${producto.price} MXN\n\n"
-            f"Por favor, ponte en contacto con el comprador para coordinar la entrega."
+    # 2. VALIDACIÓN DE STOCK: Verificar si hay existencias
+    if producto.stock > 0:
+        # 3. Crear el registro de la venta
+        Sale.objects.create(
+            product=producto, 
+            buyer=request.user, 
+            seller=producto.seller,
+            price=producto.price, 
+            status='pendiente'
         )
-        # El remitente debe ser el correo que configures en settings.py
-        send_mail(
-            asunto,
-            mensaje,
-            'fernando871216@gmail.com', 
-            [producto.seller.email],
-            fail_silently=True,
-        )
-    except Exception as e:
-        print(f"Error enviando correo: {e}")
+        
+        # 4. BAJAR EL STOCK: Restamos 1 a la cantidad disponible
+        producto.stock -= 1
+        producto.save()
 
-    return redirect('mis_compras')
+        # 5. NOTIFICACIÓN POR EMAIL AL VENDEDOR
+        try:
+            asunto = f"¡Nueva venta! - {producto.title}"
+            mensaje = (
+                f"Hola {producto.seller.username},\n\n"
+                f"Has recibido una nueva venta en MarketIndustrial.\n\n"
+                f"Producto: {producto.title}\n"
+                f"Comprador: {request.user.username}\n"
+                f"Quedan {producto.stock} unidades en tu inventario.\n\n"
+                f"Ponte en contacto con el comprador para la entrega."
+            )
+            send_mail(
+                asunto,
+                mensaje,
+                'tu-correo@gmail.com', # Configurado en settings.py
+                [producto.seller.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Error al enviar correo: {e}")
+
+        return redirect('mis_compras')
+    
+    else:
+        # Si no hay stock, podrías redirigir con un mensaje de error
+        return render(request, 'marketplace/pago_fallido.html', {
+            'error_message': 'Lo sentimos, este producto se acaba de agotar.'
+        })
 
 # --- AQUÍ ESTABA EL ERROR CORREGIDO: order_by en lugar de order_at ---
 @login_required
@@ -183,4 +195,5 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
 
