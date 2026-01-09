@@ -113,9 +113,10 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    ventas = Sale.objects.filter(seller=request.user).order_by('-created_at')
+    # Filtramos las ventas donde el usuario actual es el VENDEDOR
+    ventas = Sale.objects.filter(seller=request.user).order_header("-created_at")
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
-
+    
 # --- 6. RETORNO DE PAGO EXITOSO ---
 @login_required
 def pago_exitoso(request):
@@ -206,3 +207,4 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
+
