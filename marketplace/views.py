@@ -65,7 +65,9 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    ventas = Sale.objects.filter(seller=request.user).order_by("-created_at")
+    # CORRECCIÓN: En Ventas (Sale), el vendedor es el dueño del producto
+    # Usamos product__user para llegar al vendedor
+    ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
@@ -127,7 +129,8 @@ def procesar_pago(request, product_id):
 # --- AQUÍ ESTABA EL ERROR CORREGIDO: order_by en lugar de order_at ---
 @login_required
 def mi_inventario(request):
-    productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
+    # CORRECCIÓN: Cambiamos 'seller' por 'user'
+    productos = IndustrialProduct.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
 
 @login_required
@@ -221,3 +224,4 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor # Cambia de Sí a No y viceversa
     venta.save()
     return redirect('panel_admin')
+
