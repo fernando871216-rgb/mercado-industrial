@@ -5,14 +5,12 @@ import re
 
 # --- FORMULARIOS DE PERFIL ---
 class UserUpdateForm(forms.ModelForm):
-    # Definimos estos campos para asegurar que Django los reconozca en el formulario
     first_name = forms.CharField(label="Nombre(s)", required=True)
     last_name = forms.CharField(label="Apellidos", required=True)
     email = forms.EmailField(label="Correo Electrónico", required=True)
 
     class Meta:
         model = User
-        # Agregamos first_name y last_name a la lista de campos
         fields = ['username', 'first_name', 'last_name', 'email']
         labels = {
             'username': 'Nombre de Usuario',
@@ -25,23 +23,26 @@ class UserUpdateForm(forms.ModelForm):
         }
 
 class ProfileUpdateForm(forms.ModelForm):
-    phone_number = forms.CharField(label="Número de WhatsApp", required=True)
+    # CORRECCIÓN: Cambiamos phone_number por phone para que coincida con el MODELO
+    phone = forms.CharField(label="Número de WhatsApp", required=True)
 
     class Meta:
         model = Profile
-        fields = ['phone_number']
+        # CORRECCIÓN: Aquí también debe ser phone
+        fields = ['phone', 'address'] 
         widgets = {
-            'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 5512345678'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 5512345678'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Dirección completa'}),
         }
 
-    # Tu validación extra para el celular (está perfecta)
-    def clean_phone_number(self):
-        phone = self.cleaned_data.get('phone_number')
-        # Quita espacios o guiones si el usuario los pone
-        phone = re.sub(r'\D', '', phone) 
-        if len(phone) != 10:
+    # Validación corregida para el nombre del campo 'phone'
+    def clean_phone(self):
+        phone_data = self.cleaned_data.get('phone')
+        # Quita espacios o guiones
+        phone_data = re.sub(r'\D', '', phone_data) 
+        if len(phone_data) != 10:
             raise forms.ValidationError("El número de celular debe tener exactamente 10 dígitos.")
-        return phone
+        return phone_data
 
 # --- 1. FORMULARIO DE REGISTRO ---
 class RegistroForm(forms.ModelForm):
