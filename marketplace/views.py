@@ -15,16 +15,19 @@ from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 def home(request):
     query = request.GET.get('q')
     if query:
+        # Busca por título, marca o número de parte
         products = IndustrialProduct.objects.filter(
-            Q(title__icontains=query) | Q(brand__icontains=query) | Q(part_number__icontains=query)
+            Q(title__icontains=query) | 
+            Q(brand__icontains=query) | 
+            Q(part_number__icontains=query)
         ).distinct()
     else:
         products = IndustrialProduct.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/home.html', {'products': products, 'query': query})
-
-def detalle_producto(request, product_id):
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    preference_id = None
+        
+    return render(request, 'marketplace/home.html', {
+        'products': products, 
+        'query': query
+    })
     
     # Configuración de Mercado Pago
     # Reemplaza con tu Access Token real entre las comillas
@@ -158,4 +161,5 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
 
