@@ -201,7 +201,7 @@ def pago_exitoso(request):
 
 @staff_member_required # Solo tú puedes entrar
 def panel_administrador(request):
-    ventas = Sale.objects.all().order_id('-created_at')
+    ventas = Sale.objects.all().order_by('-created_at')
     
     # Calculamos el total de dinero que ha pasado por la plataforma
     total_ventas = ventas.aggregate(Sum('price'))['price__sum'] or 0
@@ -214,6 +214,7 @@ def panel_administrador(request):
         'total_ventas': total_ventas,
         'tus_ganancias': tus_ganancias,
     })
+
 
 
 
