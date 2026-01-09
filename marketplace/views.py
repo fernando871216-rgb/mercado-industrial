@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.db.models import Q
 from django.core.mail import send_mail
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -195,5 +197,23 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
+
+@staff_member_required # Solo tú puedes entrar
+def panel_administrador(request):
+    ventas = Sale.objects.all().order_id('-created_at')
+    
+    # Calculamos el total de dinero que ha pasado por la plataforma
+    total_ventas = ventas.aggregate(Sum('price'))['price__sum'] or 0
+    
+    # Tu ganancia bruta (5% de todo)
+    tus_ganancias = float(total_ventas) * 0.05
+    
+    return render(request, 'marketplace/panel_admin.html', {
+        'ventas': ventas,
+        'total_ventas': total_ventas,
+        'tus_ganancias': tus_ganancias,
+    })
+
 
 
