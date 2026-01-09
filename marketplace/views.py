@@ -8,19 +8,19 @@ from .forms import RegistroForm, ProductoForm
 from django.urls import reverse
 from .models import Sale 
 from django.core.mail import send_mail
+from django.db.models import Q
 
 # 1. VISTA DE INICIO (HOME)
 def home(request):
-    # Obtener el término de búsqueda desde la URL (?q=...)
     query = request.GET.get('q')
     
     if query:
-        # Filtramos por título o marca (icontains ignora mayúsculas/minúsculas)
+        # Buscamos coincidencias en Título, Marca o Número de Parte
         products = IndustrialProduct.objects.filter(
-            title__icontains=query
-        ) | IndustrialProduct.objects.filter(
-            brand__icontains=query
-        )
+            Q(title__icontains=query) | 
+            Q(brand__icontains=query) | 
+            Q(part_number__icontains=query)
+        ).distinct()
     else:
         products = IndustrialProduct.objects.all().order_by('-created_at')
         
@@ -201,6 +201,7 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/inicio.html', {'products': products, 'category': category})
+
 
 
 
