@@ -11,39 +11,41 @@ from django.db.models import Q
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 
-# --- 1. PROCESAR PAGO (BOTÓN DIRECTO) ---
+# --- 1. PROCESAR PAGO (BOTÓN DIRECTO / REGISTRO MANUAL) ---
 @login_required
 def procesar_pago(request, product_id):
-    producto = get_object_sender(Product, id=product_id)
+    # Corregido: Usamos IndustrialProduct y la función correcta get_object_or_404
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
     
-    # ... (Aquí va tu lógica actual de crear la venta) ...
+    # Crear el registro de la venta
     nueva_venta = Sale.objects.create(
         product=producto,
         buyer=request.user,
         seller=producto.seller,
-        price=producto.price
+        price=producto.price,
+        status='pendiente'
     )
 
     # ENVÍO DE EMAIL AL VENDEDOR
-    asunto = f"¡Felicidades! Has vendido: {producto.title}"
+    asunto = f"¡Venta Registrada! Equipo: {producto.title}"
     mensaje = f"""
     Hola {producto.seller.username},
     
-    Alguien ha marcado tu equipo "{producto.title}" como comprado en Mercado Industrial.
+    El usuario {request.user.username} ha marcado tu equipo "{producto.title}" como comprado.
     
-    Datos del comprador:
+    DATOS DEL COMPRADOR:
     - Usuario: {request.user.username}
     - Email: {request.user.email}
     
-    Por favor, ingresa a tu panel de 'Mis Ventas' para coordinar la entrega.
+    Por favor, revisa tu panel de 'Mis Ventas' para contactar al cliente.
     """
     
     try:
         send_mail(
             asunto,
             mensaje,
-            'fernando871216@gmail.com', # Remitente
-            [producto.seller.email], # Destinatario (el correo del vendedor)
+            'fernando871216@gmail.com', # Tu correo configurado en settings.py
+            [producto.seller.email],
             fail_silently=False,
         )
     except Exception as e:
@@ -68,7 +70,6 @@ def home(request):
 # --- 3. EDITAR PERFIL ---
 @login_required
 def editar_perfil(request):
-    # Asegura que el perfil existe
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
@@ -133,15 +134,24 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    # Filtramos las ventas donde el usuario actual es el VENDEDOR
     ventas = Sale.objects.filter(seller=request.user).order_by("-created_at")
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
-    
-# --- 6. RETORNO DE PAGO EXITOSO ---
+
+# --- 6. CAMBIAR ESTADO DE VENTA ---
+@login_required
+def cambiar_estado_venta(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, seller=request.user)
+    if venta.status == 'pendiente':
+        venta.status = 'completado'
+    else:
+        venta.status = 'pendiente'
+    venta.save()
+    return redirect('mis_ventas')
+
+# --- 7. RETORNO DE PAGO EXITOSO (MERCADO PAGO) ---
 @login_required
 def pago_exitoso(request):
     producto_id = request.GET.get('external_reference')
-    payment_id = request.GET.get('collection_id') 
     
     if producto_id:
         try:
@@ -150,19 +160,20 @@ def pago_exitoso(request):
                 producto.stock -= 1
                 producto.save()
                 
-                # CREAR REGISTRO DE VENTA (Campos corregidos)
+                # Crear venta desde Mercado Pago
                 Sale.objects.create(
                     product=producto,
                     buyer=request.user,
                     seller=producto.seller,
-                    price=producto.price
+                    price=producto.price,
+                    status='completado' # Al ser pago real, nace completada
                 )
 
-                # Notificación al vendedor
+                # Notificación
                 send_mail(
-                    '¡Vendiste un producto!',
-                    f'El usuario {request.user.username} compró {producto.title}. Email: {request.user.email}',
-                    'tu-correo@gmail.com',
+                    '¡Pago Confirmado!',
+                    f'El usuario {request.user.username} pagó ${producto.price} por {producto.title}.',
+                    'fernando871216@gmail.com',
                     [producto.seller.email],
                     fail_silently=True,
                 )
@@ -171,7 +182,7 @@ def pago_exitoso(request):
             
     return render(request, 'marketplace/pago_exitoso.html')
 
-# --- 7. INVENTARIO Y CRUD ---
+# --- 8. INVENTARIO Y CRUD ---
 @login_required
 def mi_inventario(request):
     productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
@@ -208,7 +219,7 @@ def borrar_producto(request, pk):
     producto.delete()
     return redirect('mi_inventario')
 
-# --- 8. AUTH Y OTROS ---
+# --- 9. AUTH Y OTROS ---
 def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -227,17 +238,3 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
-
-@login_required
-def cambiar_estado_venta(request, venta_id):
-    # Solo el vendedor puede cambiar el estado
-    venta = get_object_or_404(Sale, id=venta_id, seller=request.user)
-    if venta.status == 'pendiente':
-        venta.status = 'completado'
-    else:
-        venta.status = 'pendiente'
-    venta.save()
-    return redirect('mis_ventas')
-
-
-
