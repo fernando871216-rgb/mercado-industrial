@@ -12,43 +12,60 @@
             --danger: #e74c3c;
             --success: #27ae60;
             --light: #f4f7f6;
+            --warning: #f39c12;
         }
 
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             margin: 0; 
             background-color: var(--light); 
             color: #333; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         /* Navbar */
         nav { 
             background: var(--primary); 
-            padding: 1rem 2rem; 
+            padding: 0.8rem 2rem; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             color: white; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        nav a { 
+        .nav-logo {
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            text-decoration: none; 
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        .nav-links a { 
             color: white; 
             text-decoration: none; 
             margin-right: 1.2rem; 
             font-weight: 500; 
-            transition: opacity 0.3s;
+            transition: color 0.3s;
             font-size: 0.9rem;
         }
         
-        nav a:hover { opacity: 0.8; }
+        .nav-links a:hover { color: var(--accent); }
 
         .btn-post {
             background: var(--accent);
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold !important;
+            transition: transform 0.2s !important;
         }
+        .btn-post:hover { transform: translateY(-2px); opacity: 1 !important; }
 
         .user-menu { display: flex; align-items: center; gap: 15px; }
 
@@ -56,73 +73,24 @@
             background: var(--danger);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 7px 14px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            margin-left: 10px;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 3rem;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
+        .btn-logout:hover { background: #c0392b; }
 
         .nav-divider {
-            border-left: 1px solid rgba(255,255,255,0.3);
-            height: 20px;
-            margin: 0 10px;
+            border-left: 1px solid rgba(255,255,255,0.2);
+            height: 24px;
+            margin: 0 5px;
         }
-    </style>
-</head>
-<body>
 
-    <nav>
-        <div>
-            <a href="{% url 'home' %}" style="font-size: 1.3rem; font-weight: bold; margin-right: 2rem;">MERCADO INDUSTRIAL</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'subir_producto' %}" class="btn-post"><i class="fas fa-plus"></i> Publicar</a>
-            {% endif %}
-        </div>
-
-        <div class="user-menu">
-            {% if user.is_authenticated %}
-                <a href="{% url 'mi_inventario' %}"><i class="fas fa-boxes"></i> Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}" style="color: #2ecc71;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</a>
-                <a href="{% url 'mis_compras' %}"><i class="fas fa-history"></i> Mis Compras</a>
-                
-                <div class="nav-divider"></div>
-
-                <a href="{% url 'editar_perfil' %}" title="Configurar mi cuenta">
-                    <i class="fas fa-user-cog"></i> Mi Perfil
-                </a>
-
-                <span>
-                    <strong>{{ user.username }}</strong>
-                </span>
-
-                <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-logout">Salir</button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}">Ingresar</a>
-                <a href="{% url 'registro' %}" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">Registrarse</a>
-            {% endif %}
-        </div>
-    </nav>
-
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-
-    <footer>
-        <p>&copy; 2026 Mercado Industrial - Compra y Venta de Equipo Especializado</p>
-    </footer>
-
-</body>
-</html>
+        /* Mensajes de Alerta */
+        .message-container {
+            max-width:
