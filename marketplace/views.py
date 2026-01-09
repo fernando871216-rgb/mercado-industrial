@@ -14,22 +14,42 @@ from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 # --- 1. PROCESAR PAGO (BOTÓN DIRECTO) ---
 @login_required
 def procesar_pago(request, product_id):
-    if request.method == 'POST':
-        producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        Sale.objects.create(
-            product=producto,
-            buyer=request.user,
-            seller=producto.seller,
-            price=producto.price
+    producto = get_object_sender(Product, id=product_id)
+    
+    # ... (Aquí va tu lógica actual de crear la venta) ...
+    nueva_venta = Sale.objects.create(
+        product=producto,
+        buyer=request.user,
+        seller=producto.seller,
+        price=producto.price
+    )
+
+    # ENVÍO DE EMAIL AL VENDEDOR
+    asunto = f"¡Felicidades! Has vendido: {producto.title}"
+    mensaje = f"""
+    Hola {producto.seller.username},
+    
+    Alguien ha marcado tu equipo "{producto.title}" como comprado en Mercado Industrial.
+    
+    Datos del comprador:
+    - Usuario: {request.user.username}
+    - Email: {request.user.email}
+    
+    Por favor, ingresa a tu panel de 'Mis Ventas' para coordinar la entrega.
+    """
+    
+    try:
+        send_mail(
+            asunto,
+            mensaje,
+            'fernando871216@gmail.com', # Remitente
+            [producto.seller.email], # Destinatario (el correo del vendedor)
+            fail_silently=False,
         )
-        
-        if producto.stock > 0:
-            producto.stock -= 1
-            producto.save()
-            
-        return redirect('mis_compras')
-    return redirect('home')
+    except Exception as e:
+        print(f"Error enviando correo: {e}")
+
+    return redirect('mis_compras')
 
 # --- 2. VISTA DE INICIO (HOME) ---
 def home(request):
@@ -207,5 +227,6 @@ def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
+
 
 
