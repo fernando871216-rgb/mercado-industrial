@@ -228,5 +228,16 @@ def category_detail(request, category_id):
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
 
+@login_required
+def cambiar_estado_venta(request, venta_id):
+    # Solo el vendedor puede cambiar el estado
+    venta = get_object_or_404(Sale, id=venta_id, seller=request.user)
+    if venta.status == 'pendiente':
+        venta.status = 'completado'
+    else:
+        venta.status = 'pendiente'
+    venta.save()
+    return redirect('mis_ventas')
+
 
 
