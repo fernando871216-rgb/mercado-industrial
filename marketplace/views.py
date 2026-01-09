@@ -11,7 +11,7 @@ from django.db.models import Q
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 
-# --- 1. INICIO Y CATEGORÍAS ---
+# --- 1. INICIO Y DETALLES (CON MERCADO PAGO) ---
 def home(request):
     query = request.GET.get('q')
     if query:
@@ -22,33 +22,43 @@ def home(request):
         products = IndustrialProduct.objects.all().order_by('-created_at')
     return render(request, 'marketplace/home.html', {'products': products, 'query': query})
 
-def category_detail(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
-    return render(request, 'marketplace/home.html', {'products': products, 'category': category})
-
-# --- 2. DETALLES Y PROCESO DE COMPRA ---
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    return render(request, 'marketplace/product_detail.html', {'product': product})
-
-@login_required
-def procesar_pago(request, product_id):
-    producto = get_object_or_404(IndustrialProduct, id=product_id)
-    Sale.objects.create(
-        product=producto, buyer=request.user, seller=producto.seller,
-        price=producto.price, status='pendiente'
-    )
+    preference_id = None
+    
+    # Configuración de Mercado Pago
+    # Reemplaza con tu Access Token real entre las comillas
+    sdk = mercadopago.SDK("TU_ACCESS_TOKEN_AQUÍ")
+    
+    preference_data = {
+        "items": [
+            {
+                "title": product.title,
+                "quantity": 1,
+                "unit_price": float(product.price),
+                "currency_id": "MXN"
+            }
+        ],
+        "back_urls": {
+            "success": request.build_absolute_uri(reverse('pago_exitoso')),
+            "failure": request.build_absolute_uri(reverse('pago_fallido')),
+        },
+        "auto_return": "approved",
+        "external_reference": str(product.id)
+    }
+    
     try:
-        send_mail(
-            f"¡Venta Registrada! {producto.title}",
-            f"Hola {producto.seller.username}, tienes un interesado en tu equipo.",
-            'fernando871216@gmail.com', [producto.seller.email], fail_silently=True
-        )
-    except: pass
-    return redirect('mis_compras')
+        preference_response = sdk.preference().create(preference_data)
+        preference_id = preference_response["response"]["id"]
+    except Exception as e:
+        print(f"Error MP: {e}")
 
-# --- 3. GESTIÓN DE VENTAS Y COMPRAS ---
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product,
+        'preference_id': preference_id
+    })
+
+# --- 2. GESTIÓN DE VENTAS Y COMPRAS ---
 @login_required
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
@@ -66,7 +76,16 @@ def cambiar_estado_venta(request, venta_id):
     venta.save()
     return redirect('mis_ventas')
 
-# --- 4. INVENTARIO (SUBIR, EDITAR, BORRAR) ---
+# --- 3. FUNCIONES DE APOYO ---
+@login_required
+def procesar_pago(request, product_id):
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    Sale.objects.create(
+        product=producto, buyer=request.user, seller=producto.seller,
+        price=producto.price, status='pendiente'
+    )
+    return redirect('mis_compras')
+
 @login_required
 def mi_inventario(request):
     productos = IndustrialProduct.objects.filter(seller=request.user).order_by('-created_at')
@@ -103,7 +122,6 @@ def borrar_producto(request, pk):
     producto.delete()
     return redirect('mi_inventario')
 
-# --- 5. PERFIL Y AUTH ---
 @login_required
 def editar_perfil(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -128,6 +146,11 @@ def registro(request):
     else:
         form = RegistroForm()
     return render(request, 'marketplace/registro.html', {'form': form})
+
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
+    return render(request, 'marketplace/home.html', {'products': products, 'category': category})
 
 def pago_fallido(request):
     return render(request, 'marketplace/pago_fallido.html')
