@@ -3,126 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercado Industrial</title>
+    <title>Marketplace Industrial</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --light: #f4f7f6;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; }
+        
+        /* BARRA DE NAVEGACIÓN */
+        nav { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #27ae60; text-decoration: none; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .nav-links a:hover { color: #27ae60; }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            background-color: var(--light); 
-            color: #333; 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        /* BOTÓN DE SALIR (ARREGLO PARA ERROR 403) */
+        .logout-button { background: none; border: none; color: #e74c3c; cursor: pointer; font-family: inherit; font-size: 0.9rem; padding: 0; font-weight: bold; }
+        .logout-button:hover { color: #c0392b; text-decoration: underline; }
 
-        nav { 
-            background: var(--primary); 
-            padding: 1rem 2rem; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            color: white; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-        }
-
-        nav a { 
-            color: white; 
-            text-decoration: none; 
-            margin-right: 1.2rem; 
-            font-weight: 500; 
-            font-size: 0.9rem;
-        }
-
-        .btn-post {
-            background: var(--accent);
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .user-menu { display: flex; align-items: center; gap: 15px; }
-
-        .btn-logout {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .message-container {
-            max-width: 1100px;
-            margin: 15px auto;
-            padding: 0 20px;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-
-        main { flex: 1; padding: 20px; }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            border-top: 1px solid #ddd;
-        }
+        .btn-user { background: #34495e; padding: 5px 12px; border-radius: 5px; border: 1px solid #5d6d7e; }
+        
+        footer { text-align: center; padding: 40px; color: #7f8c8d; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div>
-            <a href="{% url 'home' %}" style="font-size: 1.3rem; font-weight: bold;">MERCADO INDUSTRIAL</a>
+        <a href="{% url 'home' %}" class="logo"><i class="fas fa-industry"></i> MarketIndustrial</a>
+        
+        <div class="nav-links">
+            <a href="{% url 'home' %}">Catálogo</a>
+            
             {% if user.is_authenticated %}
-                <a href="{% url 'subir_producto' %}" class="btn-post"><i class="fas fa-plus"></i> Publicar</a>
-            {% endif %}
-        </div>
-
-        <div class="user-menu">
-            {% if user.is_authenticated %}
-                <a href="{% url 'mi_inventario' %}"><i class="fas fa-boxes"></i> Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}" style="color: #2ecc71;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</a>
-                <a href="{% url 'mis_compras' %}"><i class="fas fa-history"></i> Mis Compras</a>
+                <a href="{% url 'mi_inventario' %}">Mis Productos</a>
+                <a href="{% url 'mis_ventas' %}">Ventas</a>
+                <a href="{% url 'mis_compras' %}">Compras</a>
                 
-                <a href="{% url 'editar_perfil' %}"><i class="fas fa-user-cog"></i> Perfil</a>
-                <strong>{{ user.username }}</strong>
+                <div class="btn-user">
+                    <a href="{% url 'editar_perfil' %}">
+                        <i class="fas fa-user-circle"></i> 
+                        {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}
+                    </a>
+                </div>
 
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 10px;">
                     {% csrf_token %}
-                    <button type="submit" class="btn-logout">Salir</button>
+                    <button type="submit" class="logout-button">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}">Ingresar</a>
-                <a href="{% url 'registro' %}" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">Registrarse</a>
+                <a href="{% url 'login' %}">Iniciar Sesión</a>
+                <a href="{% url 'registro' %}" style="background: #27ae60; padding: 8px 15px; border-radius: 5px; font-weight: bold;">Registrarse</a>
             {% endif %}
         </div>
     </nav>
-
-    {% if messages %}
-    <div class="message-container">
-        {% for message in messages %}
-            <div class="alert alert-success">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     <main>
         {% block content %}
@@ -130,7 +63,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Mercado Industrial</p>
+        <p>&copy; 2026 Marketplace de Equipos Industriales - Todos los derechos reservados</p>
     </footer>
 
 </body>
