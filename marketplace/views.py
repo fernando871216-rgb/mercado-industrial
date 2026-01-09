@@ -203,20 +203,16 @@ def pago_exitoso(request):
 
 @staff_member_required
 def panel_administrador(request):
-    # Traemos todas las ventas del sitio, ordenadas por la más reciente
+    # Aquí traemos TODO para que tú como jefe veas todo el movimiento
     ventas = Sale.objects.all().order_by('-created_at')
-    
-    # Suma total de lo vendido en toda la página
-    total_ventas = ventas.aggregate(Sum('price'))['price__sum'] or 0
-    
-    # Tu ganancia del 5%
+    total_ventas = sum(v.price for v in ventas)
     tus_ganancias = float(total_ventas) * 0.05
     
     return render(request, 'marketplace/panel_admin.html', {
         'ventas': ventas,
         'total_ventas': total_ventas,
         'tus_ganancias': tus_ganancias,
-    })
+    }))
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -224,4 +220,5 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor # Cambia de Sí a No y viceversa
     venta.save()
     return redirect('panel_admin')
+
 
