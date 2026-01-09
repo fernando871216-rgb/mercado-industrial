@@ -55,6 +55,8 @@ class Sale(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ventas') # <--- Asegúrate que exista este
     price = models.DecimalField(max_digits=12, decimal_places=2) # <--- Y este
     created_at = models.DateTimeField(auto_now_add=True)
+    pagado_a_vendedor = models.BooleanField(default=False)
+    
     STATUS_CHOICES = [
         ('pendiente', 'Pendiente'),
         ('completado', 'Completado'),
@@ -70,6 +72,7 @@ class Sale(models.Model):
     
 
  
+
 
 
 
