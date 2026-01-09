@@ -1,31 +1,26 @@
 from django.contrib import admin
-from .models import Category, Profile, IndustrialProduct, Sale
+from .models import Category, IndustrialProduct, Profile, Sale
 
-# 1. Registro de Ventas
-@admin.register(Sale)
-class SaleAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'buyer', 'seller', 'price', 'created_at')
-    list_filter = ('created_at', 'seller')
-    search_fields = ('product__title', 'buyer__username', 'seller__username')
-
-# 2. Registro de Productos Industriales (Configuración Unificada)
-@admin.register(IndustrialProduct)
-class IndustrialProductAdmin(admin.ModelAdmin):
-    # Mostramos los campos clave, incluyendo el Número de Parte
-    list_display = ('title', 'brand', 'part_number', 'price', 'stock', 'category', 'seller')
-    # Filtros laterales útiles
-    list_filter = ('category', 'brand', 'created_at')
-    # Buscador potente para el administrador
-    search_fields = ('title', 'brand', 'part_number', 'description')
-
-# 3. Registro de Categorías
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('id', 'name')
 
-# 4. Registro de Perfiles de Usuario
+@admin.register(IndustrialProduct)
+class IndustrialProductAdmin(admin.ModelAdmin):
+    # Cambiamos 'seller' por 'user', que es como se llama en tu modelo
+    list_display = ('id', 'title', 'brand', 'price', 'stock', 'category', 'user')
+    list_filter = ('category', 'brand')
+    search_fields = ('title', 'brand', 'part_number')
+
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone_number')
-    search_fields = ('user__username', 'phone_number')
+    # Cambiamos 'phone_number' por 'phone', que es como se llama en tu modelo
+    list_display = ('user', 'phone', 'address')
+    search_fields = ('user__username', 'phone')
+
+@admin.register(Sale)
+class SaleAdmin(admin.ModelAdmin):
+    # En Sale no existe 'seller' directamente, se accede a través del producto
+    list_display = ('id', 'product', 'buyer', 'price', 'status', 'pagado_a_vendedor', 'created_at')
+    list_filter = ('status', 'pagado_a_vendedor', 'created_at')
+    search_fields = ('product__title', 'buyer__username')
