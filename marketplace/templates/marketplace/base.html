@@ -10,12 +10,9 @@
             --primary: #2c3e50;
             --accent: #3498db;
             --danger: #e74c3c;
+            --success: #27ae60;
             --light: #f4f7f6;
         }
-
-    <a href="{% url 'mis_ventas' %}" style="margin-left: 15px; color: white; text-decoration: none; font-size: 0.9rem;">
-    <i class="fas fa-hand-holding-usd"></i> Mis Ventas
-</a>
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -38,9 +35,10 @@
         nav a { 
             color: white; 
             text-decoration: none; 
-            margin-right: 1.5rem; 
+            margin-right: 1.2rem; 
             font-weight: 500; 
             transition: opacity 0.3s;
+            font-size: 0.9rem;
         }
         
         nav a:hover { opacity: 0.8; }
@@ -62,6 +60,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            margin-left: 10px;
         }
 
         footer {
@@ -71,13 +70,19 @@
             color: #7f8c8d;
             font-size: 0.9rem;
         }
+
+        .nav-divider {
+            border-left: 1px solid rgba(255,255,255,0.3);
+            height: 20px;
+            margin: 0 10px;
+        }
     </style>
 </head>
 <body>
 
     <nav>
         <div>
-            <a href="{% url 'home' %}" style="font-size: 1.3rem; font-weight: bold;">MERCADO INDUSTRIAL</a>
+            <a href="{% url 'home' %}" style="font-size: 1.3rem; font-weight: bold; margin-right: 2rem;">MERCADO INDUSTRIAL</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'subir_producto' %}" class="btn-post"><i class="fas fa-plus"></i> Publicar</a>
             {% endif %}
@@ -86,10 +91,17 @@
         <div class="user-menu">
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}"><i class="fas fa-boxes"></i> Mis Productos</a>
+                <a href="{% url 'mis_ventas' %}" style="color: #2ecc71;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</a>
                 <a href="{% url 'mis_compras' %}"><i class="fas fa-history"></i> Mis Compras</a>
                 
-                <span style="border-left: 1px solid rgba(255,255,255,0.3); padding-left: 15px;">
-                    <i class="fas fa-user-circle"></i> <strong>{{ user.username }}</strong>
+                <div class="nav-divider"></div>
+
+                <a href="{% url 'editar_perfil' %}" title="Configurar mi cuenta">
+                    <i class="fas fa-user-cog"></i> Mi Perfil
+                </a>
+
+                <span>
+                    <strong>{{ user.username }}</strong>
                 </span>
 
                 <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
@@ -114,4 +126,3 @@
 
 </body>
 </html>
-
