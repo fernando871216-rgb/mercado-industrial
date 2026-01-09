@@ -10,6 +10,7 @@ urlpatterns = [
     # Perfil de Usuario
     path('registro/', views.registro, name='registro'),
     path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
+    path('panel-admin-secreto/', views.panel_administrador, name='panel_admin'),
 
     # Inventario (CRUD)
     path('inventario/', views.mi_inventario, name='mi_inventario'),
@@ -29,3 +30,4 @@ urlpatterns = [
     # Gestión de Estados (Aquí estaba el error corregido)
     path('venta/cambiar-estado/<int:venta_id>/', views.cambiar_estado_venta, name='cambiar_estado_venta'),
 ]
+
