@@ -18,6 +18,7 @@ urlpatterns = [
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('producto/<int:product_id>/pagar/', views.procesar_pago, name='procesar_pago'),
     
+    
     # Gestión de Productos
     path('subir/', views.subir_producto, name='subir_producto'),
     path('editar/<int:pk>/', views.editar_producto, name='editar_producto'),
@@ -25,10 +26,12 @@ urlpatterns = [
     path('mi-inventario/', views.mi_inventario, name='mi_inventario'),
     path('mis-compras/', views.mis_compras, name='mis_compras'),
     path('mis-ventas/', views.mis_ventas, name='mis_ventas'),
+    ath('venta/cambiar-estado/<int:venta_id>/', views.cambiar_estado_venta, name='cambiar_estado_venta'),
     
     # Filtros
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
 ]
+
 
 
 
