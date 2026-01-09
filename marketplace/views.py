@@ -5,6 +5,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.db.models import Q
+from django.core.mail import send_mail
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -75,10 +76,38 @@ def cambiar_estado_venta(request, venta_id):
 @login_required
 def procesar_pago(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
-    Sale.objects.create(
-        product=producto, buyer=request.user, seller=producto.seller,
-        price=producto.price, status='pendiente'
+    
+    # 1. Creamos el registro de la venta en la base de datos
+    venta = Sale.objects.create(
+        product=producto, 
+        buyer=request.user, 
+        seller=producto.seller,
+        price=producto.price, 
+        status='pendiente'
     )
+    
+    # 2. NOTIFICACIÓN POR EMAIL AL VENDEDOR
+    try:
+        asunto = f"¡Nueva venta realizada! - {producto.title}"
+        mensaje = (
+            f"Hola {producto.seller.username},\n\n"
+            f"Has recibido una nueva intención de compra en MarketIndustrial.\n\n"
+            f"Producto: {producto.title}\n"
+            f"Comprador: {request.user.username} ({request.user.email})\n"
+            f"Precio: ${producto.price} MXN\n\n"
+            f"Por favor, ponte en contacto con el comprador para coordinar la entrega."
+        )
+        # El remitente debe ser el correo que configures en settings.py
+        send_mail(
+            asunto,
+            mensaje,
+            'fernando871216@gmail.com', 
+            [producto.seller.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        print(f"Error enviando correo: {e}")
+
     return redirect('mis_compras')
 
 # --- AQUÍ ESTABA EL ERROR CORREGIDO: order_by en lugar de order_at ---
@@ -154,3 +183,4 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     return render(request, 'marketplace/pago_exitoso.html')
+
