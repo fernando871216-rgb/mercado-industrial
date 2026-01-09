@@ -53,7 +53,7 @@
                     <div id="wallet_container"></div>
                     <script src="https://sdk.mercadopago.com/js/v2"></script>
                     <script>
-                        const mp = new MercadoPago('TU_PUBLIC_KEY_AQUÍ', { locale: 'es-MX' });
+                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
                         const bricksBuilder = mp.bricks();
                         bricksBuilder.create("wallet", "wallet_container", {
                             initialization: {
@@ -95,3 +95,4 @@
     </div>
 </div>
 {% endblock %}
+
