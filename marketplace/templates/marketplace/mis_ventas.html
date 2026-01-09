@@ -1,7 +1,7 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 50px auto; padding: 0 20px;">
+<div class="container" style="max-width: 1200px; margin: 50px auto; padding: 0 20px;">
     
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -17,9 +17,10 @@
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7;">
+                    <th style="padding: 15px 20px; color: #718096;">Estado</th> 
                     <th style="padding: 15px 20px; color: #718096;">Equipo / P/N</th>
                     <th style="padding: 15px 20px; color: #718096;">Comprador</th>
-                    <th style="padding: 15px 20px; color: #718096;">Contacto Cliente</th>
+                    <th style="padding: 15px 20px; color: #718096;">Contacto</th>
                     <th style="padding: 15px 20px; color: #718096;">Monto</th>
                     <th style="padding: 15px 20px; color: #718096;">Fecha</th>
                 </tr>
@@ -28,12 +29,31 @@
                 {% for venta in ventas %}
                 <tr style="border-bottom: 1px solid #edf2f7;">
                     <td style="padding: 15px 20px;">
+                        {% if venta.status == 'pendiente' %}
+                            <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; text-align: center;">
+                                Pendiente
+                            </span>
+                            <a href="{% url 'cambiar_estado_venta' venta.id %}" 
+                               style="background: #27ae60; color: white; padding: 5px 8px; border-radius: 4px; text-decoration: none; font-size: 0.65rem; font-weight: bold; display: block; text-align: center;">
+                               Confirmar
+                            </a>
+                        {% else %}
+                            <span style="background: #e6fffa; color: #234e52; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: block; text-align: center;">
+                                Completado <i class="fas fa-check"></i>
+                            </span>
+                            <a href="{% url 'cambiar_estado_venta' venta.id %}" style="display: block; text-align: center; color: #a0aec0; font-size: 0.6rem; margin-top: 5px; text-decoration: none;">Deshacer</a>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding: 15px 20px;">
                         <div style="font-weight: bold; color: #2d3748;">{{ venta.product.title }}</div>
                         <div style="font-size: 0.8rem; color: #718096;">Marca: {{ venta.product.brand }}</div>
                     </td>
+
                     <td style="padding: 15px 20px;">
                         <i class="fas fa-user-circle"></i> {{ venta.buyer.username }}
                     </td>
+
                     <td style="padding: 15px 20px;">
                         {% if venta.buyer.profile.phone_number %}
                             <a href="https://wa.me/52{{ venta.buyer.profile.phone_number }}" target="_blank" 
@@ -44,18 +64,20 @@
                             <span style="color: #a0aec0; font-size: 0.85rem;">Sin teléfono</span>
                         {% endif %}
                     </td>
+
                     <td style="padding: 15px 20px; font-weight: bold; color: #2c3e50;">
                         ${{ venta.price }}
                     </td>
+
                     <td style="padding: 15px 20px; color: #718096; font-size: 0.9rem;">
                         {{ venta.created_at|date:"d M Y" }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding: 50px; text-align: center; color: #a0aec0;">
+                    <td colspan="6" style="padding: 50px; text-align: center; color: #a0aec0;">
                         <i class="fas fa-inbox" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
-                        Aún no has recibido ventas. ¡Sigue publicando equipos!
+                        Aún no has recibido ventas.
                     </td>
                 </tr>
                 {% endfor %}
