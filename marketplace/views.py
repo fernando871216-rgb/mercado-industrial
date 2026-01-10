@@ -133,20 +133,22 @@ def borrar_producto(request, pk):
 
 @login_required
 def editar_perfil(request):
-    # Esto asegura que el perfil exista. Si no existe, lo crea.
+    # Aseguramos que el perfil exista
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        # Pasamos instance=request.user.profile para que SOBREESCRIBA los datos
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
         
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            # Creamos el mensaje de éxito
-            messages.success(request, f'¡Datos guardados correctamente!')
-            return redirect('editar_perfil') # Redirige aquí mismo para ver los cambios
+            messages.success(request, '¡Datos guardados correctamente!')
+            return redirect('editar_perfil')
+        else:
+            # SI HAY UN ERROR, ESTO NOS LO MOSTRARÁ EN LA PANTALLA
+            messages.error(request, f"Error en User: {u_form.errors}")
+            messages.error(request, f"Error en Profile: {p_form.errors}")
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
@@ -155,7 +157,6 @@ def editar_perfil(request):
         'u_form': u_form, 
         'p_form': p_form
     })
-
 def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -285,6 +286,7 @@ def mercadopago_webhook(request):
 
         return HttpResponse(status=200) # SIEMPRE respondemos 200
     return HttpResponse(status=200)
+
 
 
 
