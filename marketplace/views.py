@@ -41,7 +41,7 @@ def detalle_producto(request, product_id):
                     "currency_id": "MXN"
                 }
             ],
-            "external_reference": str(product.id), # Vital para identificar qué se compró
+            "external_reference": str(product.id),
             "back_urls": {
                 "success": request.build_absolute_uri(reverse('pago_exitoso')),
                 "failure": request.build_absolute_uri(reverse('pago_fallido')),
@@ -80,24 +80,17 @@ def procesar_pago(request, product_id):
     if request.method == 'POST':
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         
-        # 1. Creamos la venta SIN el argumento 'seller' para evitar la pantalla amarilla
-        Sale.objects.create(
-            product=producto,
-            buyer=request.user,
-            price=producto.price,
-            status='completado'
-        )
-        
-        # 2. Descontamos el stock
-        if producto.stock > 1:
+        # Evitamos comprar si no hay stock
+        if producto.stock > 0:
+            Sale.objects.create(
+                product=producto,
+                buyer=request.user,
+                price=producto.price,
+                status='completado'
+            )
             producto.stock -= 1
             producto.save()
-        else:
-            producto.stock = 0
-            producto.save()
-            
-        # 3. Redirigimos a una página de éxito (puedes usar la misma de Mercado Pago)
-        return redirect('pago_exitoso')
+            return redirect('pago_exitoso')
         
     return redirect('detalle_producto', product_id=product_id)
 
@@ -169,11 +162,8 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     product_id = request.GET.get('external_reference')
-    
     if product_id:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # Buscamos si ya se registró para no duplicar
         venta_existe = Sale.objects.filter(
             product=producto, 
             buyer=request.user, 
@@ -181,19 +171,15 @@ def pago_exitoso(request):
         ).exists()
 
         if not venta_existe:
-            # IMPORTANTE: No usamos 'seller' aquí porque tu modelo no lo tiene
-            # Django lo asociará automáticamente a través del producto
             Sale.objects.create(
                 product=producto,
                 buyer=request.user,
                 price=producto.price,
                 status='completado'
             )
-            
             if producto.stock > 0:
                 producto.stock -= 1
                 producto.save()
-
     return render(request, 'marketplace/pago_exitoso.html')
 
 @staff_member_required
@@ -208,14 +194,15 @@ def panel_administrador(request):
         'tus_ganancias': tus_ganancias,
     })
 
+@login_required
+def mi_inventario(request):
+    productos = IndustrialProduct.objects.filter(user=request.user)
+    return render(request, 'marketplace/mi_inventario.html', {'products': productos})
+
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
     venta = get_object_or_404(Sale, id=venta_id)
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
-    return redirect('panel_admin')
-
-
-
-
-
+    # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
+    return redirect('panel_administrador')
