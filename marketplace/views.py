@@ -287,6 +287,16 @@ def mercadopago_webhook(request):
         return HttpResponse(status=200) # SIEMPRE respondemos 200
     return HttpResponse(status=200)
 
+@login_required
+def confirmar_recepcion(request, venta_id):
+    # Buscamos la venta, asegurándonos de que sea de este usuario
+    venta = get_object_or_404(Sale, id=venta_id, buyer=request.user)
+    venta.recibido_por_comprador = True
+    venta.save()
+    messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
+    return redirect('mis_compras') # O como se llame tu vista de historial
+
+
 
 
 
