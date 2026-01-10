@@ -246,42 +246,34 @@ def cancelar_venta(request, venta_id):
 @csrf_exempt
 def mercadopago_webhook(request):
     if request.method == 'POST':
-        payment_id = request.GET.get('id')
+        # 1. Intentamos sacar el ID del pago
+        payment_id = request.GET.get('id') or request.GET.get('data.id')
         
         if not payment_id:
             try:
                 data = json.loads(request.body)
                 payment_id = data.get('data', {}).get('id') or data.get('id')
-            except:
-                pass
+            except: pass
 
         if payment_id:
-            # --- ENVÍO DE CORREO DE AVISO ---
+            # 2. Obtenemos el producto (Mercado Pago nos devuelve el external_reference que enviamos)
+            # En una implementación real usarías el SDK para consultar el external_reference, 
+            # pero si ya configuraste el 'pago_exitoso', el registro ya se hace ahí.
+            
+            # 3. Avisamos por correo para que tú lo valides manualmente si algo falla
             try:
-                asunto = f"✅ ¡Nueva Notificación de Pago! ID: {payment_id}"
-                mensaje = (
-                    f"Hola administrador,\n\n"
-                    f"Se ha recibido una notificación de pago desde Mercado Pago.\n"
-                    f"ID del Pago: {payment_id}\n\n"
-                    f"Por favor, revisa tu panel de Mercado Pago y el Panel de Ventas "
-                    f"de Mercado Industrial para confirmar los detalles del equipo.\n\n"
-                    f"Saludos,\nTu Sistema Mercado Industrial"
-                )
-                
                 send_mail(
-                    asunto,
-                    mensaje,
-                    settings.DEFAULT_FROM_EMAIL, # Tu correo de salida
-                    [settings.ADMIN_EMAIL],      # Tu correo personal (donde recibes)
+                    f"✅ Pago Confirmado #{payment_id}",
+                    f"Se ha recibido un pago. Revisa tu panel administrativo para confirmar el stock.",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.ADMIN_EMAIL],
                     fail_silently=False,
                 )
-            except Exception as e:
-                print(f"Error enviando correo: {e}")
+            except: pass
 
-            return HttpResponse(status=200)
-        
-        return HttpResponse(status=200)
+        return HttpResponse(status=200) # SIEMPRE respondemos 200
     return HttpResponse(status=200)
+
 
 
 
