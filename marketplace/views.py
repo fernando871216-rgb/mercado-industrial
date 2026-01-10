@@ -11,8 +11,9 @@ from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from .models import IndustrialProduct, Sale
+from .models import IndustrialProduct, Sale, Profile
 from .forms import UserUpdateForm, ProfileUpdateForm
+from django.contrib import messages
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -132,18 +133,28 @@ def borrar_producto(request, pk):
 
 @login_required
 def editar_perfil(request):
-    Profile.objects.get_or_create(user=request.user)
+    # Esto asegura que el perfil exista. Si no existe, lo crea.
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
+        # Pasamos instance=request.user.profile para que SOBREESCRIBA los datos
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
+        
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            return redirect('home')
+            # Creamos el mensaje de éxito
+            messages.success(request, f'¡Datos guardados correctamente!')
+            return redirect('editar_perfil') # Redirige aquí mismo para ver los cambios
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
-    return render(request, 'marketplace/editar_perfil.html', {'u_form': u_form, 'p_form': p_form})
+    
+    return render(request, 'marketplace/editar_perfil.html', {
+        'u_form': u_form, 
+        'p_form': p_form
+    })
 
 def registro(request):
     if request.method == 'POST':
@@ -274,6 +285,7 @@ def mercadopago_webhook(request):
 
         return HttpResponse(status=200) # SIEMPRE respondemos 200
     return HttpResponse(status=200)
+
 
 
 
