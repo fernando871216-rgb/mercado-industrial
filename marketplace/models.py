@@ -37,6 +37,9 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
+    clabe = models.CharField(max_length=18, blank=True, null=True, verbose_name="CLABE Interbancaria")
+    banco = models.CharField(max_length=50, blank=True, null=True, verbose_name="Nombre del Banco")
+    beneficiario = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nombre del Beneficiario")
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
@@ -83,3 +86,4 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
