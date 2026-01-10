@@ -1,0 +1,33 @@
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;">
+    
+    <h1 style="color: #003366; border-bottom: 3px solid #eee; padding-bottom: 15px; margin-bottom: 30px;">
+        <i class="fas fa-gavel"></i> Términos y Condiciones
+    </h1>
+
+    <p style="color: #7f8c8d; font-style: italic; margin-bottom: 30px;">Última actualización: Enero 2026</p>
+
+    <div style="line-height: 1.8; color: #4a5568;">
+        <h3 style="color: #2c3e50;">1. Naturaleza del Servicio</h3>
+        <p>Mercado Industrial es una plataforma digital que facilita el contacto entre compradores y vendedores de equipo industrial. Nuestra labor se limita a proporcionar la tecnología de exhibición y la pasarela de pagos segura.</p>
+
+        <h3 style="color: #2c3e50;">2. Responsabilidad de la Operación</h3>
+        <p><strong>Logística y Envío:</strong> Los usuarios reconocen que Mercado Industrial NO gestiona envíos. El método de entrega, costos de flete y seguros del equipo son responsabilidad exclusiva del comprador y el vendedor.</p>
+        
+        <h3 style="color: #2c3e50;">3. Garantía de Equipos</h3>
+        <p>Al tratarse de un mercado entre particulares o empresas externas, Mercado Industrial no garantiza el estado físico, mecánico o funcional de los equipos. Recomendamos usar el chat de WhatsApp para solicitar videos de funcionamiento o pruebas antes de finalizar la compra.</p>
+
+        <h3 style="color: #2c3e50;">4. Comisiones y Pagos</h3>
+        <p>Los pagos realizados mediante la plataforma están protegidos por Mercado Pago. La comisión por uso de plataforma (5%) y las tarifas bancarias son retenidas al momento de la transacción y no son reembolsables una vez que el servicio de contacto se ha efectuado.</p>
+
+        <h3 style="color: #2c3e50;">5. Conducta del Usuario</h3>
+        <p>Queda prohibido el uso de la plataforma para actividades ilícitas. Nos reservamos el derecho de eliminar cualquier cuenta que reciba reportes de fraude o mal comportamiento comercial.</p>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+        <a href="{% url 'home' %}" style="background: #003366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">He leído y acepto los términos</a>
+    </div>
+</div>
+{% endblock %}
