@@ -64,23 +64,44 @@
                 {% endif %}
             </div>
 
-            {% if product.stock > 0 and user.is_authenticated %}
-                {% if preference_id %}
-                    <div id="wallet_container" style="margin-bottom: 15px;"></div>
-                    <script src="https://sdk.mercadopago.com/js/v2"></script>
-                    <script>
-                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
-                        const bricksBuilder = mp.bricks();
-                        bricksBuilder.create("wallet", "wallet_container", {
-                            initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
-                        });
-                    </script>
+            <div style="margin-bottom: 25px;">
+                {% if product.stock > 0 and user.is_authenticated %}
+                    
+                    {% if preference_id %}
+                        <p style="font-size: 0.85rem; color: #2c3e50; font-weight: bold; margin-bottom: 10px;">Pagar con Mercado Pago:</p>
+                        <div id="wallet_container" style="margin-bottom: 15px;"></div>
+                        <script src="https://sdk.mercadopago.com/js/v2"></script>
+                        <script>
+                            const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                            const bricksBuilder = mp.bricks();
+                            bricksBuilder.create("wallet", "wallet_container", {
+                                initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
+                            });
+                        </script>
+                    {% endif %}
+
+                    <div style="text-align: center; margin: 20px 0; color: #bdc3c7; font-weight: bold;">O TAMBIÉN</div>
+
+                    <form action="{% url 'procesar_pago' product.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#1a252f'" onmouseout="this.style.background='#2c3e50'">
+                            <i class="fas fa-handshake"></i> Confirmar Intención de Compra
+                        </button>
+                        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 8px; text-align: center;">
+                            Usa este botón para registrar la operación si acordaste el pago por fuera.
+                        </p>
+                    </form>
+
+                {% elif not user.is_authenticated %}
+                    <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 0.9rem; text-align: center;">
+                        Debes iniciar sesión para realizar una compra o ver el contacto.
+                    </div>
                 {% endif %}
-            {% endif %}
+            </div>
 
             <div style="margin-top: 15px; font-size: 0.8rem; color: #7f8c8d; text-align: center;">
                 <i class="fas fa-shield-alt"></i> Tu pago está protegido. Al comprar aceptas los 
-                <a href="/terminos/" style="color: #3498db;">Términos y Condiciones</a>.
+                <a href="/terminos/" style="color: #3498db; text-decoration: none;">Términos y Condiciones</a>.
             </div>
 
             <div style="margin-top: 30px;">
