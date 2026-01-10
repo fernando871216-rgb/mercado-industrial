@@ -10,7 +10,15 @@
             <h2 style="margin: 0; font-size: 1.5rem;">Configuración de mi Perfil</h2>
             <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Administra tu información personal y datos de cobro</p>
         </div>
-
+        
+        {% if messages %}
+    {% for message in messages %}
+        <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+        
         <form method="POST" style="padding: 25px;">
             {% csrf_token %}
 
@@ -110,3 +118,4 @@
     }
 </style>
 {% endblock %}
+
