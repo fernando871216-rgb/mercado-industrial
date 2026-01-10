@@ -49,10 +49,11 @@
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
         {% for product in products %}
-            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s;" 
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}" 
                  onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                 
                 <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
+                    
                     <div style="height: 200px; background: #fdfdfd; display: flex; align-items: center; justify-content: center; padding: 10px;">
                         {% if product.image %}
                             <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
@@ -62,22 +63,22 @@
                     </div>
                     
                     <div style="padding: 20px;">
-                        <span style="color: #3498db; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{{ product.brand }}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <span style="color: #3498db; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{{ product.brand }}</span>
+                            
+                            {% if product.stock > 0 %}
+                                <span style="font-size: 0.7rem; background: #e6fcf5; color: #087f5b; padding: 2px 8px; border-radius: 4px; font-weight: bold;">
+                                    Stock: {{ product.stock }}
+                                </span>
+                            {% else %}
+                                <span style="font-size: 0.7rem; background: #fff5f5; color: #fa5252; padding: 2px 8px; border-radius: 4px; font-weight: bold;">
+                                    Agotado
+                                </span>
+                            {% endif %}
+                        </div>
+
                         <h4 style="margin: 5px 0 10px 0; font-size: 1.1rem; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             {{ product.title }}
                         </h4>
+
                         <div style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">
-                            ${{ product.price }} <span style="font-size: 0.8rem; font-weight: normal; color: #95a5a6;">MXN</span>
-                        </div>
-                        <div style="margin-top: 15px; font-size: 0.85rem; color: #7f8c8d;">
-                            <i class="fas fa-barcode"></i> P/N: {{ product.part_number|default:"S/N" }}
-                        </div>
-                    </div>
-                </a>
-            </div>
-        {% empty %}
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No se encontraron productos.</p>
-        {% endfor %}
-    </div>
-</div>
-{% endblock %}
