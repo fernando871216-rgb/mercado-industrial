@@ -54,6 +54,38 @@
                 {% endif %}
             </div>
 
+            <div style="margin-bottom: 25px;">
+                {% if product.stock > 0 and user.is_authenticated %}
+                    
+                    {% if preference_id %}
+                        <div id="wallet_container" style="margin-bottom: 15px;"></div>
+                        <script src="https://sdk.mercadopago.com/js/v2"></script>
+                        <script>
+                            const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                            const bricksBuilder = mp.bricks();
+                            bricksBuilder.create("wallet", "wallet_container", {
+                                initialization: {
+                                    preferenceId: "{{ preference_id }}",
+                                    redirectMode: "modal"
+                                },
+                            });
+                        </script>
+                    {% endif %}
+
+                    <form action="{% url 'procesar_pago' product.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                            <i class="fas fa-shopping-cart"></i> Confirmar Intención de Compra
+                        </button>
+                    </form>
+
+                {% elif not user.is_authenticated %}
+                    <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 0.9rem; text-align: center;">
+                        Debes iniciar sesión para realizar una compra.
+                    </div>
+                {% endif %}
+            </div>
+
             <div style="margin-top: 20px;">
                 <h3 style="font-size: 1rem; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px;">Descripción</h3>
                 <p style="line-height: 1.6; color: #4a5568; white-space: pre-line;">{{ product.description }}</p>
