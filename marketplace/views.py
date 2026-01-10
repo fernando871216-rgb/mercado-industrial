@@ -86,7 +86,7 @@ def procesar_pago(request, product_id):
                 product=producto,
                 buyer=request.user,
                 price=producto.price,
-                status='completado'
+                status='pendiente'
             )
             producto.stock -= 1
             producto.save()
@@ -214,4 +214,5 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
     return redirect('panel_administrador')
+
 
