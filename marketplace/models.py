@@ -52,6 +52,7 @@ class Sale(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='pendiente')
     pagado_a_vendedor = models.BooleanField(default=False)
+    recibido_por_comprador = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Venta de {self.product.title}"
@@ -86,5 +87,6 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
