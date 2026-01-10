@@ -1,48 +1,48 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div style="padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 0 auto;">
+<div style="padding: 20px; font-family: sans-serif; max-width: 1200px; margin: 0 auto;">
     
-    <div style="margin-bottom: 40px; background: #003366; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <div style="margin-bottom: 40px; background: #003366; padding: 30px; border-radius: 15px;">
         <form method="GET" action="{% url 'home' %}" style="display: flex; gap: 10px;">
             <input type="text" name="q" placeholder="Buscar por título, marca o número de parte..." value="{{ query|default:'' }}" 
-                   style="flex: 1; padding: 15px; border-radius: 8px; border: none; font-size: 1rem; outline: none;">
-            <button type="submit" style="background: #27ae60; color: white; border: none; padding: 0 30px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 1rem;">
-                <i class="fas fa-search"></i> Buscar
+                   style="flex: 1; padding: 15px; border-radius: 8px; border: none; font-size: 1rem;">
+            <button type="submit" style="background: #27ae60; color: white; border: none; padding: 0 30px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                Buscar
             </button>
         </form>
     </div>
 
-    <h2 style="color: #2c3e50; margin-bottom: 25px; border-left: 5px solid #27ae60; padding-left: 15px; display: flex; align-items: center; justify-content: space-between;">
-        <span>
-            {% if query %}
-                Resultados para: "{{ query }}"
-            {% elif category %}
-                Categoría: {{ category.name }}
-            {% else %}
-                Equipos Disponibles
-            {% endif %}
-        </span>
-        {% if query or category %}
-            <a href="{% url 'home' %}" style="font-size: 0.9rem; color: #666; font-weight: normal; text-decoration: none; background: #eee; padding: 5px 12px; border-radius: 20px;">Ver todo</a>
-        {% endif %}
+    <h2 style="color: #2c3e50; margin-bottom: 25px; border-left: 5px solid #27ae60; padding-left: 15px;">
+        {% if query %} Resultados para: "{{ query }}" {% else %} Equipos Disponibles {% endif %}
     </h2>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
         {% for product in products %}
-            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid #eee; display: flex; flex-direction: column;">
-                
-                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit; flex-grow: 1;">
-                    
-                    <div style="height: 220px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; position: relative;">
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
+                    <div style="height: 200px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 10px;">
+                            <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                         {% else %}
-                            <div style="text-align: center; color: #ccc;">
-                                <i class="fas fa-tools" style="font-size: 3rem;"></i>
-                                <p style="font-size: 0.8rem; margin-top: 5px;">Sin imagen</p>
-                            </div>
+                            <i class="fas fa-tools" style="font-size: 3rem; color: #ccc;"></i>
                         {% endif %}
-                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; color: #003366; border: 1px solid #ddd;">
-                            {{ product.brand }}
+                    </div>
+
+                    <div style="padding: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1.1rem; color: #333;">{{ product.title }}</h3>
+                        <p style="color: #666; font-size: 0.9rem;">Marca: {{ product.brand }}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <span style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">${{ product.price }}</span>
+                            <span style="font-size: 0.8rem; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px;">
+                                Stock: {{ product.stock }}
+                            </span>
                         </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center; padding: 40px;">No se encontraron productos.</p>
+        {% endfor %} </div>
+</div>
+{% endblock %}
