@@ -97,6 +97,25 @@
     <main style="padding: 20px 5%;">
         {% block content %}{% endblock %}
     </main>
-
+<footer style="background: #2c3e50; color: white; padding: 40px 20px; margin-top: 60px; text-align: center; font-family: 'Segoe UI', sans-serif;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="margin-bottom: 20px;">
+            <strong style="font-size: 1.2rem;">Mercado Industrial</strong>
+            <p style="font-size: 0.9rem; color: #bdc3c7;">El punto de encuentro para la industria mexicana.</p>
+        </div>
+        
+        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; font-size: 0.9rem;">
+            <a href="{% url 'home' %}" style="color: #ecf0f1; text-decoration: none;">Inicio</a>
+            <a href="/terminos/" style="color: #ecf0f1; text-decoration: none;">Términos y Condiciones</a>
+            <a href="mailto:soporte@tuplataforma.com" style="color: #ecf0f1; text-decoration: none;">Soporte</a>
+        </div>
+        
+        <div style="border-top: 1px solid #34495e; padding-top: 20px; font-size: 0.8rem; color: #95a5a6;">
+            &copy; 2026 Mercado Industrial. Todos los derechos reservados. <br>
+            Plataforma desarrollada para facilitar el comercio industrial seguro.
+        </div>
+    </div>
+</footer>
 </body>
 </html>
+
