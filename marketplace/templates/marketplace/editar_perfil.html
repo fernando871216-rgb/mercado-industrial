@@ -13,8 +13,11 @@
         
         {% if messages %}
     {% for message in messages %}
-        <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold;">
-            <i class="fas fa-check-circle"></i> {{ message }}
+        <div style="padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; 
+            {% if message.tags == 'success' %} background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+            {% else %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i> 
+            {{ message }}
         </div>
     {% endfor %}
 {% endif %}
@@ -118,4 +121,5 @@
     }
 </style>
 {% endblock %}
+
 
