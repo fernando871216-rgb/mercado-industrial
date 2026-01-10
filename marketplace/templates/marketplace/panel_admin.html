@@ -30,7 +30,24 @@
                 </div>
                 <div style="text-align: right;">
                     <strong style="display: block; font-size: 0.9rem; color: #2c3e50;">{{ venta.product.user.username }}</strong>
-                    <span style="font-size: 0.7rem; color: #7f8c8d; word-break: break-all;">{{ venta.product.user.email }}</span>
+                    <span style="font-size: 0.7rem; color: #7f8c8d;">{{ venta.product.user.email }}</span>
+                </div>
+            </div>
+
+            <div style="background: #ebf5ff; padding: 15px; border-bottom: 1px solid #d1e9ff;">
+                <span style="display: block; font-size: 0.7rem; color: #3498db; font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">Datos para Depósito:</span>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 5px; font-size: 0.85rem; color: #2c3e50;">
+                    <div><strong>Banco:</strong> {{ venta.product.user.profile.banco|default:"No registrado" }}</div>
+                    <div><strong>Titular:</strong> {{ venta.product.user.profile.beneficiario|default:"---" }}</div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 8px; border-radius: 8px; border: 1px solid #d1e9ff; margin-top: 5px;">
+                        <span style="font-weight: bold; color: #003366;">CLABE:</span>
+                        <code id="clabe-{{ venta.id }}" style="font-size: 1rem; color: #e83e8c;">{{ venta.product.user.profile.clabe|default:"No registrada" }}</code>
+                        {% if venta.product.user.profile.clabe %}
+                        <button onclick="copiarClabe('clabe-{{ venta.id }}')" style="margin-left: auto; background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer;">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -40,19 +57,8 @@
                     <strong style="color: #34495e;">{{ venta.product.title }}</strong>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                    <div style="background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px solid #f0f0f0;">
-                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d;">Total Venta</span>
-                        <strong style="color: #2c3e50; font-size: 0.9rem;">${{ venta.price }}</strong>
-                    </div>
-                    <div style="background: #fff9f4; padding: 10px; border-radius: 8px; border: 1px solid #ffecdb;">
-                        <span style="display: block; font-size: 0.7rem; color: #e67e22;">Tu 5% (Comisión)</span>
-                        <strong style="color: #e67e22; font-size: 0.9rem;">+${{ venta.price|calcular_tu_comision|stringformat:".2f" }}</strong>
-                    </div>
-                </div>
-
                 <div style="background: #f4fff9; padding: 12px; border-radius: 10px; border: 1px solid #eafaf1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-weight: bold; color: #27ae60; font-size: 0.85rem;">Monto a Transferir:</span>
+                    <span style="font-weight: bold; color: #27ae60; font-size: 0.85rem;">Monto a enviar al vendedor:</span>
                     <span style="font-weight: 800; color: #27ae60; font-size: 1.1rem;">
                         ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
                     </span>
@@ -60,11 +66,11 @@
 
                 <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" style="width: 100%; background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: 0.3s;">
+                    <button type="submit" style="width: 100%; background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
                         {% if venta.pagado_a_vendedor %}
                             <i class="fas fa-undo"></i> Desmarcar Pago
                         {% else %}
-                            <i class="fas fa-check"></i> Marcar como Pagado al Vendedor
+                            <i class="fas fa-check"></i> Marcar como Pagado
                         {% endif %}
                     </button>
                 </form>
@@ -78,4 +84,17 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+function copiarClabe(idElemento) {
+    var aux = document.createElement("input");
+    aux.setAttribute("value", document.getElementById(idElemento).innerHTML);
+    document.body.appendChild(aux);
+    aux.select();
+    document.execCommand("copy");
+    document.body.removeChild(aux);
+    alert("CLABE copiada al portapapeles");
+}
+</script>
+
 {% endblock %}
