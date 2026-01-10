@@ -11,6 +11,7 @@ from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
+from .models import IndustrialProduct, Sale
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -244,23 +245,34 @@ def cancelar_venta(request, venta_id):
 
 @csrf_exempt
 def mercadopago_webhook(request):
-    # Mercado Pago envía los datos en formato JSON
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            # Buscamos el ID del pago en la notificación
-            if data.get('type') == 'payment':
-                payment_id = data.get('data', {}).get('id')
-                
-                # Aquí podrías usar la librería de Mercado Pago para consultar el estado real
-                # Pero para fines prácticos, si recibes la notificación, procedemos a validar:
-                # (Esta es la lógica que asegura que el stock baje pase lo que pase)
-                
+        payment_id = None
+        
+        # 1. Intentamos obtener el ID si viene en la URL (como en tus logs)
+        payment_id = request.GET.get('id')
+        
+        # 2. Si no viene en la URL, intentamos leerlo del cuerpo JSON
+        if not payment_id:
+            try:
+                data = json.loads(request.body)
+                payment_id = data.get('data', {}).get('id') or data.get('id')
+            except Exception:
+                pass
+
+        # Si logramos obtener un ID de pago, respondemos con éxito
+        if payment_id:
+            print(f"--- NOTIFICACIÓN RECIBIDA --- ID de Pago: {payment_id}")
+            
+            # Aquí es donde podrías agregar lógica para marcar como pagado,
+            # pero por ahora lo más importante es que tu servidor responda 200 OK
+            # para que Mercado Pago deje de enviar errores.
             return HttpResponse(status=200)
-        except Exception as e:
-            print(f"Error en Webhook: {e}")
-            return HttpResponse(status=400)
+        
+        # Si no hay ID pero la petición llegó, igual respondemos 200 para evitar reintentos infinitos
+        return HttpResponse(status=200)
+
     return HttpResponse(status=200)
+
 
 
 
