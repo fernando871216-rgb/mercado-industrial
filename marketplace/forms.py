@@ -23,12 +23,15 @@ class UserUpdateForm(forms.ModelForm):
         }
 
 class ProfileUpdateForm(forms.ModelForm):
-    # Definimos el campo phone explícitamente para asegurar la validación
-    phone = forms.CharField(label="Número de WhatsApp", required=False)
+    # Ponemos todo como False para que no bloquee el guardado si falta algo
+    phone = forms.CharField(required=False)
+    clabe = forms.CharField(required=False)
+    banco = forms.CharField(required=False)
+    beneficiario = forms.CharField(required=False)
+    address = forms.CharField(required=False, widget=forms.Textarea)
 
     class Meta:
         model = Profile
-        # IMPORTANTE: Estos nombres deben coincidir EXACTAMENTE con tu modelo
         fields = ['phone', 'address', 'clabe', 'banco', 'beneficiario']
         
         widgets = {
@@ -102,6 +105,7 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
 
 
 
