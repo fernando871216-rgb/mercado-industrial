@@ -161,16 +161,30 @@ def pago_fallido(request):
 
 @login_required
 def pago_exitoso(request):
+    # Intentamos obtener el ID del producto desde la URL que envía Mercado Pago
     product_id = request.GET.get('external_reference')
     producto_obj = None
-    
+    venta_creada = False
+
     if product_id:
         producto_obj = get_object_or_404(IndustrialProduct, id=product_id)
-        # (Aquí mantienes tu lógica existente de creación de Sale)
         
+        # Verificamos si ya existe una venta registrada para este pago (para no duplicar)
+        # Si no existe, la creamos y descontamos stock
+        if producto_obj.stock > 0:
+            Sale.objects.create(
+                product=producto_obj,
+                buyer=request.user,
+                price=producto_obj.price,
+                status='completado' # Al ser pago real, entra como completado
+            )
+            producto_obj.stock -= 1
+            producto_obj.save()
+            venta_creada = True
+
     return render(request, 'marketplace/pago_exitoso.html', {
-        'product_id': product_id,
-        'producto': producto_obj  # Pasamos el objeto completo para ver al vendedor
+        'producto': producto_obj,
+        'venta_creada': venta_creada
     })
 
 @staff_member_required
@@ -224,6 +238,7 @@ def cancelar_venta(request, venta_id):
             venta.save()
             
     return redirect('mis_ventas')
+
 
 
 
