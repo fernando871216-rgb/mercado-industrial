@@ -78,9 +78,11 @@ def cambiar_estado_venta(request, venta_id):
 def procesar_pago(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
     if producto.stock > 0:
+    
         Sale.objects.create(
             product=producto, 
             buyer=request.user, 
+            seller=producto.user, 
             price=producto.price, 
             status='pendiente'
         )
@@ -181,3 +183,4 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
     return redirect('panel_admin')
+
