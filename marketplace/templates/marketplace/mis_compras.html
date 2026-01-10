@@ -13,43 +13,35 @@
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                     <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Producto</th>
                     <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Vendedor</th>
-                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Precio</th>
+                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Monto Pagado</th>
                     <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Estado</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras %}
-                <tr style="border-bottom: 1px solid #eee; transition: 0.3s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 15px; font-weight: bold; color: #2c3e50;">
                         {{ compra.product.title }}
                     </td>
                     
                     <td style="padding: 15px; color: #34495e;">
                         <i class="fas fa-user-circle" style="color: #bdc3c7;"></i> 
-                        {{ compra.seller.username|default:"Usuario" }}
-                        {% if compra.seller.profile.phone %}
-                            <br>
-                            <small style="color: #27ae60; font-size: 0.8rem;">
-                                <i class="fab fa-whatsapp"></i> {{ compra.seller.profile.phone }}
-                            </small>
-                        {% endif %}
-                    </td>
+                        {{ compra.product.user.username }} </td>
                     
                     <td style="padding: 15px; color: #2c3e50; font-weight: bold;">
-                        ${{ compra.amount }} <span style="font-size: 0.75rem; color: #95a5a6;">MXN</span>
+                        ${{ compra.price|default:compra.product.price }} <span style="font-size: 0.75rem; color: #95a5a6;">MXN</span>
                     </td>
                     
                     <td style="padding: 15px;">
                         <span style="background: #e6fcf5; color: #087f5b; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block;">
-                            {{ compra.status|capfirst }}
+                            {{ compra.status|default:"Completado"|capfirst }}
                         </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="4" style="padding: 40px; text-align: center; color: #95a5a6;">
-                        <i class="fas fa-info-circle" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
-                        Aún no has realizado ninguna compra.
+                        No hay compras registradas.
                     </td>
                 </tr>
                 {% endfor %}
