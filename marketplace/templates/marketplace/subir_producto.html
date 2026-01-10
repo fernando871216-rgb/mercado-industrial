@@ -1,56 +1,113 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 3rem auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+<div class="container" style="max-width: 700px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="color: #2c3e50;">{% if edit %}Editar Equipo{% else %}Publicar Nuevo Equipo{% endif %}</h2>
-        <p style="color: #7f8c8d;">Completa la ficha técnica para que los compradores puedan encontrar tu equipo.</p>
-    </div>
+    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 25px rgba(0,0,0,0.1);">
+        <h2 style="color: #2c3e50; margin-bottom: 25px; text-align: center;">
+            <i class="fas fa-upload"></i> {% if edit %}Editar{% else %}Publicar{% endif %} Producto
+        </h2>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <form method="POST" enctype="multipart/form-data" id="productoForm">
+            {% csrf_token %}
+            
             {% for field in form %}
-                <div style="margin-bottom: 15px; {% if field.name == 'description' %}grid-column: span 2;{% endif %}">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">
-                        {{ field.label }}
-                    </label>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; color: #34495e; margin-bottom: 8px;">{{ field.label }}</label>
                     {{ field }}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px;">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
                 </div>
             {% endfor %}
-        </div>
 
-        <div style="margin-top: 30px;">
-            <button type="submit" style="width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
-                {% if edit %}Guardar Cambios{% else %}Publicar Ahora{% endif %}
+            <div id="cuadro-ganancias" style="background: #f4f7f6; border: 1px solid #ced4da; padding: 20px; border-radius: 12px; margin: 25px 0;">
+                <h4 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #dee2e6; padding-bottom: 10px;">
+                    <i class="fas fa-hand-holding-usd"></i> Resumen de Liquidación
+                </h4>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Precio de venta:</span>
+                    <strong id="resumen-precio">$0.00</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #555;">
+                    <span>Comisión Plataforma (5%):</span>
+                    <span id="resumen-comision-plataforma">-$0.00</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #555;">
+                    <span>Tarifa Mercado Pago (3.49% + $4):</span>
+                    <span id="resumen-comision-mp">-$0.00</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #555; font-size: 0.85rem;">
+                    <span>IVA de comisiones (16%):</span>
+                    <span id="resumen-iva">-$0.00</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 1.25rem; color: #27ae60; font-weight: bold; border-top: 2px solid #fff; padding-top: 10px;">
+                    <span>Ganancia Neta:</span>
+                    <span id="resumen-neto">$0.00</span>
+                </div>
+                
+                <p style="font-size: 0.7rem; color: #6c757d; margin-top: 15px; line-height: 1.3;">
+                    * Las tarifas de Mercado Pago son estimadas para cobros con tarjeta o dinero en cuenta. El IVA se aplica sobre las comisiones cobradas.
+                </p>
+            </div>
+
+            <button type="submit" style="width: 100%; background: #003366; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                Confirmar y Publicar
             </button>
-        </div>
-    </form>
-
-    <div style="margin-top: 20px; text-align: center;">
-        <a href="{% url 'home' %}" style="color: #95a5a6; text-decoration: none; font-size: 0.9rem;">Cancelar y volver</a>
+        </form>
     </div>
 </div>
 
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputPrecio = document.querySelector('input[name="price"]');
+        const resPrecio = document.getElementById('resumen-precio');
+        const resPlataforma = document.getElementById('resumen-comision-plataforma');
+        const resMP = document.getElementById('resumen-comision-mp');
+        const resIVA = document.getElementById('resumen-iva');
+        const resNeto = document.getElementById('resumen-neto');
+
+        function actualizarCalculos() {
+            let precio = parseFloat(inputPrecio.value) || 0;
+            
+            // 1. Tu comisión (5%)
+            let comisionPlataforma = precio * 0.05;
+            
+            // 2. Comisión Mercado Pago (3.49% + $4 MXN fijo)
+            let comisionMP = (precio * 0.0349) + 4;
+            if (precio <= 0) comisionMP = 0;
+
+            // 3. IVA sobre ambas comisiones (16%)
+            let ivaComisiones = (comisionPlataforma + comisionMP) * 0.16;
+
+            // 4. Resultado Final
+            let totalDescuentos = comisionPlataforma + comisionMP + ivaComisiones;
+            let neto = precio - totalDescuentos;
+            if (neto < 0) neto = 0;
+
+            // Formatear moneda
+            const fmt = (val) => '$' + val.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            resPrecio.innerText = fmt(precio);
+            resPlataforma.innerText = '-' + fmt(comisionPlataforma);
+            resMP.innerText = '-' + fmt(comisionMP);
+            resIVA.innerText = '-' + fmt(ivaComisiones);
+            resNeto.innerText = fmt(neto);
+        }
+
+        inputPrecio.addEventListener('input', actualizarCalculos);
+        actualizarCalculos();
+    });
+</script>
+
 <style>
-    /* Estilos para los campos del formulario */
-    input[type="text"], input[type="number"], select, textarea {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #dcdde1;
-        border-radius: 6px;
-        font-size: 1rem;
-        box-sizing: border-box;
+    input, select, textarea {
+        width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 1rem;
     }
-    textarea { height: 120px; resize: vertical; }
-    input[type="file"] { padding: 10px 0; }
-    input:focus { border-color: #3498db; outline: none; box-shadow: 0 0 5px rgba(52, 152, 219, 0.2); }
+    label { margin-top: 10px; }
 </style>
 {% endblock %}
