@@ -23,27 +23,41 @@ class UserUpdateForm(forms.ModelForm):
         }
 
 class ProfileUpdateForm(forms.ModelForm):
-    # CORRECCIÓN: Cambiamos phone_number por phone para que coincida con el MODELO
+    # Definimos el campo phone explícitamente para personalizar la etiqueta
     phone = forms.CharField(label="Número de WhatsApp", required=True)
 
     class Meta:
         model = Profile
-        # CORRECCIÓN: Aquí también debe ser phone
         fields = ['phone', 'address', 'clabe', 'banco', 'beneficiario'] 
+        
+        # CORRECCIÓN: Quitamos los duplicados y dejamos una sola configuración por campo
         widgets = {
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 5512345678'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Dirección completa'}),
-            'phone': forms.TextInput(attrs={'placeholder': '10 dígitos sin espacios'}),
-            'clabe': forms.TextInput(attrs={'placeholder': '18 dígitos de tu tarjeta/cuenta'}),
-            'banco': forms.TextInput(attrs={'placeholder': 'Ej: BBVA, Santander...'}),
-            'beneficiario': forms.TextInput(attrs={'placeholder': 'Nombre del titular de la cuenta'}),
-            'address': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Calle, número, colonia y CP'})
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '10 dígitos sin espacios'
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Calle, número, colonia y CP'
+            }),
+            'clabe': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '18 dígitos de tu tarjeta/cuenta'
+            }),
+            'banco': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: BBVA, Santander...'
+            }),
+            'beneficiario': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Nombre del titular de la cuenta'
+            }),
         }
 
-    # Validación corregida para el nombre del campo 'phone'
     def clean_phone(self):
         phone_data = self.cleaned_data.get('phone')
-        # Quita espacios o guiones
+        # Quita espacios o guiones usando la librería re
         phone_data = re.sub(r'\D', '', phone_data) 
         if len(phone_data) != 10:
             raise forms.ValidationError("El número de celular debe tener exactamente 10 dígitos.")
@@ -97,4 +111,5 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
 
