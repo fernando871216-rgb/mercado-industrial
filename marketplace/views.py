@@ -163,6 +163,34 @@ def pago_fallido(request):
 
 @login_required
 def pago_exitoso(request):
+    # 1. Obtenemos el ID del producto que se pasó por la URL (Mercado Pago lo devuelve si lo configuramos)
+    # O bien, buscamos el producto más reciente basado en la intención de compra
+    product_id = request.GET.get('external_reference') 
+    
+    if product_id:
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        # 2. Verificamos si ya existe esta venta para no duplicarla si refrescan la página
+        venta_existe = Sale.objects.filter(
+            product=producto, 
+            buyer=request.user, 
+            status='completado'
+        ).exists()
+
+        if not venta_existe:
+            # 3. Creamos la venta oficial que aparecerá en la tabla
+            Sale.objects.create(
+                product=producto,
+                buyer=request.user,
+                seller=producto.user,
+                price=producto.price,
+                status='completado' # Marcamos como completado porque el pago fue exitoso
+            )
+            # 4. Descontamos el stock
+            if producto.stock > 0:
+                producto.stock -= 1
+                producto.save()
+
     return render(request, 'marketplace/pago_exitoso.html')
 
 @staff_member_required
@@ -183,4 +211,5 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
     return redirect('panel_admin')
+
 
