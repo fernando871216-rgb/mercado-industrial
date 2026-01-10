@@ -41,6 +41,7 @@ def detalle_producto(request, product_id):
                     "currency_id": "MXN"
                 }
             ],
+            "external_reference": str(product.id), # Vital para identificar qué se compró
             "back_urls": {
                 "success": request.build_absolute_uri(reverse('pago_exitoso')),
                 "failure": request.build_absolute_uri(reverse('pago_fallido')),
@@ -211,5 +212,6 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
     return redirect('panel_admin')
+
 
 
