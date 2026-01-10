@@ -22,16 +22,28 @@
                 <div style="display: flex; align-items: center; gap: 10px;">
                     {% if venta.pagado_a_vendedor %}
                         <i class="fas fa-check-circle" style="color: #27ae60; font-size: 1.2rem;"></i>
-                        <span style="font-size: 0.75rem; font-weight: bold; color: #27ae60;">PAGADO</span>
+                        <span style="font-size: 0.75rem; font-weight: bold; color: #27ae60;">PAGADO AL VENDEDOR</span>
                     {% else %}
                         <i class="fas fa-clock" style="color: #f39c12; font-size: 1.2rem;"></i>
-                        <span style="font-size: 0.75rem; font-weight: bold; color: #f39c12;">PENDIENTE</span>
+                        <span style="font-size: 0.75rem; font-weight: bold; color: #f39c12;">PENDIENTE DE LIQUIDAR</span>
                     {% endif %}
                 </div>
                 <div style="text-align: right;">
                     <strong style="display: block; font-size: 0.9rem; color: #2c3e50;">{{ venta.product.user.username }}</strong>
                     <span style="font-size: 0.7rem; color: #7f8c8d;">{{ venta.product.user.email }}</span>
                 </div>
+            </div>
+
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; text-align: center;">
+                {% if venta.recibido_por_comprador %}
+                    <div style="background: #eafaf1; color: #27ae60; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; border: 1px solid #d4edda; display: inline-block; width: 100%;">
+                        <i class="fas fa-user-check"></i> ¡EL CLIENTE YA RECIBIÓ EL PRODUCTO! (LISTO PARA PAGAR)
+                    </div>
+                {% else %}
+                    <div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; border: 1px solid #ffeeba; display: inline-block; width: 100%;">
+                        <i class="fas fa-truck-loading"></i> EL CLIENTE AÚN NO CONFIRMA RECEPCIÓN
+                    </div>
+                {% endif %}
             </div>
 
             <div style="background: #ebf5ff; padding: 15px; border-bottom: 1px solid #d1e9ff;">
@@ -53,7 +65,7 @@
 
             <div style="padding: 15px;">
                 <div style="margin-bottom: 12px;">
-                    <span style="font-size: 0.75rem; color: #95a5a6; text-transform: uppercase; display: block;">Producto:</span>
+                    <span style="font-size: 0.75rem; color: #95a5a6; text-transform: uppercase; display: block;">Producto vendido:</span>
                     <strong style="color: #34495e;">{{ venta.product.title }}</strong>
                 </div>
 
@@ -68,7 +80,7 @@
                     {% csrf_token %}
                     <button type="submit" style="width: 100%; background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
                         {% if venta.pagado_a_vendedor %}
-                            <i class="fas fa-undo"></i> Desmarcar Pago
+                            <i class="fas fa-undo"></i> Desmarcar Pago Realizado
                         {% else %}
                             <i class="fas fa-check"></i> Marcar como Pagado
                         {% endif %}
@@ -79,7 +91,7 @@
         {% empty %}
         <div style="text-align: center; padding: 50px; color: #bdc3c7;">
             <i class="fas fa-history" style="font-size: 3rem; opacity: 0.3; margin-bottom: 10px;"></i>
-            <p>No hay ventas para liquidar.</p>
+            <p>No hay ventas registradas.</p>
         </div>
         {% endfor %}
     </div>
