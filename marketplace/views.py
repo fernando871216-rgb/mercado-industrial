@@ -77,25 +77,29 @@ def cambiar_estado_venta(request, venta_id):
 
 @login_required
 def procesar_pago(request, product_id):
-    producto = get_object_or_404(IndustrialProduct, id=product_id)
-    if producto.stock > 0:
-    
+    if request.method == 'POST':
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        # 1. Creamos la venta SIN el argumento 'seller' para evitar la pantalla amarilla
         Sale.objects.create(
-            product=producto, 
-            buyer=request.user, 
-            seller=producto.user, 
-            price=producto.price, 
-            status='pendiente'
+            product=producto,
+            buyer=request.user,
+            price=producto.price,
+            status='completado'
         )
-        producto.stock -= 1
-        producto.save()
-        return redirect('mis_compras')
-    return redirect('home')
-
-@login_required
-def mi_inventario(request):
-    productos = IndustrialProduct.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'marketplace/mi_inventario.html', {'productos': productos})
+        
+        # 2. Descontamos el stock
+        if producto.stock > 1:
+            producto.stock -= 1
+            producto.save()
+        else:
+            producto.stock = 0
+            producto.save()
+            
+        # 3. Redirigimos a una página de éxito (puedes usar la misma de Mercado Pago)
+        return redirect('pago_exitoso')
+        
+    return redirect('detalle_producto', product_id=product_id)
 
 @login_required
 def subir_producto(request):
@@ -210,6 +214,7 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
     return redirect('panel_admin')
+
 
 
 
