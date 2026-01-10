@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
+from django.views.generic import TemplateView
 
 urlpatterns = [
     # --- PÁGINAS PRINCIPALES ---
@@ -34,6 +35,9 @@ urlpatterns = [
     # --- PANEL ADMINISTRATIVO (TU PANEL) ---
     path('panel-control/', views.panel_administrador, name='panel_admin'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
+    path('admin-panel/', views.panel_administrador, name='panel_admin'),
+    path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
