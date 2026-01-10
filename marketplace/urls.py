@@ -28,6 +28,7 @@ urlpatterns = [
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
     path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
     path('venta/cancelar/<int:venta_id>/', views.cancelar_venta, name='cancelar_venta'),
+    path('confirmar-recepcion/<int:venta_id>/', views.confirmar_recepcion, name='confirmar_recepcion'),
     
     # --- RESULTADOS DE PAGO ---
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
@@ -39,5 +40,6 @@ urlpatterns = [
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
