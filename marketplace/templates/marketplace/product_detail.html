@@ -22,7 +22,7 @@
             </div>
 
             <div style="margin-top: 20px; text-align: center;">
-                <a href="mailto:soporte@tuplataforma.com?subject=Reporte de producto: {{ product.title }} (ID: {{ product.id }})" 
+                <a href="mailto:soporte@initre.com?subject=Reporte de producto: {{ product.title }} (ID: {{ product.id }})" 
                    style="color: #e74c3c; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
                     <i class="fas fa-exclamation-triangle"></i> ¿Hay algún error? Reportar esta publicación
                 </a>
@@ -51,8 +51,8 @@
                 <h4 style="margin: 0 0 10px 0; color: #003366;"><i class="fab fa-whatsapp"></i> Contacto Directo</h4>
                 {% if user.is_authenticated %}
                     {% if product.user.profile.phone %}
-                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Al contactar, acuerda con el vendedor los términos de envío.</p>
-                        <a href="https://wa.me/52{{ product.user.profile.phone }}?text=Hola, me interesa el equipo: {{ product.title }}" target="_blank" style="display: block; text-align: center; background: #25D366; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Acuerda con el vendedor los términos de pago y entrega.</p>
+                        <a href="https://wa.me/{{ product.user.profile.phone }}?text=Hola, me interesa el equipo: {{ product.title }}" target="_blank" style="display: block; text-align: center; background: #25D366; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                             Chatear con Vendedor
                         </a>
                     {% else %}
@@ -68,7 +68,7 @@
                 {% if product.stock > 0 and user.is_authenticated %}
                     
                     {% if preference_id %}
-                        <p style="font-size: 0.85rem; color: #2c3e50; font-weight: bold; margin-bottom: 10px;">Pagar con Mercado Pago:</p>
+                        <p style="font-size: 0.85rem; color: #2c3e50; font-weight: bold; margin-bottom: 10px;">Pagar ahora por la plataforma:</p>
                         <div id="wallet_container" style="margin-bottom: 15px;"></div>
                         <script src="https://sdk.mercadopago.com/js/v2"></script>
                         <script>
@@ -78,30 +78,28 @@
                                 initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
                             });
                         </script>
+                        <div style="text-align: center; margin: 15px 0; color: #bdc3c7; font-weight: bold; font-size: 0.8rem;">O TAMBIÉN</div>
                     {% endif %}
-
-                    <div style="text-align: center; margin: 20px 0; color: #bdc3c7; font-weight: bold;">O TAMBIÉN</div>
 
                     <form action="{% url 'procesar_pago' product.id %}" method="POST">
                         {% csrf_token %}
-                        <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#1a252f'" onmouseout="this.style.background='#2c3e50'">
-                            <i class="fas fa-handshake"></i> Confirmar Intención de Compra
+                        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
+                            <i class="fas fa-handshake"></i> CONFIRMAR INTENCIÓN DE COMPRA
                         </button>
                         <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 8px; text-align: center;">
-                            Usa este botón para registrar la operación si acordaste el pago por fuera.
+                            Al confirmar, el stock se apartará y podrás ver el teléfono directo del vendedor.
                         </p>
                     </form>
 
                 {% elif not user.is_authenticated %}
                     <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 0.9rem; text-align: center;">
-                        Debes iniciar sesión para realizar una compra o ver el contacto.
+                        <i class="fas fa-lock"></i> Debes iniciar sesión para realizar una compra.
+                    </div>
+                {% elif product.stock <= 0 %}
+                    <div style="padding: 15px; background: #f8d7da; border-radius: 8px; color: #721c24; font-size: 0.9rem; text-align: center; font-weight: bold;">
+                        PRODUCTO AGOTADO
                     </div>
                 {% endif %}
-            </div>
-
-            <div style="margin-top: 15px; font-size: 0.8rem; color: #7f8c8d; text-align: center;">
-                <i class="fas fa-shield-alt"></i> Tu pago está protegido. Al comprar aceptas los 
-                <a href="/terminos/" style="color: #3498db; text-decoration: none;">Términos y Condiciones</a>.
             </div>
 
             <div style="margin-top: 30px;">
