@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from cloudinary.models import CloudinaryField
+from decimal import Decimal
 
 # --- MODELO DE CATEGORÍA ---
 class Category(models.Model):
@@ -18,11 +19,11 @@ class Category(models.Model):
 class IndustrialProduct(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    brand = models.CharField(max_length=100, blank=True, null=True) # Agregado
-    part_number = models.CharField(max_length=100, blank=True, null=True) # Agregado
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    part_number = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    stock = models.IntegerField(default=1) # Agregado
+    stock = models.IntegerField(default=1)
     image = CloudinaryField('image', blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -52,6 +53,24 @@ class Sale(models.Model):
     def __str__(self):
         return f"Venta de {self.product.title}"
 
+    # --- FÓRMULAS FINANCIERAS PARA EL PANEL ---
+
+    def get_gateway_cost(self):
+        """Calcula costo de Mercado Pago: 3.49% + $4.00 + IVA del costo"""
+        comision_porcentaje = self.price * Decimal('0.0349')
+        fijo = Decimal('4.00')
+        iva = (comision_porcentaje + fijo) * Decimal('0.16')
+        total = comision_porcentaje + fijo + iva
+        return total.quantize(Decimal('0.01'))
+
+    def get_platform_commission(self):
+        """Calcula la comisión de INITRE (5%)"""
+        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+
+    def get_net_amount(self):
+        """Calcula el monto final que recibe el vendedor"""
+        return (self.price - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
+
 # --- SEÑALES (SIGNALS) ---
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -64,5 +83,3 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-
-
