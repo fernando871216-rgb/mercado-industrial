@@ -1,12 +1,14 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 40px auto; padding: 20px; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 1200px; margin: 40px auto; padding: 20px; font-family: 'Segoe UI', sans-serif;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <div>
-            <h2 style="color: #2c3e50; margin: 0;">📦 Mi Inventario</h2>
-            <p style="color: #7f8c8d; margin: 5px 0 0 0;">Gestiona tus equipos y existencias</p>
+            <h2 style="color: #2c3e50; margin: 0;">📦 Inventario General</h2>
+            <p style="color: #7f8c8d; margin: 5px 0 0 0;">
+                {% if user.is_staff %} Gestionando todos los productos del marketplace {% else %} Gestiona tus equipos y existencias {% endif %}
+            </p>
         </div>
         <a href="{% url 'subir_producto' %}" style="background: #27ae60; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2);">
             <i class="fas fa-plus"></i> Nuevo Producto
@@ -19,6 +21,9 @@
                 <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                     <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Producto</th>
                     <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Marca / PN</th>
+                    {% if user.is_staff %}
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Vendedor</th>
+                    {% endif %}
                     <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Precio</th>
                     <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Stock</th>
                     <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase; text-align: center;">Acciones</th>
@@ -43,6 +48,16 @@
                         <div style="font-size: 0.9rem; color: #3498db; font-weight: bold;">{{ product.brand }}</div>
                         <div style="font-size: 0.75rem; color: #95a5a6;">P/N: {{ product.part_number|default:"N/A" }}</div>
                     </td>
+                    
+                    {% if user.is_staff %}
+                    <td style="padding: 15px 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user-circle" style="color: #bdc3c7;"></i>
+                            <span style="font-size: 0.9rem; color: #2c3e50;">{{ product.user.username|default:"Sin asignar" }}</span>
+                        </div>
+                    </td>
+                    {% endif %}
+
                     <td style="padding: 15px 20px;">
                         <span style="font-weight: bold; color: #27ae60;">${{ product.price }}</span>
                     </td>
@@ -55,4 +70,29 @@
                             <span style="background: #fff5f5; color: #fa5252; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
                                 <i class="fas fa-exclamation-circle"></i> Agotado
                             </span>
-                        {% endif
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px 20px; text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 10px;">
+                            <a href="{% url 'editar_producto' product.id %}" style="color: #3498db; background: #ebf5ff; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; text-decoration: none;" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'borrar_producto' product.id %}" onclick="return confirm('¿Estás seguro de eliminar este producto?')" style="color: #e74c3c; background: #fdf2f2; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; text-decoration: none;" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.is_staff %}6{% else %}5{% endif %}" style="padding: 60px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; display: block; margin-bottom: 15px; opacity: 0.3;"></i>
+                        Aún no hay productos registrados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
