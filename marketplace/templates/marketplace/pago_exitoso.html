@@ -1,21 +1,47 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 600px; margin: 80px auto; text-align: center; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-    <div style="color: #27ae60; font-size: 4rem; margin-bottom: 20px;">
-        <i class="fas fa-check-circle"></i>
+<div class="container" style="max-width: 800px; margin: 60px auto; text-align: center; font-family: 'Segoe UI', sans-serif;">
+    
+    <div style="background: white; padding: 50px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid #f1c40f;">
+        <div style="background: #f1c40f; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px;">
+            <i class="fas fa-handshake" style="color: white; font-size: 2.5rem;"></i>
+        </div>
+
+        <h1 style="color: #2c3e50; margin-bottom: 15px;">¡Intención de Compra Registrada!</h1>
+        
+        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px;">
+            Hemos notificado al vendedor sobre tu interés. El equipo ha sido reservado para ti y el stock se ha actualizado. 
+            <br><br>
+            <strong>Importante:</strong> Para concretar la transacción, por favor contacta al vendedor ahora mismo.
+        </p>
+
+        {% if product_id %}
+            {% with product=producto_obj %}
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                <h4 style="margin-top: 0; color: #2c3e50;">Paso siguiente:</h4>
+                
+                <a href="https://wa.me/{{ product.user.profile.phone|default:'' }}?text=Hola, soy {{ user.username }} y acabo de registrar mi intención de compra en Mercado Industrial por el equipo: {{ product.title }}. ¿Cómo procedemos con el pago?" 
+                   target="_blank"
+                   style="display: inline-block; background: #25D366; color: white; padding: 15px 35px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);">
+                    <i class="fab fa-whatsapp"></i> Contactar al Vendedor por WhatsApp
+                </a>
+
+                <p style="font-size: 0.85rem; color: #95a5a6; margin-top: 15px;">
+                    Vendedor: <strong>{{ product.user.username }}</strong><br>
+                    {% if not product.user.profile.phone %}
+                        <span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> El vendedor no ha registrado su teléfono. Intenta otro medio de contacto.</span>
+                    {% endif %}
+                </p>
+            </div>
+            {% endwith %}
+        {% endif %}
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{% url 'mis_compras' %}" style="color: #3498db; text-decoration: none; font-weight: 600;">Ver mis compras</a>
+            <span style="color: #ccc;">|</span>
+            <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-weight: 600;">Regresar al catálogo</a>
+        </div>
     </div>
-    <h1 style="color: #2c3e50;">¡Pago Procesado Exitosamente!</h1>
-    <p style="color: #7f8c8d; font-size: 1.1rem; margin-bottom: 30px;">
-        Tu intención de compra ha sido registrada. Para acelerar el proceso, avísale al vendedor por WhatsApp.
-    </p>
-
-    <a href="https://wa.me/52{{ producto.seller.profile.phone_number }}?text=¡Hola!%20Acabo%20de%20comprar%20tu%20producto:%20{{ producto.title }}%20en%20MarketIndustrial.%20¿Me%20podrías%20confirmar%20la%20entrega?" 
-       target="_blank" 
-       style="display: block; background: #25D366; color: white; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; transition: 0.3s;">
-        <i class="fab fa-whatsapp"></i> Notificar al Vendedor
-    </a>
-
-    <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none;">Volver al inicio</a>
 </div>
 {% endblock %}
