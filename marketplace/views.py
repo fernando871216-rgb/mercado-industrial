@@ -246,32 +246,43 @@ def cancelar_venta(request, venta_id):
 @csrf_exempt
 def mercadopago_webhook(request):
     if request.method == 'POST':
-        payment_id = None
-        
-        # 1. Intentamos obtener el ID si viene en la URL (como en tus logs)
         payment_id = request.GET.get('id')
         
-        # 2. Si no viene en la URL, intentamos leerlo del cuerpo JSON
         if not payment_id:
             try:
                 data = json.loads(request.body)
                 payment_id = data.get('data', {}).get('id') or data.get('id')
-            except Exception:
+            except:
                 pass
 
-        # Si logramos obtener un ID de pago, respondemos con éxito
         if payment_id:
-            print(f"--- NOTIFICACIÓN RECIBIDA --- ID de Pago: {payment_id}")
-            
-            # Aquí es donde podrías agregar lógica para marcar como pagado,
-            # pero por ahora lo más importante es que tu servidor responda 200 OK
-            # para que Mercado Pago deje de enviar errores.
+            # --- ENVÍO DE CORREO DE AVISO ---
+            try:
+                asunto = f"✅ ¡Nueva Notificación de Pago! ID: {payment_id}"
+                mensaje = (
+                    f"Hola administrador,\n\n"
+                    f"Se ha recibido una notificación de pago desde Mercado Pago.\n"
+                    f"ID del Pago: {payment_id}\n\n"
+                    f"Por favor, revisa tu panel de Mercado Pago y el Panel de Ventas "
+                    f"de Mercado Industrial para confirmar los detalles del equipo.\n\n"
+                    f"Saludos,\nTu Sistema Mercado Industrial"
+                )
+                
+                send_mail(
+                    asunto,
+                    mensaje,
+                    settings.DEFAULT_FROM_EMAIL, # Tu correo de salida
+                    [settings.ADMIN_EMAIL],      # Tu correo personal (donde recibes)
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Error enviando correo: {e}")
+
             return HttpResponse(status=200)
         
-        # Si no hay ID pero la petición llegó, igual respondemos 200 para evitar reintentos infinitos
         return HttpResponse(status=200)
-
     return HttpResponse(status=200)
+
 
 
 
