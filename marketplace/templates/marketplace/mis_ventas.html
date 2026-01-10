@@ -1,110 +1,75 @@
 {% extends 'marketplace/base.html' %}
-{% load extras %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+<div class="container" style="max-width: 1100px; margin: 40px auto; padding: 20px; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid #003366; padding-bottom: 15px;">
-        <h2 style="color: #2c3e50; margin: 0;">
-            <i class="fas fa-chart-line"></i> Panel de Ventas y Liquidaciones
-        </h2>
-        <div style="text-align: right;">
-            <span style="display: block; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase;">Comisión de Plataforma</span>
-            <span style="font-size: 1.2rem; font-weight: bold; color: #f39c12;">5.0% Fijo</span>
-        </div>
+    <div style="margin-bottom: 30px;">
+        <h2 style="color: #2c3e50; margin: 0;">💰 Mis Ventas e Intenciones</h2>
+        <p style="color: #7f8c8d; margin: 5px 0 0 0;">Gestiona las solicitudes de compra de tus productos.</p>
     </div>
 
-    {% if ventas %}
-        {% for venta in ventas %}
-            <div style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid {% if venta.status == 'completado' %}#27ae60{% else %}#f39c12{% endif %};">
-                
-                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 30px;">
-                    
-                    <div style="flex: 1; min-width: 300px;">
-                        <div style="margin-bottom: 15px;">
-                            <span style="font-size: 0.75rem; color: #95a5a6; font-weight: bold; text-transform: uppercase;">ID de Venta: #{{ venta.id }}</span>
-                            <h3 style="margin: 5px 0; color: #003366; font-size: 1.4rem;">{{ venta.product.title }}</h3>
-                        </div>
+    <div style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #eee;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Producto / Fecha</th>
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Comprador</th>
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Monto</th>
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase;">Estado</th>
+                    <th style="padding: 20px; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 20px;">
+                        <div style="font-weight: 600; color: #2c3e50;">{{ venta.product.title }}</div>
+                        <div style="font-size: 0.8rem; color: #95a5a6;">{{ venta.created_at|date:"d M Y, H:i" }}</div>
+                    </td>
+                    <td style="padding: 20px;">
+                        <div style="color: #34495e; font-weight: 500;">{{ venta.buyer.username }}</div>
+                        <div style="font-size: 0.8rem; color: #3498db;">{{ venta.buyer.email }}</div>
+                    </td>
+                    <td style="padding: 20px; font-weight: bold; color: #27ae60;">
+                        ${{ venta.price }}
+                    </td>
+                    <td style="padding: 20px;">
+                        {% if venta.status == 'pendiente' %}
+                            <span style="background: #fff3cd; color: #856404; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">PENDIENTE</span>
+                        {% elif venta.status == 'completado' %}
+                            <span style="background: #d4edda; color: #155724; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">COMPLETADO</span>
+                        {% else %}
+                            <span style="background: #f8d7da; color: #721c24; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">CANCELADO</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 20px; text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 10px;">
+                            {% if venta.status == 'pendiente' %}
+                                <a href="{% url 'cambiar_estado_venta' venta.id %}" 
+                                   style="background: #27ae60; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+                                    Confirmar
+                                </a>
+                            {% endif %}
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                            <div>
-                                <p style="margin: 0; font-size: 0.85rem; color: #7f8c8d;">Comprador</p>
-                                <p style="margin: 0; font-weight: 600; color: #2c3e50;">{{ venta.buyer.username }}</p>
-                            </div>
-                            <div>
-                                <p style="margin: 0; font-size: 0.85rem; color: #7f8c8d;">Fecha de Operación</p>
-                                <p style="margin: 0; font-weight: 600; color: #2c3e50;">{{ venta.created_at|date:"d/m/Y" }}</p>
-                            </div>
+                            {% if venta.status != 'cancelado' %}
+                                <a href="{% url 'cancelar_venta' venta.id %}" 
+                                   onclick="return confirm('¿Seguro que quieres cancelar? El stock regresará al inventario.')"
+                                   style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+                                    Cancelar
+                                </a>
+                            {% endif %}
                         </div>
-
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="padding: 6px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; background: {% if venta.status == 'completado' %}#eafaf1; color: #27ae60;{% else %}#fff5e6; color: #f39c12;{% endif %}">
-                                <i class="fas {% if venta.status == 'completado' %}fa-check-circle{% else %}fa-clock{% endif %}"></i> 
-                                {{ venta.status|upper }}
-                            </span>
-                            
-                            <form action="{% url 'cambiar_estado_venta' venta.id %}" method="POST" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 0.85rem; text-decoration: underline;">
-                                    Cambiar estado
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div style="flex: 1; min-width: 300px; background: #fcfcfc; border: 1px solid #edf2f7; padding: 20px; border-radius: 12px;">
-                        <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; color: #4a5568; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
-                            Desglose Financiero (MXN)
-                        </h4>
-                        
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span style="color: #718096;">Precio de Venta:</span>
-                            <span style="font-weight: bold; color: #2d3748;">${{ venta.price }}</span>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; color: #a0aec0;">
-                            <span>Costo Pasarela (3.49% + IVA + $4.64):</span>
-                            <span>- ${{ venta.price|calcular_gastos_operativos|stringformat:".2f" }}</span>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; color: #f6ad55; font-weight: 600;">
-                            <span>Comisión INITRE (5%):</span>
-                            <span>- ${{ venta.price|calcular_tu_comision|stringformat:".2f" }}</span>
-                        </div>
-
-                        <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 15px 0;">
-
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-weight: bold; color: #2d3748;">Monto Neto a Pagar:</span>
-                            <span style="font-size: 1.4rem; font-weight: 800; color: #27ae60;">
-                                ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
-                            </span>
-                        </div>
-                        
-                        <div style="margin-top: 15px; padding: 10px; background: #fffaf0; border-radius: 8px; border: 1px solid #feebc8;">
-                            <p style="margin: 0; font-size: 0.75rem; color: #7b341e; line-height: 1.4;">
-                                <i class="fas fa-info-circle"></i> 
-                                Este monto estará disponible para transferencia una vez que el comprador confirme la entrega física.
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        {% endfor %}
-    {% else %}
-        <div style="text-align: center; padding: 80px 20px; background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <div style="font-size: 4rem; color: #e2e8f0; margin-bottom: 20px;">
-                <i class="fas fa-store-slash"></i>
-            </div>
-            <h3 style="color: #4a5568;">No hay ventas registradas</h3>
-            <p style="color: #a0aec0; max-width: 400px; margin: 10px auto;">
-                Cuando un cliente compre uno de tus equipos industriales, aparecerá aquí el desglose de tu ganancia.
-            </p>
-            <a href="{% url 'subir_producto' %}" style="display: inline-block; margin-top: 20px; background: #003366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                Publicar nuevo producto
-            </a>
-        </div>
-    {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 60px; text-align: center; color: #95a5a6;">
+                        No tienes ventas registradas aún.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
