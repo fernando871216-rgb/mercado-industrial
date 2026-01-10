@@ -15,8 +15,8 @@ class IndustrialProductAdmin(admin.ModelAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     # Cambiamos 'phone_number' por 'phone', que es como se llama en tu modelo
-    list_display = ('user', 'phone', 'address')
-    search_fields = ('user__username', 'phone')
+    list_display = ('user', 'phone', 'banco', 'clabe', 'beneficiario')
+    search_fields = ('user__username', 'clabe', 'phone')
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
@@ -24,3 +24,4 @@ class SaleAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'buyer', 'price', 'status', 'pagado_a_vendedor', 'created_at')
     list_filter = ('status', 'pagado_a_vendedor', 'created_at')
     search_fields = ('product__title', 'buyer__username')
+
