@@ -164,14 +164,12 @@ def pago_fallido(request):
 
 @login_required
 def pago_exitoso(request):
-    # 1. Obtenemos el ID del producto que se pasó por la URL (Mercado Pago lo devuelve si lo configuramos)
-    # O bien, buscamos el producto más reciente basado en la intención de compra
-    product_id = request.GET.get('external_reference') 
+    product_id = request.GET.get('external_reference')
     
     if product_id:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         
-        # 2. Verificamos si ya existe esta venta para no duplicarla si refrescan la página
+        # Buscamos si ya se registró para no duplicar
         venta_existe = Sale.objects.filter(
             product=producto, 
             buyer=request.user, 
@@ -179,15 +177,15 @@ def pago_exitoso(request):
         ).exists()
 
         if not venta_existe:
-            # 3. Creamos la venta oficial que aparecerá en la tabla
+            # IMPORTANTE: No usamos 'seller' aquí porque tu modelo no lo tiene
+            # Django lo asociará automáticamente a través del producto
             Sale.objects.create(
                 product=producto,
                 buyer=request.user,
-                seller=producto.user,
                 price=producto.price,
-                status='completado' # Marcamos como completado porque el pago fue exitoso
+                status='completado'
             )
-            # 4. Descontamos el stock
+            
             if producto.stock > 0:
                 producto.stock -= 1
                 producto.save()
@@ -212,6 +210,7 @@ def marcar_como_pagado(request, venta_id):
     venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
     venta.save()
     return redirect('panel_admin')
+
 
 
 
