@@ -2,63 +2,45 @@
 {% load extras %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+<div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: #003366; margin: 0;">
-            <i class="fas fa-university"></i> Centro de Liquidaciones INITRE
-        </h1>
-        <div style="background: #003366; color: white; padding: 15px 25px; border-radius: 12px; text-align: right; box-shadow: 0 4px 15px rgba(0,51,102,0.3);">
-            <span style="display: block; font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">Tu Ganancia Neta Acumulada</span>
-            <span style="font-size: 1.8rem; font-weight: 800; color: #f39c12;">${{ tus_ganancias|stringformat:".2f" }}</span>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px;">
+        <h2 style="color: #003366; margin: 0; font-size: 1.5rem;">
+            <i class="fas fa-university"></i> Liquidaciones INITRE
+        </h2>
+        <div style="background: #003366; color: white; padding: 15px 20px; border-radius: 12px; flex-grow: 1; max-width: 300px; text-align: right; box-shadow: 0 4px 15px rgba(0,51,102,0.2);">
+            <span style="display: block; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8;">Tu Ganancia Acumulada</span>
+            <span style="font-size: 1.6rem; font-weight: 800; color: #f39c12;">${{ tus_ganancias|stringformat:".2f" }}</span>
         </div>
     </div>
 
-    <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #eef2f7;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-            <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7; text-align: left;">
-                    <th style="padding: 18px;">Estado Pago</th>
-                    <th style="padding: 18px;">Vendedor</th>
-                    <th style="padding: 18px;">Producto</th>
-                    <th style="padding: 18px;">Total Venta</th>
-                    <th style="padding: 18px; color: #e67e22;">Tu 5%</th>
-                    <th style="padding: 18px; background: #eafaf1; color: #27ae60;">Monto a Transferir</th>
-                    <th style="padding: 18px;">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for venta in ventas %}
-                <tr style="border-bottom: 1px solid #f6f8fa; {% if venta.pagado_a_vendedor %}opacity: 0.6; background: #fafafa;{% endif %}">
-                    <td style="padding: 18px; text-align: center;">
-                        {% if venta.pagado_a_vendedor %}
-                            <i class="fas fa-check-circle" style="color: #27ae60; font-size: 1.5rem;"></i>
-                        {% else %}
-                            <i class="fas fa-clock" style="color: #f39c12; font-size: 1.5rem;"></i>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 18px;">
-                        <strong>{{ venta.product.user.username }}</strong><br>
-                        <span style="font-size: 0.75rem; color: #7f8c8d;">{{ venta.product.user.email }}</span>
-                    </td>
-                    <td style="padding: 18px;">{{ venta.product.title|truncatechars:20 }}</td>
-                    <td style="padding: 18px; font-weight: bold;">${{ venta.price }}</td>
-                    <td style="padding: 18px; color: #e67e22;">+${{ venta.price|calcular_tu_comision|stringformat:".2f" }}</td>
-                    <td style="padding: 18px; background: #f4fff9; font-weight: 800; color: #27ae60;">
-                        ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
-                    </td>
-                    <td style="padding: 18px;">
-                        <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" style="background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; width: 100%;">
-                                {% if venta.pagado_a_vendedor %}Desmarcar{% else %}Marcar Pago{% endif %}
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        {% for venta in ventas %}
+        <div style="background: white; border-radius: 15px; border: 1px solid #eef2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; {% if venta.pagado_a_vendedor %}opacity: 0.7;{% endif %}">
+            
+            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% if venta.pagado_a_vendedor %}
+                        <i class="fas fa-check-circle" style="color: #27ae60; font-size: 1.2rem;"></i>
+                        <span style="font-size: 0.75rem; font-weight: bold; color: #27ae60;">PAGADO</span>
+                    {% else %}
+                        <i class="fas fa-clock" style="color: #f39c12; font-size: 1.2rem;"></i>
+                        <span style="font-size: 0.75rem; font-weight: bold; color: #f39c12;">PENDIENTE</span>
+                    {% endif %}
+                </div>
+                <div style="text-align: right;">
+                    <strong style="display: block; font-size: 0.9rem; color: #2c3e50;">{{ venta.product.user.username }}</strong>
+                    <span style="font-size: 0.7rem; color: #7f8c8d; word-break: break-all;">{{ venta.product.user.email }}</span>
+                </div>
+            </div>
+
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 12px;">
+                    <span style="font-size: 0.75rem; color: #95a5a6; text-transform: uppercase; display: block;">Producto:</span>
+                    <strong style="color: #34495e;">{{ venta.product.title }}</strong>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px solid #f0f0f0;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d;">Total Venta</span>
+                        <strong style="color: #2c3e50; font-size: 0.9rem;">${{ venta.price }}</strong>
