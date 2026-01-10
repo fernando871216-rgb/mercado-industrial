@@ -32,10 +32,12 @@ urlpatterns = [
     # --- RESULTADOS DE PAGO ---
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
+    path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     
     # --- PANEL ADMINISTRATIVO (TU PANEL) ---
     # Usamos name='panel_administrador' para que coincida con el redirect de views.py
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
