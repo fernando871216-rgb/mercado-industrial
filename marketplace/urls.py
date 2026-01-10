@@ -34,3 +34,4 @@ urlpatterns = [
     path('panel-control/', views.panel_administrador, name='panel_admin'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
