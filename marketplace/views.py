@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
 from .models import IndustrialProduct, Sale
+from .forms import UserUpdateForm, ProfileUpdateForm
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -273,6 +274,7 @@ def mercadopago_webhook(request):
 
         return HttpResponse(status=200) # SIEMPRE respondemos 200
     return HttpResponse(status=200)
+
 
 
 
