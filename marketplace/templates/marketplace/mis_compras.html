@@ -43,15 +43,8 @@
                 </div>
 
                 <div style="flex-grow: 1; min-width: 0;">
-                    <h3 style="margin: 0; font-size: 1rem; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        {{ compra.product.title }}
-                    </h3>
-                    <p style="margin: 3px 0; color: #27ae60; font-weight: bold; font-size: 1.1rem;">
-                        ${{ compra.price }} MXN
-                    </p>
-                    <p style="margin: 0; font-size: 0.8rem; color: #7f8c8d;">
-                        Vendedor: <span style="color: #3498db;">{{ compra.product.user.username }}</span>
-                    </p>
+                    <h3 style="margin: 0; font-size: 1rem; color: #2c3e50;">{{ compra.product.title }}</h3>
+                    <p style="margin: 3px 0; color: #27ae60; font-weight: bold; font-size: 1.1rem;">${{ compra.price }} MXN</p>
                 </div>
             </div>
 
@@ -59,14 +52,33 @@
                 <a href="{% url 'detalle_producto' compra.product.id %}" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #34495e; font-size: 0.8rem; font-weight: 600; border-right: 1px solid #eee;">
                     Ver Producto
                 </a>
-                
                 {% if compra.product.user.profile.phone %}
-                <a href="https://wa.me/{{ compra.product.user.profile.phone }}?text=Hola, te compré el equipo: {{ compra.product.title }}" 
-                   target="_blank" 
-                   style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #25D366; font-size: 0.8rem; font-weight: bold;">
+                <a href="https://wa.me/{{ compra.product.user.profile.phone }}" target="_blank" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #25D366; font-size: 0.8rem; font-weight: bold;">
                     <i class="fab fa-whatsapp"></i> Contactar
                 </a>
                 {% endif %}
             </div>
 
-            <div style="padding: 15px; background: #fff; border-top: 1px solid #eee
+            <div style="padding: 15px; background: #fff; border-top: 1px solid #eee; text-align: center;">
+                {% if not compra.recibido_por_comprador %}
+                    <form action="{% url 'confirmar_recepcion' compra.id %}" method="POST" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
+                            <i class="fas fa-box-open"></i> Ya recibí mi producto
+                        </button>
+                    </form>
+                {% else %}
+                    <div style="background: #eafaf1; color: #27ae60; padding: 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; border: 1px solid #d4edda;">
+                        <i class="fas fa-check-double"></i> Entrega Confirmada
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 60px; border: 2px dashed #eee;">
+            <p style="color: #95a5a6;">Aún no tienes compras.</p>
+        </div>
+        {% endfor %}
+        </div>
+</div>
+{% endblock %}
