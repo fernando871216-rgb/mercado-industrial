@@ -163,6 +163,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Configuración para envío de correos
+ADMIN_EMAIL = 'fernando871216@gmail.com'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -173,6 +174,7 @@ DEFAULT_FROM_EMAIL = 'Mercado Industrial <tu-correo@gmail.com>'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 
 
