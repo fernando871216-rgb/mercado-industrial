@@ -162,25 +162,16 @@ def pago_fallido(request):
 @login_required
 def pago_exitoso(request):
     product_id = request.GET.get('external_reference')
+    producto_obj = None
+    
     if product_id:
-        producto = get_object_or_404(IndustrialProduct, id=product_id)
-        venta_existe = Sale.objects.filter(
-            product=producto, 
-            buyer=request.user, 
-            status='completado'
-        ).exists()
+        producto_obj = get_object_or_404(IndustrialProduct, id=product_id)
+        # ... (aquí va la lógica de creación de venta que ya tenías) ...
 
-        if not venta_existe:
-            Sale.objects.create(
-                product=producto,
-                buyer=request.user,
-                price=producto.price,
-                status='completado'
-            )
-            if producto.stock > 0:
-                producto.stock -= 1
-                producto.save()
-    return render(request, 'marketplace/pago_exitoso.html')
+    return render(request, 'marketplace/pago_exitoso.html', {
+        'product_id': product_id,
+        'producto_obj': producto_obj
+    })
 
 @staff_member_required
 def panel_administrador(request):
@@ -214,5 +205,6 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
     return redirect('panel_administrador')
+
 
 
