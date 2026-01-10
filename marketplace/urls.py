@@ -15,7 +15,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
     
-    # --- INVENTARIO DEL VENDEDOR ---
+    # --- INVENTARIO DEL VENDEDOR (MI INVENTARIO) ---
     path('mis-productos/', views.mi_inventario, name='mi_inventario'),
     path('subir-producto/', views.subir_producto, name='subir_producto'),
     path('editar-producto/<int:pk>/', views.editar_producto, name='editar_producto'),
@@ -33,11 +33,7 @@ urlpatterns = [
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     
     # --- PANEL ADMINISTRATIVO (TU PANEL) ---
-    path('panel-control/', views.panel_administrador, name='panel_admin'),
-    path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
-    path('admin-panel/', views.panel_administrador, name='panel_admin'),
+    # Usamos name='panel_administrador' para que coincida con el redirect de views.py
+    path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
-
-
-
