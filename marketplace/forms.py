@@ -29,10 +29,15 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         # CORRECCIÓN: Aquí también debe ser phone
-        fields = ['phone', 'address'] 
+        fields = ['phone', 'address', 'clabe', 'banco', 'beneficiario'] 
         widgets = {
             'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 5512345678'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Dirección completa'}),
+            'phone': forms.TextInput(attrs={'placeholder': '10 dígitos sin espacios'}),
+            'clabe': forms.TextInput(attrs={'placeholder': '18 dígitos de tu tarjeta/cuenta'}),
+            'banco': forms.TextInput(attrs={'placeholder': 'Ej: BBVA, Santander...'}),
+            'beneficiario': forms.TextInput(attrs={'placeholder': 'Nombre del titular de la cuenta'}),
+            'address': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Calle, número, colonia y CP'})
         }
 
     # Validación corregida para el nombre del campo 'phone'
@@ -92,3 +97,4 @@ class ProductoForm(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
+
