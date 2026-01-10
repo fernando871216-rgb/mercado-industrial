@@ -196,8 +196,16 @@ def panel_administrador(request):
 
 @login_required
 def mi_inventario(request):
-    productos = IndustrialProduct.objects.filter(user=request.user)
-    return render(request, 'marketplace/mi_inventario.html', {'products': productos})
+    # Si eres el administrador principal, te mostramos TODOS los productos para que puedas gestionarlos
+    if request.user.is_staff:
+        productos = IndustrialProduct.objects.all().order_by('-created_at')
+    else:
+        # Si eres un vendedor normal, solo ves los tuyos
+        productos = IndustrialProduct.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'marketplace/mi_inventario.html', {
+        'products': productos
+    })
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -206,3 +214,4 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
     return redirect('panel_administrador')
+
