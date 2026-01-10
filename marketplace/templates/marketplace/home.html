@@ -1,25 +1,8 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+<div style="padding: 20px; font-family: sans-serif;">
     
-    <div style="background: #2c3e50; padding: 40px; border-radius: 15px; margin-bottom: 40px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <h1 style="color: white; margin-bottom: 20px; font-size: 2rem;">Encuentra Equipos Industriales</h1>
-        
-        <form action="{% url 'home' %}" method="GET" style="max-width: 600px; margin: 0 auto; display: flex; gap: 10px;">
-            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar por nombre, marca o P/N..." 
-                   style="flex: 1; padding: 15px; border-radius: 8px; border: none; font-size: 1rem; outline: none;">
-            <button type="submit" style="background: #27ae60; color: white; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">
-                <i class="fas fa-search"></i> Buscar
-            </button>
-        </form>
-        
-        {% if query %}
-            <p style="color: #bdc3c7; margin-top: 15px;">Mostrando resultados para: <strong>"{{ query }}"</strong></p>
-            <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-size: 0.9rem;">Limpiar búsqueda</a>
-        {% endif %}
-    </div>
-
     <h2 style="color: #2c3e50; margin-bottom: 25px; border-left: 5px solid #27ae60; padding-left: 15px;">
         {% if category %}{{ category.name }}{% else %}Todos los Productos{% endif %}
     </h2>
@@ -27,37 +10,32 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
         {% for product in products %}
             <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid #eee;">
-                <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit;">
+                
+                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
+                    
                     <div style="height: 200px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
                         {% if product.image %}
                             <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                         {% else %}
-                            <i class="fas fa-image" style="font-size: 3rem; color: #dee2e6;"></i>
+                            <i class="fas fa-tools" style="font-size: 3rem; color: #ccc;"></i>
                         {% endif %}
                     </div>
-                    <div style="padding: 20px;">
-                        <span style="color: #27ae60; font-weight: bold; font-size: 0.8rem; text-transform: uppercase;">{{ product.brand }}</span>
-                        <h3 style="margin: 10px 0; font-size: 1.1rem; color: #2c3e50; height: 2.4em; overflow: hidden;">{{ product.title }}</h3>
-                        <p style="font-size: 1.4rem; font-weight: 800; color: #2c3e50; margin: 15px 0;">${{ product.price }} <small style="font-size: 0.8rem; color: #95a5a6;">MXN</small></p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f1f1; pt: 15px; margin-top: 10px; padding-top: 10px;">
-                            <span style="font-size: 0.8rem; color: #7f8c8d;"><i class="fas fa-tag"></i> {{ product.category.name }}</span>
-                            <span style="background: #2c3e50; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">Ver detalle</span>
+
+                    <div style="padding: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1.1rem; color: #333;">{{ product.title }}</h3>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Marca: {{ product.brand }}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">${{ product.price }}</span>
+                            <span style="font-size: 0.8rem; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px;">
+                                Stock: {{ product.stock }}
+                            </span>
                         </div>
                     </div>
                 </a>
             </div>
         {% empty %}
-            <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #95a5a6;">
-                <i class="fas fa-search" style="font-size: 4rem; margin-bottom: 20px;"></i>
-                <p>No se encontraron productos que coincidan con tu búsqueda.</p>
-                <a href="{% url 'home' %}" style="color: #3498db;">Ver todos los productos</a>
-            </div>
+            <p>No se encontraron productos en esta sección.</p>
         {% endfor %}
     </div>
 </div>
-
-<style>
-    div:hover { transform: translateY(-5px); }
-    button:hover { background: #2ecc71 !important; }
-</style>
 {% endblock %}
