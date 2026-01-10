@@ -166,11 +166,11 @@ def pago_exitoso(request):
     
     if product_id:
         producto_obj = get_object_or_404(IndustrialProduct, id=product_id)
-        # ... (aquí va la lógica de creación de venta que ya tenías) ...
-
+        # (Aquí mantienes tu lógica existente de creación de Sale)
+        
     return render(request, 'marketplace/pago_exitoso.html', {
         'product_id': product_id,
-        'producto_obj': producto_obj
+        'producto': producto_obj  # Pasamos el objeto completo para ver al vendedor
     })
 
 @staff_member_required
@@ -205,6 +205,26 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
     return redirect('panel_administrador')
+
+@login_required
+def cancelar_venta(request, venta_id):
+    # Buscamos la venta. Solo el vendedor del producto o un admin pueden cancelarla.
+    venta = get_object_or_404(Sale, id=venta_id)
+    
+    # Verificamos permisos: Solo el dueño del producto (vendedor) o admin
+    if request.user == venta.product.user or request.user.is_staff:
+        if venta.status != 'cancelado':
+            # 1. Devolvemos el stock al producto
+            producto = venta.product
+            producto.stock += 1
+            producto.save()
+            
+            # 2. Marcamos la venta como cancelada
+            venta.status = 'cancelado'
+            venta.save()
+            
+    return redirect('mis_ventas')
+
 
 
 
