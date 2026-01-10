@@ -1,35 +1,56 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 50px auto; padding: 0 20px;">
-    <h2 style="margin-bottom: 30px; color: #2c3e50;"><i class="fas fa-shopping-bag"></i> Mis Compras</h2>
+<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
+    
+    <h2 style="color: #2c3e50; margin-bottom: 30px;">
+        <i class="fas fa-shopping-bag"></i> Mis Compras
+    </h2>
 
-    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #edf2f7;">
-        <table style="width: 100%; border-collapse: collapse;">
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #eee;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #edf2f7;">
-                    <th style="padding: 15px; text-align: left;">Producto</th>
-                    <th style="padding: 15px; text-align: left;">Vendedor</th>
-                    <th style="padding: 15px; text-align: left;">Precio</th>
-                    <th style="padding: 15px; text-align: left;">Estado</th>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Producto</th>
+                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Vendedor</th>
+                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Precio</th>
+                    <th style="padding: 15px; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase;">Estado</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras %}
-                <tr style="border-bottom: 1px solid #edf2f7;">
-                    <td style="padding: 15px; font-weight: bold;">{{ compra.product.title }}</td>
-                    <td style="padding: 15px;">{{ compra.seller.username }}</td>
-                    <td style="padding: 15px;">${{ compra.price }}</td>
+                <tr style="border-bottom: 1px solid #eee; transition: 0.3s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 15px; font-weight: bold; color: #2c3e50;">
+                        {{ compra.product.title }}
+                    </td>
+                    
+                    <td style="padding: 15px; color: #34495e;">
+                        <i class="fas fa-user-circle" style="color: #bdc3c7;"></i> 
+                        {{ compra.seller.username|default:"Usuario" }}
+                        {% if compra.seller.profile.phone %}
+                            <br>
+                            <small style="color: #27ae60; font-size: 0.8rem;">
+                                <i class="fab fa-whatsapp"></i> {{ compra.seller.profile.phone }}
+                            </small>
+                        {% endif %}
+                    </td>
+                    
+                    <td style="padding: 15px; color: #2c3e50; font-weight: bold;">
+                        ${{ compra.amount }} <span style="font-size: 0.75rem; color: #95a5a6;">MXN</span>
+                    </td>
+                    
                     <td style="padding: 15px;">
-                        <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; 
-                            {% if compra.status == 'completado' %} background: #e6fffa; color: #234e52; {% else %} background: #fff3cd; color: #856404; {% endif %}">
+                        <span style="background: #e6fcf5; color: #087f5b; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block;">
                             {{ compra.status|capfirst }}
                         </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="padding: 40px; text-align: center; color: #a0aec0;">Aún no has realizado compras.</td>
+                    <td colspan="4" style="padding: 40px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-info-circle" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        Aún no has realizado ninguna compra.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
