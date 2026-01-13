@@ -33,15 +33,15 @@
         /* Botón de Hamburguesa (solo sale en celular) */
         .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
 
-        /* Estilo especial para el botón de Ganancia */
-        .btn-ganancia { background: #f39c12; padding: 5px 12px; border-radius: 20px; color: white !important; font-weight: bold !important; }
+        /* Estilo especial para el botón de Ganancia / Perfil */
+        .btn-perfil { background: #f39c12; padding: 5px 12px; border-radius: 20px; color: white !important; font-weight: bold !important; }
 
         /* DISEÑO PARA CELULARES */
         @media (max-width: 768px) {
-            .menu-toggle { display: block; } /* Aparecen las rayitas */
+            .menu-toggle { display: block; }
             
             .nav-links {
-                display: none; /* Escondemos los links normales */
+                display: none;
                 flex-direction: column;
                 position: absolute;
                 top: 100%;
@@ -53,8 +53,7 @@
                 box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             }
 
-            .nav-links.active { display: flex; } /* Se muestra al dar clic */
-            
+            .nav-links.active { display: flex; }
             .logo { font-size: 1rem; }
         }
     </style>
@@ -72,23 +71,24 @@
 
         <div class="nav-links" id="nav-content">
             <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
+            
             {% if user.is_authenticated %}
-                <a href="{% url 'mis_productos' %}">Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}">Ventas</a>
-                <a href="{% url 'mis_compras' %}">Compras</a>
+                <a href="{% url 'mi_inventario' %}">Mis Productos</a>
+                <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
+                <a href="{% url 'mis_compras' %}">Mis Compras</a>
                 
-                <a href="{% url 'editar_perfil' %}" class="btn-ganancia">
-                    <i class="fas fa-wallet"></i> Perfil / Pagos
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil">
+                    <i class="fas fa-user-circle"></i> Perfil / Pagos
                 </a>
 
                 {% if user.is_staff %}
-                    <a href="{% url 'panel_admin' %}" style="color: #f39c12;"><b>ADMIN</b></a>
+                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
                 {% endif %}
 
-                <a href="{% url 'logout' %}" style="opacity: 0.8;"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="{% url 'logout' %}" style="opacity: 0.8;"><i class="fas fa-sign-out-alt"></i> Salir</a>
             {% else %}
                 <a href="{% url 'login' %}">Ingresar</a>
-                <a href="{% url 'register' %}">Registro</a>
+                <a href="{% url 'registro' %}">Registro</a>
             {% endif %}
         </div>
     </nav>
@@ -104,7 +104,6 @@
 
         menuToggle.addEventListener('click', () => {
             navContent.classList.toggle('active');
-            // Cambia el icono de barras a una X cuando está abierto
             const icon = menuToggle.querySelector('i');
             if (navContent.classList.contains('active')) {
                 icon.classList.remove('fa-bars');
