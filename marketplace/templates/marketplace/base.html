@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,117 +5,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; }
-        
-        nav { 
-            background-color: white; 
-            padding: 5px 5%; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            position: sticky; top: 0; z-index: 1000;
-        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; }
 
-        .logo-container { display: flex; align-items: center; text-decoration: none; }
-        .logo-img { height: 90px; width: auto; margin-right: 15px; }
-
-        .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a { color: #2c3e50; text-decoration: none; font-weight: 500; font-size: 0.9rem; }
-        .nav-links a:hover { color: #003366; }
-
-        .logout-form { display: inline; }
-        .btn-salir {
-            background-color: #e74c3c;
+        /* Estilos de la Barra de Navegación */
+        .navbar {
+            background-color: #003366;
             color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.85rem;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        .btn-salir:hover { background-color: #c0392b; }
 
-        .admin-link {
-            color: #f39c12 !important;
-            font-weight: bold !important;
-            border: 1px solid #f39c12;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        .admin-link:hover {
-            background: #f39c12;
-            color: white !important;
+        .logo { font-weight: bold; font-size: 1.2rem; color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+
+        /* Contenedor de links para PC */
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #f39c12; }
+
+        /* Botón de Hamburguesa (solo sale en celular) */
+        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
+
+        /* Estilo especial para el botón de Ganancia */
+        .btn-ganancia { background: #f39c12; padding: 5px 12px; border-radius: 20px; color: white !important; font-weight: bold !important; }
+
+        /* DISEÑO PARA CELULARES */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; } /* Aparecen las rayitas */
+            
+            .nav-links {
+                display: none; /* Escondemos los links normales */
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: #003366;
+                padding: 20px 0;
+                gap: 20px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            }
+
+            .nav-links.active { display: flex; } /* Se muestra al dar clic */
+            
+            .logo { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <nav>
-        <a href="{% url 'home' %}" class="logo-container">
-            <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 1.3rem; font-weight: 800; color: #003366; line-height: 1;">MERCADO INDUSTRIAL</span>
-                <span style="font-size: 1rem; font-weight: 400; color: #2c3e50; letter-spacing: 2px;">INITRE</span>
-            </div>
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="logo">
+            <i class="fas fa-industry"></i> INITRE
         </a>
-        
-        <div class="nav-links">
-            <a href="{% url 'home' %}">Catálogo</a>
-            
+
+        <div class="menu-toggle" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <div class="nav-links" id="nav-content">
+            <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
             {% if user.is_authenticated %}
-                <a href="{% url 'mi_inventario' %}">Mis Productos</a>
+                <a href="{% url 'mis_productos' %}">Mis Productos</a>
                 <a href="{% url 'mis_ventas' %}">Ventas</a>
                 <a href="{% url 'mis_compras' %}">Compras</a>
                 
-                {% if user.is_staff %}
-                <a href="{% url 'panel_administrador' %}" class="admin-link">
-                    <i class="fas fa-chart-pie"></i> MI GANANCIA
+                <a href="{% url 'editar_perfil' %}" class="btn-ganancia">
+                    <i class="fas fa-wallet"></i> Perfil / Pagos
                 </a>
+
+                {% if user.is_staff %}
+                    <a href="{% url 'panel_admin' %}" style="color: #f39c12;"><b>ADMIN</b></a>
                 {% endif %}
 
-                <a href="{% url 'editar_perfil' %}" style="color: #34495e;">
-                    <i class="fas fa-user-circle"></i> {{ user.username }}
-                </a>
-
-                <form action="{% url 'logout' %}" method="post" class="logout-form">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-salir">Salir</button>
-                </form>
+                <a href="{% url 'logout' %}" style="opacity: 0.8;"><i class="fas fa-sign-out-alt"></i></a>
             {% else %}
-                <a href="{% url 'login' %}">Entrar</a>
-                <a href="{% url 'registro' %}" style="background: #003366; color: white; padding: 8px 15px; border-radius: 5px;">Registro</a>
+                <a href="{% url 'login' %}">Ingresar</a>
+                <a href="{% url 'register' %}">Registro</a>
             {% endif %}
         </div>
     </nav>
 
-    <main style="padding: 20px 5%;">
-        {% block content %}{% endblock %}
-    </main>
-<footer style="background: #2c3e50; color: white; padding: 40px 20px; margin-top: 60px; text-align: center; font-family: 'Segoe UI', sans-serif;">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        <div style="margin-bottom: 20px;">
-            <strong style="font-size: 1.2rem;">Mercado Industrial</strong>
-            <p style="font-size: 0.9rem; color: #bdc3c7;">El punto de encuentro para la industria mexicana.</p>
-        </div>
-        
-        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; font-size: 0.9rem;">
-            <a href="{% url 'home' %}" style="color: #ecf0f1; text-decoration: none;">Inicio</a>
-            <a href="/terminos/" style="color: #ecf0f1; text-decoration: none;">Términos y Condiciones</a>
-            <a href="mailto:soporte@tuplataforma.com" style="color: #ecf0f1; text-decoration: none;">Soporte</a>
-        </div>
-        
-        <div style="border-top: 1px solid #34495e; padding-top: 20px; font-size: 0.8rem; color: #95a5a6;">
-            &copy; 2026 Mercado Industrial. Todos los derechos reservados. <br>
-            Plataforma desarrollada para facilitar el comercio industrial seguro.
-        </div>
+    <div class="main-content">
+        {% block content %}
+        {% endblock %}
     </div>
-</footer>
+
+    <script>
+        const menuToggle = document.getElementById('mobile-menu');
+        const navContent = document.getElementById('nav-content');
+
+        menuToggle.addEventListener('click', () => {
+            navContent.classList.toggle('active');
+            // Cambia el icono de barras a una X cuando está abierto
+            const icon = menuToggle.querySelector('i');
+            if (navContent.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+    </script>
+
 </body>
 </html>
-
-
