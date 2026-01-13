@@ -5,7 +5,7 @@
 
     <div style="background: #eef2f7; border-radius: 15px; padding: 30px; margin-bottom: 40px; border-left: 6px solid #003366;">
         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 300px;">
+            <div style="flex: 2; min-width: 300px;">
                 <h2 style="color: #003366; margin: 0 0 10px 0; font-size: 1.5rem;">
                     <i class="fas fa-handshake"></i> Comercio Directo y Seguro
                 </h2>
@@ -14,18 +14,19 @@
                     <strong>El vendedor y el comprador tienen total libertad</strong> para acordar los términos de entrega, envío o recolección del equipo. 
                 </p>
             </div>
-            <div style="display: flex; gap: 15px;">
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); width: 100px;">
-                    <i class="fas fa-search" style="color: #3498db; font-size: 1.5rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.7rem; font-weight: bold;">Busca</span>
+            
+            <div style="flex: 1; display: flex; gap: 10px; min-width: 250px; justify-content: center;">
+                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
+                    <i class="fas fa-search" style="color: #3498db; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Busca</span>
                 </div>
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); width: 100px;">
-                    <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.5rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.7rem; font-weight: bold;">Contacta</span>
+                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
+                    <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Contacta</span>
                 </div>
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); width: 100px;">
-                    <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.5rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.7rem; font-weight: bold;">Acuerda</span>
+                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
+                    <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
                 </div>
             </div>
         </div>
@@ -34,8 +35,8 @@
     <div style="margin-bottom: 40px; text-align: center;">
         <form method="GET" action="{% url 'home' %}" style="max-width: 600px; margin: 0 auto; display: flex; gap: 10px;">
             <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar equipos, marcas..." 
-                   style="flex: 1; padding: 12px 20px; border: 2px solid #ddd; border-radius: 30px; font-size: 1rem; outline: none;">
-            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold;">
+                   style="flex: 1; padding: 12px 20px; border: 2px solid #ddd; border-radius: 30px; font-size: 1rem; outline: none; min-width: 0;">
+            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; white-space: nowrap;">
                 Buscar
             </button>
         </form>
@@ -86,6 +87,7 @@
             </div>
         {% empty %}
             <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
-        {% endfor %} </div>
+        {% endfor %} 
+    </div>
 </div>
 {% endblock %}
