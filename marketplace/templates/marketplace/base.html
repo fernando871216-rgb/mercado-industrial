@@ -7,7 +7,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; }
+        /* Estilos Generales */
+        html, body { height: 100%; margin: 0; }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f4f7f6; 
+        }
+        
+        /* Contenedor principal para empujar el footer abajo */
+        .main-content { flex: 1; }
+
+        /* Barra de Navegación */
         .navbar {
             background-color: #003366;
             color: white;
@@ -27,6 +39,27 @@
         .btn-perfil { background: #f39c12; padding: 5px 12px; border-radius: 20px; color: white !important; font-weight: bold !important; }
         .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
 
+        /* Estilos del Footer (Lo que se había perdido) */
+        footer {
+            background-color: #002244;
+            color: #bdc3c7;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .footer-links { margin-bottom: 15px; }
+        .footer-links a { 
+            color: #ffffff; 
+            text-decoration: none; 
+            margin: 0 10px; 
+            font-size: 0.85rem; 
+            opacity: 0.8; 
+            transition: 0.3s;
+        }
+        .footer-links a:hover { opacity: 1; color: #f39c12; }
+        .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+
+        /* Diseño para Celulares */
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
             .nav-links {
@@ -72,7 +105,7 @@
 
                 <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="logout-btn" title="Cerrar Sesión">
+                    <button type="submit" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Salir
                     </button>
                 </form>
@@ -84,8 +117,21 @@
     </nav>
 
     <div class="main-content">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </div>
+
+    <footer>
+        <div class="footer-links">
+            <a href="{% url 'terminos' %}">Aviso de Privacidad</a>
+            <a href="{% url 'terminos' %}">Términos y Condiciones</a>
+            <a href="mailto:soporte@initre.com">Contacto</a>
+        </div>
+        <div class="copyright">
+            &copy; 2026 Mercado Industrial INITRE. Todos los derechos reservados. <br>
+            <small>Comercio seguro de equipo industrial usado.</small>
+        </div>
+    </footer>
 
     <script>
         const menuToggle = document.getElementById('mobile-menu');
@@ -97,5 +143,6 @@
             icon.classList.toggle('fa-times');
         });
     </script>
+
 </body>
 </html>
