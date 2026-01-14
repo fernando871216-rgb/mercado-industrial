@@ -23,7 +23,7 @@
         .navbar {
             background-color: #003366;
             color: white;
-            padding: 5px 20px; /* Reduje el padding para que el logo quepa mejor */
+            padding: 5px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -33,7 +33,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        /* Estilo del Contenedor del Logo */
         .logo-container { 
             display: flex; 
             align-items: center; 
@@ -41,7 +40,7 @@
             color: white; 
         }
         .logo-img { 
-            height: 45px; /* Ajusta el tamaño de tu logo aquí */
+            height: 45px;
             width: auto;
             margin-right: 10px;
             object-fit: contain;
@@ -49,7 +48,18 @@
         .logo-text { font-weight: bold; font-size: 1.1rem; }
 
         .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a, .logout-btn { color: white; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: 0.3s; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+        .nav-links a, .logout-btn { 
+            color: white; 
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            transition: 0.3s; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            padding: 0; 
+            font-family: inherit; 
+        }
         .nav-links a:hover, .logout-btn:hover { color: #f39c12; }
         .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
         .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
@@ -81,7 +91,7 @@
                 gap: 20px;
             }
             .nav-links.active { display: flex; }
-            .logo-img { height: 35px; } /* Logo un poco más chico en celular */
+            .logo-img { height: 35px; }
         }
     </style>
 </head>
@@ -110,7 +120,7 @@
                     <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
                 {% endif %}
 
-                <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Salir
@@ -122,6 +132,16 @@
             {% endif %}
         </div>
     </nav>
+
+    {% if messages %}
+    <div style="padding: 10px 20px;">
+        {% for message in messages %}
+            <div style="padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: {% if message.tags == 'success' %}#d4edda{% else %}#f8d7da{% endif %}; color: {% if message.tags == 'success' %}#155724{% else %}#721c24{% endif %}; border: 1px solid {% if message.tags == 'success' %}#c3e6cb{% else %}#f5c6cb{% endif %};">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="main-content">
         {% block content %}
@@ -141,12 +161,14 @@
     <script>
         const menuToggle = document.getElementById('mobile-menu');
         const navContent = document.getElementById('nav-content');
-        menuToggle.addEventListener('click', () => {
-            navContent.classList.toggle('active');
-            const icon = menuToggle.querySelector('i');
-            icon.classList.toggle('fa-bars');
-            icon.classList.toggle('fa-times');
-        });
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navContent.classList.toggle('active');
+                const icon = menuToggle.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+        }
     </script>
 
 </body>
