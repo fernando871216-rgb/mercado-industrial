@@ -42,7 +42,7 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html', {
         'u_form': u_form,
         'p_form': p_form
-    })
+    })1 1
 
 # ==========================================
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
@@ -51,12 +51,10 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # PEGA AQUÍ EL TOKEN LARGO QUE COPIASTE DE LA PÁGINA DE SOLOENVÍOS
-    # Asegúrate de que esté entre las comillas
+    # El token que ya sabemos que funciona (asegúrate de que siga siendo el vigente)
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        # PASO DIRECTO A COTIZACIÓN
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
         
         headers_rates = {
@@ -65,16 +63,27 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
+        # Validamos y formateamos los datos antes de enviar
+        try:
+            peso = float(request.GET.get('peso') or 1)
+            ancho = int(float(request.GET.get('ancho') or 20))
+            alto = int(float(request.GET.get('alto') or 20))
+            largo = int(float(request.GET.get('largo') or 20))
+        except:
+            peso, ancho, alto, largo = 1, 20, 20, 20
+
+        # Estructura ultra-limpia
         payload_rates = {
-            "origin_zip_code": cp_origen,
-            "destination_zip_code": cp_destino,
+            "origin_zip_code": str(cp_origen),
+            "destination_zip_code": str(cp_destino),
             "packages": [
                 {
-                    "weight": float(request.GET.get('peso') or 1),
-                    "width": int(float(request.GET.get('ancho') or 20)),
-                    "height": int(float(request.GET.get('alto') or 20)),
-                    "length": int(float(request.GET.get('largo') or 20)),
-                    "description": "Caja de cartón"
+                    "description": "Caja de carton",
+                    "weight": peso,
+                    "width": ancho,
+                    "height": alto,
+                    "length": largo,
+                    "quantity": 1 # A veces este campo es obligatorio para evitar el 422
                 }
             ]
         }
@@ -83,10 +92,12 @@ def cotizar_soloenvios(request):
         
         if res.status_code == 200:
             data = res.json()
-            rates_list = data.get('rates', data) if isinstance(data, dict) else data
+            # En quotations, el resultado suele venir en una llave llamada 'rates'
+            rates_list = data.get('rates', []) if isinstance(data, dict) else data
             
             tarifas = []
             for t in rates_list:
+                # Intentamos obtener el precio de varias llaves posibles
                 precio = t.get('total_price') or t.get('price') or t.get('cost')
                 if precio:
                     tarifas.append({
@@ -94,18 +105,21 @@ def cotizar_soloenvios(request):
                         'precio_final': round(float(precio) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
+            
+            if not tarifas:
+                 return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles para estos CPs.'})
+                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si aquí sale 401, el token manual ya caducó
+        # Si sale 422, devolvemos el JSON de error de SoloEnvíos para leer qué campo falla
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error en Cotización: {res.status_code}', 
+            'error': f'Error de Datos (422)', 
             'detalle': res.text
         })
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
-
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -243,6 +257,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
