@@ -31,44 +31,58 @@
 
             <h1 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 2rem;">{{ product.title }}</h1>
             
-            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 10px;">
-                ${{ product.price }} <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;">MXN</span>
+            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 5px;">
+                $<span id="display_price">{{ product.price }}</span> <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;">MXN</span>
             </div>
+            <p id="envio_info" style="color: #3498db; font-size: 0.9rem; margin-bottom: 20px; display: none;">
+                <i class="fas fa-check-circle"></i> Envío seleccionado: +$<span id="monto_flete">0</span>
+            </p>
 
             <div style="background: #f0f7ff; padding: 20px; border-radius: 12px; border: 1px solid #d0e3ff; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 15px 0; color: #003366;"><i class="fas fa-truck"></i> Cotizar Envío Real</h4>
+                <h4 style="margin: 0 0 15px 0; color: #003366;"><i class="fas fa-truck"></i> Cotizar Envío (Opcional)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <input type="text" id="envio_cp" placeholder="CP Destino" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                     <input type="number" id="envio_peso" placeholder="Peso (Kg)" value="1" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px;">
-                    <input type="number" id="envio_largo" value="10" title="Largo" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    <input type="number" id="envio_ancho" value="10" title="Ancho" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    <input type="number" id="envio_alto" value="10" title="Alto" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_largo" value="10" placeholder="Largo" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_ancho" value="10" placeholder="Ancho" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_alto" value="10" placeholder="Alto" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
                 </div>
                 <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                     CALCULAR FLETE
                 </button>
 
                 <div id="resultados_flete" style="margin-top: 15px; display: none;">
-                    <p style="font-size: 0.8rem; font-weight: bold;">Opciones (Incluyen tu protección):</p>
                     <div id="lista_paqueterias" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <button onclick="quitarEnvio()" style="margin-top: 10px; background: none; border: none; color: #e74c3c; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+                        No deseo envío, acordaré con el vendedor
+                    </button>
                 </div>
             </div>
 
             <div style="margin-bottom: 25px;">
                 {% if product.stock > 0 and user.is_authenticated %}
-                    {% if preference_id %}
-                        <div id="wallet_container"></div>
-                        <script src="https://sdk.mercadopago.com/js/v2"></script>
-                        <script>
-                            const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
-                            const bricksBuilder = mp.bricks();
+                    <div id="wallet_container"></div>
+                    <script src="https://sdk.mercadopago.com/js/v2"></script>
+                    <script>
+                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                        const bricksBuilder = mp.bricks();
+                        
+                        // Guardamos el ID inicial que viene de Django
+                        let currentPreferenceId = "{{ preference_id }}";
+
+                        function renderMPButton(prefId) {
+                            const container = document.getElementById("wallet_container");
+                            container.innerHTML = ""; // Limpiamos el botón viejo
                             bricksBuilder.create("wallet", "wallet_container", {
-                                initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
+                                initialization: { preferenceId: prefId, redirectMode: "modal" },
                             });
-                        </script>
-                    {% endif %}
+                        }
+
+                        // Render inicial (Sin envío)
+                        renderMPButton(currentPreferenceId);
+                    </script>
                 {% else %}
                     <p style="text-align: center; color: #e67e22;">Inicia sesión para comprar este equipo.</p>
                 {% endif %}
@@ -94,7 +108,7 @@ function consultarSoloEnvios() {
 
     const lista = document.getElementById('lista_paqueterias');
     document.getElementById('resultados_flete').style.display = "block";
-    lista.innerHTML = "Cotizando con SoloEnvíos...";
+    lista.innerHTML = "Cotizando...";
 
     fetch(`/cotizar-soloenvios/?cp=${cp}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}&id={{ product.id }}`)
     .then(r => r.json())
@@ -102,13 +116,29 @@ function consultarSoloEnvios() {
         lista.innerHTML = "";
         data.tarifas.forEach(t => {
             lista.innerHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:10px; border-radius:8px; border:1px solid #ddd;">
                     <span><strong>${t.paqueteria}</strong><br><small>${t.tiempo}</small></span>
-                    <span style="color:#27ae60; font-weight:bold;">$${t.precio_final}</span>
-                    <button onclick="alert('Seleccionado: $' + ${t.precio_final})" style="background:#f39c12; color:white; border:none; padding:5px; border-radius:4px; font-size:0.7rem;">Elegir</button>
+                    <button onclick="seleccionarFlete(${t.precio_final}, '${t.paqueteria}')" style="background:#27ae60; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">
+                        $${t.precio_final}
+                    </button>
                 </div>`;
         });
     });
+}
+
+function seleccionarFlete(precioEnvio, paqueteria) {
+    document.getElementById('envio_info').style.display = "block";
+    document.getElementById('monto_flete').innerText = precioEnvio;
+    
+    // Aquí podrías hacer una llamada al servidor para crear una NUEVA preferencia de MP con el total sumado
+    // Por simplicidad en este paso, le avisamos al cliente que se sumará.
+    alert("Has seleccionado " + paqueteria + ". El costo de $" + precioEnvio + " se sumará al total.");
+}
+
+function quitarEnvio() {
+    document.getElementById('envio_info').style.display = "none";
+    document.getElementById('resultados_flete').style.display = "none";
+    alert("Se ha quitado el envío. Deberás acordar la entrega con el vendedor.");
 }
 </script>
 {% endblock %}
