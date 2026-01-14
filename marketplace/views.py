@@ -51,54 +51,16 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    client_id = "puouHyooEp4uBo0Nnov46lUFOf-memYBLGRYhdB1eRA"
-    client_secret = "vzVupeT2PMAktJp5SbXlyivRf8ajqqRD0015Pxhz-Ps"
-    
-    auth_url = 'https://app.soloenvios.com/api/v1/oauth/token'
-    token = None
+    # PEGA AQUÍ EL TOKEN LARGO QUE COPIASTE DE LA PÁGINA DE SOLOENVÍOS
+    # Asegúrate de que esté entre las comillas
+    token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        # --- INTENTO 1: BASIC AUTH (El más estándar para OAuth2) ---
-        keys = f"{client_id}:{client_secret}"
-        auth_base64 = base64.b64encode(keys.encode()).decode()
-        
-        headers_1 = {
-            "Authorization": f"Basic {auth_base64}",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        payload_1 = {"grant_type": "client_credentials"}
-        
-        res1 = requests.post(auth_url, data=payload_1, headers=headers_1, verify=False, timeout=10)
-        
-        if res1.status_code == 200:
-            token = res1.json().get('access_token')
-        else:
-            # --- INTENTO 2: CREDENCIALES EN EL CUERPO (Como decía tu manual) ---
-            payload_2 = {
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret
-            }
-            res2 = requests.post(auth_url, data=payload_2, verify=False, timeout=10)
-            if res2.status_code == 200:
-                token = res2.json().get('access_token')
-            else:
-                # --- INTENTO 3: JSON PAYLOAD ---
-                res3 = requests.post(auth_url, json=payload_2, verify=False, timeout=10)
-                if res3.status_code == 200:
-                    token = res3.json().get('access_token')
-
-        if not token:
-            return JsonResponse({
-                'tarifas': [], 
-                'error': 'No se pudo obtener el Token',
-                'detalle': 'Las 3 formas de autenticación fallaron.'
-            })
-
-        # --- PASO 2: COTIZACIÓN (Ya con el Token obtenido) ---
+        # PASO DIRECTO A COTIZACIÓN
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
+        
         headers_rates = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {token_manual}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
@@ -117,11 +79,10 @@ def cotizar_soloenvios(request):
             ]
         }
         
-        res = requests.post(rates_url, json=payload_rates, headers=headers_rates, verify=False)
+        res = requests.post(rates_url, json=payload_rates, headers=headers_rates, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # Quotations puede devolver la lista directamente o dentro de 'rates'
             rates_list = data.get('rates', data) if isinstance(data, dict) else data
             
             tarifas = []
@@ -135,7 +96,12 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error en Cotización: {res.status_code}', 'detalle': res.text})
+        # Si aquí sale 401, el token manual ya caducó
+        return JsonResponse({
+            'tarifas': [], 
+            'error': f'Error en Cotización: {res.status_code}', 
+            'detalle': res.text
+        })
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -277,6 +243,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
