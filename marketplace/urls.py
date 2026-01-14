@@ -6,8 +6,7 @@ from . import views
 urlpatterns = [
     # --- PÁGINAS PRINCIPALES ---
     path('', views.home, name='home'),
-    # Cambiado a 'product_detail' para que coincida con tus otros HTMLs
-    path('producto/<int:product_id>/', views.detalle_producto, name='product_detail'), 
+    path('producto/<int:product_id>/', views.detalle_producto, name='product_detail'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
     
     # --- CUENTA Y PERFIL ---
@@ -31,19 +30,18 @@ urlpatterns = [
     path('actualizar-guia/<int:venta_id>/', views.actualizar_guia, name='actualizar_guia'),
     
     # --- MERCADO PAGO Y LOGÍSTICA ---
-    # OJO: Verifica que en views.py la función se llame 'procesar_pago' o 'actualizar_preferencia_pago'
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
-    path('actualizar-pago/', views.actualizar_preferencia_pago, name='actualizar_pago'),
+    path('actualizar-pago/', views.actualizar_pago, name='actualizar_pago'), # <--- CORREGIDO AQUÍ
     path('cotizar-soloenvios/', views.cotizar_soloenvios, name='cotizar_soloenvios'),
     path('producto/<int:product_id>/intencion/', views.crear_intencion_compra, name='crear_intencion_compra'),
     
-    # --- RESULTADOS DE PAGO Y WEBHOOK ---
+    # --- RESULTADOS DE PAGO ---
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     
     # --- OTROS ---
-    path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
+    path('terminos/', Template_View.as_view(template_name="marketplace/terminos.html"), name='terminos'),
     
     # --- PANEL ADMINISTRATIVO ---
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
