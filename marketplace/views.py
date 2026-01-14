@@ -10,6 +10,7 @@ import mercadopago
 import json
 from .models import IndustrialProduct, Category, Sale, Profile    
 from .forms import RegistroForm, ProductForm, ProfileForm, UserUpdateForm
+import urllib3
 
 
 # --- CONFIGURACIÓN ---
@@ -90,22 +91,12 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Usamos tus credenciales reales de la captura
-    api_key = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    # URL CORREGIDA (Sin el 'api.' al principio)
+    url = "https://soloenvios.com/api/v1/shipping/rates"
+    token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     
-    url = "https://api.soloenvios.com/v1/shipping/rates"
-    
-    # Medidas seguras: Si vienen de la web las usamos, si no, valores de una caja real
-    try:
-        peso = float(request.GET.get('peso') or 1)
-        largo = float(request.GET.get('largo') or 20)
-        ancho = float(request.GET.get('ancho') or 20)
-        alto = float(request.GET.get('alto') or 20)
-    except:
-        peso, largo, ancho, alto = 1, 20, 20, 20
-
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "Accept": "application/json",
         "User-Agent": "Mozilla/5.0"
@@ -115,57 +106,44 @@ def cotizar_soloenvios(request):
         "origin_zip_code": str(cp_origen),
         "destination_zip_code": str(cp_destino),
         "package": {
-            "weight": peso,
-            "width": ancho,
-            "height": alto,
-            "length": largo
+            "weight": float(request.GET.get('peso') or 1),
+            "width": float(request.GET.get('ancho') or 20),
+            "height": float(request.GET.get('alto') or 20),
+            "length": float(request.GET.get('largo') or 20)
         }
     }
     
     try:
-        # Bypass de seguridad para Render (verify=False)
-        import urllib3
         urllib3.disable_warnings()
+        # Intentamos la conexión
+        response = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
         
-        response = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
-        
+        print(f"DEBUG: Status {response.status_code}")
+
         if response.status_code == 200:
             data = response.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
             for t in rates:
+                # Extraemos el precio del campo 'price' o 'cost'
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
                     # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
+                        'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
                         'precio_final': precio_con_comision,
                         'tiempo': t.get('delivery_days') or '3-5'
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            # Esto nos dirá en los logs de Render si es un tema de CPs o de Saldo
-            print(f"Respuesta API SoloEnvíos: {response.status_code} - {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'El transportista no devolvió tarifas (Error {response.status_code})'})
+            print(f"Error de API SoloEnvios: {response.text}")
+            return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code} al cotizar'})
 
     except Exception as e:
-        print(f"Error técnico en el servidor: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el cotizador'})
-            
-  
-# --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
-def registro(request):
-    if request.method == 'POST':
-        form = RegistroForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = RegistroForm()
-    return render(request, 'marketplace/registro.html', {'form': form})
+        print(f"NUEVO ERROR TÉCNICO: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el servidor de envíos'})
 
 @login_required
 def editar_perfil(request):
@@ -336,6 +314,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
