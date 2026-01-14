@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView # Verifica que esta línea esté arriba
 from . import views
 
 urlpatterns = [
@@ -31,7 +31,7 @@ urlpatterns = [
     
     # --- MERCADO PAGO Y LOGÍSTICA ---
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
-    path('actualizar-pago/', views.actualizar_pago, name='actualizar_pago'), # <--- CORREGIDO AQUÍ
+    path('actualizar-pago/', views.actualizar_pago, name='actualizar_pago'), 
     path('cotizar-soloenvios/', views.cotizar_soloenvios, name='cotizar_soloenvios'),
     path('producto/<int:product_id>/intencion/', views.crear_intencion_compra, name='crear_intencion_compra'),
     
@@ -41,7 +41,8 @@ urlpatterns = [
     path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     
     # --- OTROS ---
-    path('terminos/', Template_View.as_view(template_name="marketplace/terminos.html"), name='terminos'),
+    # CORREGIDO: TemplateView sin guion bajo
+    path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
     
     # --- PANEL ADMINISTRATIVO ---
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
