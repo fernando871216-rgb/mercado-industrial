@@ -28,6 +28,11 @@ class IndustrialProduct(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    peso = models.DecimalField(max_digits=6, decimal_places=2, default=5.0, help_text="Peso estimado en Kg")
+    largo = models.IntegerField(default=30, help_text="Largo en cm")
+    ancho = models.IntegerField(default=30, help_text="Ancho en cm")
+    alto = models.IntegerField(default=30, help_text="Alto en cm")
+    cp_origen = models.CharField(max_length=5, default="00000", help_text="Código Postal donde está el equipo")
 
     def __str__(self):
         return self.title
@@ -87,6 +92,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
