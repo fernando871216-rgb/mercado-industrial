@@ -58,6 +58,8 @@ class Sale(models.Model):
     status = models.CharField(max_length=20, default='pendiente')
     pagado_a_vendedor = models.BooleanField(default=False)
     recibido_por_comprador = models.BooleanField(default=False)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Número de Guía")
+    shipping_company = models.CharField(max_length=50, blank=True, null=True, verbose_name="Paquetería")
 
     def __str__(self):
         return f"Venta de {self.product.title}"
@@ -92,6 +94,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
