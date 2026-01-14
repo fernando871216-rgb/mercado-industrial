@@ -18,44 +18,55 @@
             </h4>
             
             <div style="margin-bottom: 15px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre de Usuario:</label>
-                <input type="text" value="{{ user.username }}" disabled style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #f9f9f9; color: #999;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Nombre de Usuario:</label>
+                <input type="text" value="{{ user.username }}" disabled style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #f9f9f9;">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre:</label>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">Nombre:</label>
                     {{ u_form.first_name }}
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Apellidos:</label>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">Apellidos:</label>
                     {{ u_form.last_name }}
                 </div>
             </div>
 
             <div style="margin-bottom: 25px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Correo Electrónico:</label>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Correo Electrónico:</label>
                 {{ u_form.email }}
             </div>
 
             <div style="background: #f0fff4; padding: 20px; border-radius: 12px; border: 1px solid #c6f6d5; margin-bottom: 25px;">
-                <h4 style="color: #27ae60; margin-top: 0; margin-bottom: 15px;"><i class="fab fa-whatsapp"></i> Datos de Contacto</h4>
-                <div style="margin-bottom: 15px;">
+                <h4 style="color: #27ae60; margin-top: 0;"><i class="fab fa-whatsapp"></i> Datos de Contacto</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-weight: bold; display: block;">Teléfono (10 dígitos):</label>
                     {{ p_form.phone }}
                 </div>
                 <div>
+                    <label style="font-weight: bold; display: block;">Dirección Completa:</label>
                     {{ p_form.address }}
                 </div>
             </div>
 
             <div style="background: #fffaf0; padding: 20px; border-radius: 12px; border: 1px solid #feebc8; margin-bottom: 30px;">
-                <h4 style="color: #dd6b20; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-university"></i> Datos de Pago</h4>
-                <div style="margin-bottom: 10px;">{{ p_form.banco }}</div>
-                <div style="margin-bottom: 10px;">{{ p_form.clabe }}</div>
-                <div>{{ p_form.beneficiario }}</div>
+                <h4 style="color: #dd6b20; margin-top: 0;"><i class="fas fa-university"></i> Datos de Pago</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-weight: bold; display: block;">Banco:</label>
+                    {{ p_form.banco }}
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-weight: bold; display: block;">CLABE (18 dígitos):</label>
+                    {{ p_form.clabe }}
+                </div>
+                <div>
+                    <label style="font-weight: bold; display: block;">Beneficiario:</label>
+                    {{ p_form.beneficiario }}
+                </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
                 GUARDAR CAMBIOS
             </button>
         </div>
@@ -63,8 +74,19 @@
 </div>
 
 <style>
-    input[type="text"], input[type="email"], textarea, input[type="tel"], select {
-        width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;
+    /* Esto obliga a que los campos de Django se vean como cajas de texto reales */
+    input[type="text"], 
+    input[type="email"], 
+    input[type="tel"], 
+    input[type="number"],
+    textarea {
+        width: 100% !important;
+        padding: 12px !important;
+        border-radius: 8px !important;
+        border: 1px solid #ccc !important;
+        display: block !important;
+        margin-top: 5px !important;
+        box-sizing: border-box !important;
     }
 </style>
 {% endblock %}
