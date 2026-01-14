@@ -90,18 +90,15 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Usamos las credenciales de tus capturas
-    api_key = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
-    api_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
-    
-    # URL oficial de producción
+    # Datos para la API (usando tus credenciales de la captura)
     url = "https://api.soloenvios.com/v1/shipping/rates"
+    token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     
     headers = {
-        "Authorization": f"Bearer {api_key}", # Probamos con Bearer primero
-        "Api-Key": api_key,                   # Algunas APIs piden este header extra
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
     payload = {
@@ -109,16 +106,20 @@ def cotizar_soloenvios(request):
         "destination_zip_code": str(cp_destino),
         "package": {
             "weight": float(request.GET.get('peso') or 1),
-            "width": float(request.GET.get('ancho') or 10),
-            "height": float(request.GET.get('alto') or 10),
-            "length": float(request.GET.get('largo') or 10)
+            "width": float(request.GET.get('ancho') or 20),
+            "height": float(request.GET.get('alto') or 20),
+            "length": float(request.GET.get('largo') or 20)
         }
     }
     
     try:
-        # Añadimos verify=False solo si el error persiste por certificados de Render
-        response = requests.post(url, json=payload, headers=headers, timeout=20)
+        # IMPORTANTE: verify=False ignora errores de certificados SSL en Render
+        # timeout=25 da más tiempo por si la conexión es lenta
+        response = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
+        # Log para ver en Render qué está pasando
+        print(f"DEBUG API: Enviado a {url} - Status: {response.status_code}")
+
         if response.status_code == 200:
             data = response.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
@@ -127,7 +128,6 @@ def cotizar_soloenvios(request):
             for t in rates:
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
-                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
@@ -136,13 +136,13 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            # Si da error, imprimimos el detalle para verlo en Render Logs
-            print(f"Error SoloEnvios {response.status_code}: {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'Error API {response.status_code}'})
+            print(f"Error de API: {response.text}")
+            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
 
     except Exception as e:
-        print(f"Excepcion: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el servidor de envíos'})
+        # Esto imprimirá el error técnico real en tus LOGS de Render
+        print(f"ERROR TÉCNICO REAL: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': f'Error de conexión: {str(e)[:40]}'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -326,6 +326,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
