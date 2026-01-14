@@ -51,34 +51,34 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # NUEVAS CREDENCIALES ACTUALIZADAS
+    # Tus llaves nuevas
     client_id = "puouHyooEp4uBo0Nnov46lUFOf-memYBLGRYhdB1eRA"
     client_secret = "vzVupeT2PMAktJp5SbXlyivRf8ajqqRD0015Pxhz-Ps"
     
     try:
-        auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
+        # 1. PASO: TOKEN (Enviando todo por URL para evitar "método incompatible")
+        auth_url = (
+            f"https://app.soloenvios.com/api/v1/oauth/token?"
+            f"client_id={client_id}&"
+            f"client_secret={client_secret}&"
+            f"grant_type=client_credentials&"
+            f"redirect_uri=urn:ietf:wg:oauth:2.0:oob"
+        )
         
-        auth_payload = {
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "grant_type": "client_credentials",
-            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
-        }
-
-        # Petición de token
-        auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=15)
+        # Petición POST vacía, ya que los datos van en la URL
+        auth_res = requests.post(auth_url, verify=False, timeout=15)
         
         if auth_res.status_code != 200:
             print(f"DEBUG SOLOENVIOS: {auth_res.status_code} - {auth_res.text}")
             return JsonResponse({
                 'tarifas': [], 
                 'error': f'Auth Error: {auth_res.status_code}',
-                'detalle': 'Error al validar nuevas credenciales'
+                'detalle': auth_res.json().get('error_description', 'Error de credenciales')
             })
             
         token = auth_res.json().get('access_token')
 
-        # 2. PASO: COTIZACIÓN
+        # 2. PASO: COTIZACIÓN (Esto se queda igual, ya que usa el Token)
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -108,13 +108,13 @@ def cotizar_soloenvios(request):
                 costo = t.get('price') or t.get('cost') or 0
                 if costo:
                     tarifas.append({
-                        'paqueteria': t.get('service_name') or 'Envío SoloEnvíos',
-                        'precio_final': round(float(costo) * 1.08, 2),
-                        'tiempo': t.get('delivery_days') or '3-5 días'
+                        'paqueteria': t.get('service_name') or 'Paquetería',
+                        'precio_final': round(float(costo) * 1.08, 2), # 8% comisión
+                        'tiempo': t.get('delivery_days') or 'N/A'
                     })
             return JsonResponse({'tarifas': tarifas})
             
-        return JsonResponse({'tarifas': [], 'error': f'Error en Cotización: {res.status_code}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}', 'detalle': res.text})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -257,6 +257,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
