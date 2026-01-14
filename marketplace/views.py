@@ -174,7 +174,8 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    # Esto busca tanto ventas pagadas como intentos (intenciones)
+    ventas = Venta.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
@@ -265,6 +266,7 @@ def mercadopago_webhook(request):
                 print(f"Pago {payment_id} aprobado con éxito.")
                 
     return JsonResponse({'status': 'ok'}, status=200)
+
 
 
 
