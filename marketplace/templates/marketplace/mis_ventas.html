@@ -1,92 +1,52 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 900px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-        <div>
-            <h2 style="color: #2c3e50; margin: 0; font-size: 1.6rem;">📈 Mis Ventas</h2>
-            <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">Gestión de ingresos y pedidos.</p>
-        </div>
-        <div style="background: #27ae60; color: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(39,174,96,0.2);">
-            <span style="font-size: 0.75rem; display: block; text-transform: uppercase; opacity: 0.9;">Tasa de Comisión</span>
-            <strong style="font-size: 1.2rem;">5% INITRE</strong>
-        </div>
-    </div>
+<div class="container" style="max-width: 1000px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
+    <h2 style="color: #2c3e50; margin-bottom: 30px;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas Realizadas</h2>
 
-    <div style="display: flex; flex-direction: column; gap: 20px;">
+    {% if ventas %}
         {% for venta in ventas %}
-        <div style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; overflow: hidden;">
-            
-            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <span style="display: block; color: #95a5a6; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Producto</span>
-                    <strong style="color: #2c3e50; font-size: 1.1rem;">{{ venta.product.title }}</strong>
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                
+                <div style="flex: 1; min-width: 250px;">
+                    <h4 style="margin: 0; color: #34495e;">{{ venta.product.title }}</h4>
+                    <p style="margin: 5px 0; font-size: 0.9rem; color: #7f8c8d;">
+                        Comprador: <strong>{{ venta.buyer.username }}</strong> | Fecha: {{ venta.created_at|date:"d/m/Y" }}
+                    </p>
+                    <span style="background: #27ae60; color: white; padding: 3px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold;">
+                        ${{ venta.price }} MXN
+                    </span>
                 </div>
-                <div style="text-align: right;">
-                    {% if venta.status == 'pendiente' %}
-                        <span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">PENDIENTE</span>
-                    {% elif venta.status == 'completado' %}
-                        <span style="background: #d4edda; color: #155724; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">COMPLETADO</span>
+
+                <div style="flex: 1; min-width: 300px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    {% if venta.tracking_number %}
+                        <p style="margin: 0; color: #2c3e50; font-weight: bold;">
+                            <i class="fas fa-truck"></i> Envío: {{ venta.shipping_company }}
+                        </p>
+                        <p style="margin: 5px 0; font-size: 1.1rem; color: #3498db; letter-spacing: 1px;">
+                            {{ venta.tracking_number }}
+                        </p>
+                        <small style="color: #95a5a6;">Guía registrada</small>
                     {% else %}
-                        <span style="background: #f8d7da; color: #721c24; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">CANCELADO</span>
+                        <form action="{% url 'actualizar_guia' venta.id %}" method="POST" style="display: flex; gap: 5px;">
+                            {% csrf_token %}
+                            <input type="text" name="shipping_company" placeholder="Paquetería" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;" required>
+                            <input type="text" name="tracking_number" placeholder="Núm. Guía" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;" required>
+                            <button type="submit" style="background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                                Guardar
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
+
             </div>
-
-            <div style="padding: 15px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <span style="display: block; color: #95a5a6; font-size: 0.75rem;">Comprador:</span>
-                        <strong style="color: #34495e; font-size: 0.9rem; word-break: break-all;">{{ venta.buyer.username }}</strong>
-                    </div>
-                    <div>
-                        <span style="display: block; color: #95a5a6; font-size: 0.75rem;">Fecha:</span>
-                        <strong style="color: #34495e; font-size: 0.9rem;">{{ venta.created_at|date:"d/m/Y" }}</strong>
-                    </div>
-                </div>
-
-                <div style="background: #fcfcfc; border: 1px dashed #ddd; border-radius: 10px; padding: 12px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem;">
-                        <span style="color: #7f8c8d;">Precio de Venta:</span>
-                        <span style="color: #2c3e50; font-weight: 600;">${{ venta.price }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; color: #e74c3c;">
-                        <span>Comisiones (MP + INITRE):</span>
-                        <span>- ${{ venta.get_gateway_cost|add:venta.get_platform_commission }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                        <span style="font-weight: bold; color: #2c3e50;">A RECIBIR:</span>
-                        <span style="font-weight: 800; color: #27ae60; font-size: 1.1rem;">${{ venta.get_net_amount }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="padding: 10px 15px; background: #fdfdfd; border-top: 1px solid #eee; display: flex; gap: 10px; flex-wrap: wrap;">
-                {% if venta.status == 'pendiente' %}
-                    <a href="{% url 'cambiar_estado_venta' venta.id %}" 
-                       style="flex: 1; min-width: 100px; text-align: center; background: #3498db; color: white; padding: 8px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
-                        Enviado
-                    </a>
-                {% endif %}
-
-                {% if venta.status != 'cancelado' %}
-                    <a href="{% url 'cancelar_venta' venta.id %}" 
-                       onclick="return confirm('¿Seguro que quieres cancelar y devolver el stock?')"
-                       style="flex: 1; min-width: 100px; text-align: center; background: #e74c3c; color: white; padding: 8px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
-                        Cancelar
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        {% empty %}
-        <div style="text-align: center; padding: 50px; background: white; border-radius: 15px; border: 2px dashed #eee;">
-            <p style="color: #bdc3c7;">No tienes ventas registradas aún.</p>
         </div>
         {% endfor %}
-    </div>
+    {% else %}
+        <div style="text-align: center; padding: 50px; background: #f9f9f9; border-radius: 10px;">
+            <p style="color: #bdc3c7;">Aún no has realizado ninguna venta.</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
-
-
-
