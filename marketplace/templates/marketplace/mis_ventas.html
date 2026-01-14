@@ -1,21 +1,21 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
-    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</h2>
+<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: sans-serif;">
+    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas / Intenciones</h2>
 
     {% if ventas %}
         {% for v in ventas %}
-        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if v.status == 'entregado' %}#27ae60{% elif v.status == 'cancelado' %}#e74c3c{% else %}#f1c40f{% endif %};">
-            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if v.status == 'pagado' %}#27ae60{% else %}#f1c40f{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="font-size: 0.8rem; color: #95a5a6; text-transform: uppercase;">Orden #{{ v.id }} - {{ v.created_at|date:"d M Y" }}</span>
-                    <h3 style="margin: 5px 0; color: #2c3e50;">{{ v.product.title }}</h3>
-                    <p style="margin: 0; color: #7f8c8d;">Comprador: <strong>{{ v.buyer.username }}</strong></p>
+                    <span style="font-size: 0.8rem; color: #95a5a6;">{{ v.created_at|date:"d M Y" }}</span>
+                    <h3 style="margin: 5px 0;">{{ v.product.title }}</h3>
+                    <p style="margin: 0;">Comprador: <strong>{{ v.buyer.username }}</strong></p>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 1.2rem; font-weight: bold; color: #2ecc71;">${{ v.total_price }}</div>
-                    <span style="display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; background: #fdf2e9; color: #e67e22;">
+                    <div style="font-size: 1.2rem; font-weight: bold;">${{ v.price }}</div>
+                    <span style="background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
                         {{ v.status|upper }}
                     </span>
                 </div>
@@ -23,32 +23,21 @@
 
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
 
-            {% if v.status == 'pendiente' or v.status == 'pagado' %}
-            <form action="{% url 'actualizar_guia' v.id %}" method="POST" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                {% csrf_token %}
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Paquetería</label>
-                    <input type="text" name="shipping_company" placeholder="Ej. FedEx" required style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Número de Guía</label>
-                    <input type="text" name="tracking_number" placeholder="12345678" required style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                </div>
-                <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    Actualizar Guía
-                </button>
-            </form>
+            {% if v.status == 'pendiente' %}
+                <p style="color: #e67e22; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> Intención de compra detectada. El cliente aún no completa el pago.</p>
             {% else %}
-                <p style="margin: 0; font-size: 0.9rem; color: #555;">
-                    <i class="fas fa-truck"></i> Envío por: <strong>{{ v.shipping_company }}</strong> | Guía: <strong>{{ v.tracking_number }}</strong>
-                </p>
+                <form action="{% url 'actualizar_guia' v.id %}" method="POST" style="display: flex; gap: 10px;">
+                    {% csrf_token %}
+                    <input type="text" name="shipping_company" placeholder="Paquetería" value="{{ v.shipping_company|default:'' }}" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    <input type="text" name="tracking_number" placeholder="Guía" value="{{ v.tracking_number|default:'' }}" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    <button type="submit" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Actualizar Envío</button>
+                </form>
             {% endif %}
         </div>
         {% endfor %}
     {% else %}
-        <div style="text-align: center; padding: 50px; background: #f9f9f9; border-radius: 15px;">
-            <i class="fas fa-shopping-cart" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
-            <p style="color: #95a5a6;">Aún no has realizado ninguna venta.</p>
+        <div style="text-align: center; padding: 50px; background: #f9f9f9;">
+            <p>No hay registros de ventas o intenciones todavía.</p>
         </div>
     {% endif %}
 </div>
