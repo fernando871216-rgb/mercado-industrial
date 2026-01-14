@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('producto/<int:product_id>/', views.detalle_producto, name='detalle_producto'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
+    path('producto/<int:product_id>/intencion/', views.crear_intencion_compra, name='crear_intencion_compra'),
     
     # --- CUENTA Y PERFIL ---
     path('registro/', views.registro, name='registro'),
@@ -49,5 +50,6 @@ urlpatterns = [
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
