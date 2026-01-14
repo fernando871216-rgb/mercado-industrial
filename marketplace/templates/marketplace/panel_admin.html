@@ -5,20 +5,23 @@
 <div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px;">
-        <h2 style="color: #003366; margin: 0; font-size: 1.5rem;">
-            <i class="fas fa-university"></i> Liquidaciones INITRE
-        </h2>
+        <div>
+            <h2 style="color: #003366; margin: 0; font-size: 1.5rem;">
+                <i class="fas fa-university"></i> Liquidaciones INITRE
+            </h2>
+            <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">Control de pagos a vendedores y comisiones del sitio.</p>
+        </div>
         <div style="background: #003366; color: white; padding: 15px 20px; border-radius: 12px; flex-grow: 1; max-width: 300px; text-align: right; box-shadow: 0 4px 15px rgba(0,51,102,0.2);">
-            <span style="display: block; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8;">Tu Ganancia Acumulada</span>
+            <span style="display: block; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8;">Tu Ganancia Estimada</span>
             <span style="font-size: 1.6rem; font-weight: 800; color: #f39c12;">${{ tus_ganancias|stringformat:".2f" }}</span>
         </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 15px;">
         {% for venta in ventas %}
-        <div style="background: white; border-radius: 15px; border: 1px solid #eef2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; {% if venta.pagado_a_vendedor %}opacity: 0.7;{% endif %}">
+        <div style="background: white; border-radius: 15px; border: 1px solid #eef2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; {% if venta.pagado_a_vendedor %}opacity: 0.8;{% endif %}">
             
-            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center;">
+            <div style="padding: 12px 15px; background: #f8f9fa; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     {% if venta.pagado_a_vendedor %}
                         <i class="fas fa-check-circle" style="color: #27ae60; font-size: 1.2rem;"></i>
@@ -29,23 +32,53 @@
                     {% endif %}
                 </div>
                 <div style="text-align: right;">
-                    <strong style="display: block; font-size: 0.9rem; color: #2c3e50;">{{ venta.product.user.username }}</strong>
+                    <strong style="display: block; font-size: 0.9rem; color: #2c3e50;">{{ venta.product.user.username|upper }}</strong>
                     <span style="font-size: 0.7rem; color: #7f8c8d;">{{ venta.product.user.email }}</span>
                 </div>
             </div>
 
-            <div style="padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee;">
-                <span style="display: block; font-size: 0.7rem; color: #95a5a6; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">Información de Rastreo:</span>
-                {% if venta.tracking_number %}
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <span style="font-size: 0.9rem; color: #2c3e50;"><i class="fas fa-truck"></i> <strong>{{ venta.shipping_company }}</strong></span>
-                        <code style="font-size: 1rem; color: #3498db; background: #f0f7ff; padding: 2px 8px; border-radius: 4px;">{{ venta.tracking_number }}</code>
-                    </div>
-                {% else %}
-                    <span style="font-size: 0.85rem; color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> El vendedor aún no registra la guía de envío.</span>
-                {% endif %}
+            <div style="padding: 15px; border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; background: #fff;">
+                <div style="flex: 1; min-width: 200px;">
+                    <span style="display: block; font-size: 0.7rem; color: #95a5a6; font-weight: bold; text-transform: uppercase;">Estado Logístico:</span>
+                    {% if venta.tracking_number %}
+                        <span style="font-size: 0.85rem; color: #2c3e50;"><i class="fas fa-truck"></i> {{ venta.shipping_company }} - <code>{{ venta.tracking_number }}</code></span>
+                    {% else %}
+                        <span style="font-size: 0.85rem; color: #e74c3c;"><i class="fas fa-times"></i> Sin guía registrada</span>
+                    {% endif %}
+                </div>
+                <div style="text-align: center; padding: 5px 15px; border-radius: 8px; {% if venta.recibido_por_comprador %}background: #eafaf1; color: #27ae60;{% else %}background: #fff5f5; color: #e74c3c;{% endif %}">
+                    {% if venta.recibido_por_comprador %}
+                        <i class="fas fa-handshake"></i> <span style="font-size: 0.8rem; font-weight: bold;">CLIENTE CONFIRMÓ RECEPCIÓN</span>
+                    {% else %}
+                        <i class="fas fa-hourglass-half"></i> <span style="font-size: 0.8rem; font-weight: bold;">CLIENTE NO HA CONFIRMADO</span>
+                    {% endif %}
+                </div>
             </div>
 
-            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; text-align: center;">
-                {% if venta.recibido_por_comprador %}
-                    <div style="background: #eafaf1; color: #27ae60; padding:
+            <div style="padding: 15px; background: #fdfdfd; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                <div style="border-right: 1px solid #eee; padding-right: 10px;">
+                    <span style="display: block; font-size: 0.65rem; color: #95a5a6;">VENTA TOTAL</span>
+                    <strong style="color: #2c3e50;">${{ venta.price }}</strong>
+                </div>
+                <div style="border-right: 1px solid #eee; padding-right: 10px;">
+                    <span style="display: block; font-size: 0.65rem; color: #95a5a6;">COMISIÓN MP</span>
+                    <strong style="color: #e74c3c;">-${{ venta.get_gateway_cost|stringformat:".2f" }}</strong>
+                </div>
+                <div style="border-right: 1px solid #eee; padding-right: 10px;">
+                    <span style="display: block; font-size: 0.65rem; color: #95a5a6;">COMISIÓN INITRE (5%)</span>
+                    <strong style="color: #3498db;">${{ venta.get_platform_commission|stringformat:".2f" }}</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 0.65rem; color: #27ae60; font-weight: bold;">PAGAR A VENDEDOR</span>
+                    <strong style="color: #27ae60; font-size: 1.1rem;">${{ venta.get_net_amount|stringformat:".2f" }}</strong>
+                </div>
+            </div>
+
+            {% if not venta.pagado_a_vendedor %}
+            <div style="padding: 15px; background: #fff; text-align: center; border-top: 1px solid #eee;">
+                <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            onclick="return confirm('¿Confirmas que ya transferiste ${{ venta.get_net_amount }} al vendedor?')"
+                            style="background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(39,174,96,0.2);">
+                        <i class="fas fa-money-bill
