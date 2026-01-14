@@ -54,62 +54,36 @@ def cotizar_soloenvios(request):
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     try:
-        # MÉTODO DE ÚLTIMO RECURSO: Credenciales en la URL
-        auth_url = f"https://app.soloenvios.com/api/v1/oauth/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
-        
-        auth_res = requests.post(auth_url, verify=False, timeout=10)
-        
-        if auth_res.status_code != 200:
-            # Si esto falla, el problema es 100% de las llaves en el panel
-            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}', 'msg': 'Revisar llaves en el panel'})
-
-        token = auth_res.json().get('access_token')
-    
-    try:
-        # 1. PASO DE AUTENTICACIÓN
+        # Paso A: Obtener Token usando FORM DATA (Evita el 401 en muchas APIs)
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-        
-        # Payloads exactos según su consola
         auth_payload = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
             "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
-
-        # SoloEnvíos a veces requiere que el Content-Type sea específicamente JSON para soltar el token
-        headers_auth = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
         
-        # INTENTO 1: Como JSON (El más probable según su consola actual)
-        auth_res = requests.post(auth_url, json=auth_payload, headers=headers_auth, verify=False, timeout=10)
+        # Intentamos primero como data (form-encoded)
+        auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=10)
         
-        # INTENTO 2: Si el primero falla con 401, intentamos como Form Data (Método antiguo)
-        if auth_res.status_code == 401:
-            auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=10)
+        # Si falla, intentamos como JSON
+        if auth_res.status_code != 200:
+            auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=10)
 
         if auth_res.status_code != 200:
-            return JsonResponse({
-                'tarifas': [], 
-                'error': f'Auth Error: {auth_res.status_code}',
-                'ayuda': 'Revisa que tus llaves Client ID y Secret en SoloEnvíos no hayan expirado.'
-            })
+            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
             
-        token_data = auth_res.json()
-        token = token_data.get('access_token')
+        token = auth_res.json().get('access_token')
 
-        # 2. PASO DE COTIZACIÓN
+        # Paso B: Cotizar con los datos de tu formulario
         rates_url = "https://app.soloenvios.com/api/v1/rates"
-        headers_rates = {
+        headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Ajustamos los datos del paquete con lo que viste en su web (Descripción: Caja)
-        payload_rates = {
+        payload = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
             "package": {
@@ -121,31 +95,26 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(rates_url, json=payload_rates, headers=headers_rates, verify=False)
+        res = requests.post(rates_url, json=payload, headers=headers, verify=False)
         
         if res.status_code == 200:
             data = res.json()
-            # Si la API devuelve error dentro del JSON exitoso
-            if isinstance(data, dict) and 'error' in data:
-                return JsonResponse({'tarifas': [], 'error': data['error']})
-                
             rates = data if isinstance(data, list) else data.get('rates', [])
-            tarifas_finales = []
-            
+            tarifas = []
             for t in rates:
                 costo = t.get('price') or t.get('cost') or 0
                 if costo:
-                    tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider_name') or 'Servicio de Envío',
-                        'precio_final': round(float(costo) * 1.08, 2), # Tu 8% de comisión
+                    tarifas.append({
+                        'paqueteria': t.get('service_name') or 'Envío',
+                        'precio_final': round(float(costo) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
-            return JsonResponse({'tarifas': tarifas_finales})
+            return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error al cotizar: {res.status_code}'})
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': str(e)})
 
 
 # ==========================================
@@ -285,6 +254,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
