@@ -90,82 +90,89 @@ def cotizar_soloenvios(request):
     cp_destino = request.GET.get('cp_destino', '').strip()
     
     if not cp_origen or not cp_destino:
-        return JsonResponse({'tarifas': [], 'error': 'Faltan datos de envío'})
+        return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
 
-    # TUS CREDENCIALES
+    # TUS LLAVES (Verifica que no tengan espacios ocultos)
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
-    # 1. PASO UNO: OBTENER EL TOKEN (Formato x-www-form-urlencoded según tu doc)
     auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
     
-    auth_data = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret
-    }
-    
     try:
-        # Aquí usamos 'data=' en lugar de 'json=' para cumplir con el estándar OAuth2 de tu doc
-        auth_res = requests.post(auth_url, data=auth_data, verify=False, timeout=15)
+        # Según el estándar que muestra tu doc, intentamos enviar las llaves como "Basic Auth"
+        # Esto es lo que significa el encabezado "Authorization" en muchos sistemas de tokens
+        payload_auth = {"grant_type": "client_credentials"}
         
+        auth_res = requests.post(
+            auth_url, 
+            data=payload_auth, 
+            auth=HTTPBasicAuth(client_id, client_secret), # Esto junta las llaves de forma segura
+            verify=False, 
+            timeout=15
+        )
+        
+        # Si falla el anterior, intentamos como lo pusimos antes pero con un pequeño ajuste
         if auth_res.status_code != 200:
-            print(f"DEBUG AUTH ERROR: {auth_res.status_code} - {auth_res.text}")
-            return JsonResponse({'tarifas': [], 'error': 'No se pudo validar el acceso (Revisa tus llaves)'})
-        
-        token_data = auth_res.json()
-        access_token = token_data.get('access_token')
-        
-        # 2. PASO DOS: COTIZAR
-        # Probamos la ruta estándar de rates bajo el dominio app.
-        rates_url = "https://app.soloenvios.com/api/v1/rates"
-        
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-        
-        payload = {
-            "origin_zip_code": str(cp_origen),
-            "destination_zip_code": str(cp_destino),
-            "package": {
-                "weight": float(request.GET.get('peso') or 1),
-                "width": float(request.GET.get('ancho') or 20),
-                "height": float(request.GET.get('alto') or 20),
-                "length": float(request.GET.get('largo') or 20)
+            auth_res = requests.post(
+                auth_url, 
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret
+                },
+                verify=False,
+                timeout=15
+            )
+
+        if auth_res.status_code == 200:
+            access_token = auth_res.json().get('access_token')
+            
+            # PASO 2: COTIZAR
+            rates_url = "https://app.soloenvios.com/api/v1/rates"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
             }
-        }
-        
-        response = requests.post(rates_url, json=payload, headers=headers, verify=False, timeout=15)
-        
-        if response.status_code == 200:
-            rates = response.json()
-            if isinstance(rates, dict): rates = rates.get('rates', [])
             
-            tarifas_finales = []
-            for t in rates:
-                precio = float(t.get('price') or t.get('cost') or 0)
-                if precio > 0:
-                    tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
-                        'precio_final': round(precio * 1.08, 2),
-                        'tiempo': t.get('delivery_days') or '3-5 días'
-                    })
-            return JsonResponse({'tarifas': tarifas_finales})
+            paquete = {
+                "origin_zip_code": str(cp_origen),
+                "destination_zip_code": str(cp_destino),
+                "package": {
+                    "weight": float(request.GET.get('peso') or 1),
+                    "width": float(request.GET.get('ancho') or 20),
+                    "height": float(request.GET.get('alto') or 20),
+                    "length": float(request.GET.get('largo') or 20)
+                }
+            }
+            
+            response = requests.post(rates_url, json=paquete, headers=headers, verify=False, timeout=15)
+            
+            if response.status_code == 200:
+                # Procesamos tarifas...
+                data = response.json()
+                rates = data if isinstance(data, list) else data.get('rates', [])
+                tarifas_finales = []
+                for t in rates:
+                    precio = float(t.get('price') or t.get('cost') or 0)
+                    if precio > 0:
+                        tarifas_finales.append({
+                            'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
+                            'precio_final': round(precio * 1.08, 2),
+                            'tiempo': t.get('delivery_days') or '3-5 días'
+                        })
+                return JsonResponse({'tarifas': tarifas_finales})
+            else:
+                return JsonResponse({'tarifas': [], 'error': f'Error API Rates: {response.status_code}'})
+        
         else:
-            # Si rates falla en app., intentamos la URL de soloenvios.com normal
-            url_respaldo = "https://soloenvios.com/api/v1/rates"
-            res_respaldo = requests.post(url_respaldo, json=payload, headers=headers, verify=False, timeout=10)
-            if res_respaldo.status_code == 200:
-                # Procesar igual
-                return JsonResponse({'tarifas': res_respaldo.json()})
-            
-            return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas disponibles'})
+            # Imprimimos el error exacto que nos da SoloEnvíos para saber qué llave no le gusta
+            print(f"ERROR DE AUTH: {auth_res.text}")
+            return JsonResponse({'tarifas': [], 'error': f'SoloEnvíos rechazó las llaves: {auth_res.status_code}'})
 
     except Exception as e:
-        print(f"ERROR FINAL: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con la paquetería'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+
+
 # --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
 def registro(request):
     # Aquí puedes poner tu lógica de creación de usuario después
@@ -349,6 +356,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
