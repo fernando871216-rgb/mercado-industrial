@@ -392,6 +392,18 @@ def confirmar_recepcion(request, venta_id):
     return redirect('mis_compras') # O como se llame tu vista de historial
 
 
+@login_required
+def actualizar_guia(request, venta_id):
+    if request.method == 'POST':
+        venta = get_object_or_404(Sale, id=venta_id)
+        # Solo el vendedor del producto o el admin pueden poner la guía
+        if request.user == venta.product.user or request.user.is_staff:
+            venta.tracking_number = request.POST.get('tracking_number')
+            venta.shipping_company = request.POST.get('shipping_company')
+            venta.save()
+            messages.success(request, f"Guía {venta.tracking_number} guardada correctamente.")
+    
+    return redirect('mis_ventas')
 
 
 
