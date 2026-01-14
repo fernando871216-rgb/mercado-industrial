@@ -50,35 +50,62 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Llaves de tu imagen
+    # Credenciales de tu consola
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
+    # User-Agent para evitar que el servidor nos bloquee por seguridad
+    headers_base = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "MercadoIndustrial/1.0"
+    }
+
     try:
-        # 1. TOKEN: Usamos los parámetros EXACTOS de tu imagen
+        # PASO 1: OBTENER TOKEN
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
+        
+        # Intentamos el envío de credenciales como JSON (como indica su consola)
         auth_payload = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
-            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob" # Parámetro crucial
+            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
-        # Forzamos JSON en los headers para evitar el 401
-        headers_auth = {"Content-Type": "application/json", "Accept": "application/json"}
         
-        auth_res = requests.post(auth_url, json=auth_payload, headers=headers_auth, verify=False)
+        auth_res = requests.post(
+            auth_url, 
+            json=auth_payload, 
+            headers=headers_base, 
+            verify=False, 
+            timeout=10
+        )
         
+        # Si falla con JSON, intentamos como Form Data (algunas versiones de la API lo piden así)
+        if auth_res.status_code == 401:
+            auth_res = requests.post(
+                auth_url, 
+                data=auth_payload, 
+                verify=False, 
+                timeout=10
+            )
+
         if auth_res.status_code != 200:
-            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
+            return JsonResponse({
+                'tarifas': [], 
+                'error': f'Auth Error: {auth_res.status_code}',
+                'detalle': auth_res.text # Esto nos dirá por qué nos rechaza exactamente
+            })
             
         token = auth_res.json().get('access_token')
 
-        # 2. COTIZACIÓN: Incluimos el empaque "Caja de cartón"
+        # PASO 2: COTIZACIÓN CON EL TIPO DE EMPAQUE QUE VISTE
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         headers_rates = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "User-Agent": "MercadoIndustrial/1.0"
         }
         
         payload = {
@@ -89,7 +116,7 @@ def cotizar_soloenvios(request):
                 "width": int(float(request.GET.get('ancho') or 10)),
                 "height": int(float(request.GET.get('alto') or 10)),
                 "length": int(float(request.GET.get('largo') or 10)),
-                "description": "Caja de cartón" # Notaste correctamente que esto es necesario
+                "description": "Caja de cartón" # Lo que observaste en la web
             }
         }
         
@@ -104,14 +131,15 @@ def cotizar_soloenvios(request):
                 if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or 'Envío',
-                        'precio_final': round(float(costo) * 1.08, 2), # Tu 8% de comisión
+                        'precio_final': round(float(costo) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
             return JsonResponse({'tarifas': tarifas})
-        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+            
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -249,6 +277,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
