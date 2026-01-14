@@ -90,15 +90,19 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Datos para la API (usando tus credenciales de la captura)
+    # TUS CREDENCIALES (Sacadas de tu captura de pantalla)
+    api_key = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    api_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
+    
     url = "https://api.soloenvios.com/v1/shipping/rates"
-    token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {api_key}",
+        "Api-Key": api_key,          # Enviamos la Key normal
+        "Api-Secret": api_secret,    # Enviamos la Secret Key por si acaso
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0"
     }
     
     payload = {
@@ -113,13 +117,12 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        # IMPORTANTE: verify=False ignora errores de certificados SSL en Render
-        # timeout=25 da más tiempo por si la conexión es lenta
+        # Mantenemos verify=False para evitar el error de conexión en Render
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
         response = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
-        # Log para ver en Render qué está pasando
-        print(f"DEBUG API: Enviado a {url} - Status: {response.status_code}")
-
         if response.status_code == 200:
             data = response.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
@@ -136,13 +139,12 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            print(f"Error de API: {response.text}")
+            print(f"DEBUG: Error {response.status_code} - {response.text}")
             return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
 
     except Exception as e:
-        # Esto imprimirá el error técnico real en tus LOGS de Render
-        print(f"ERROR TÉCNICO REAL: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': f'Error de conexión: {str(e)[:40]}'})
+        print(f"ERROR TÉCNICO: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el transportista'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -326,6 +328,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
