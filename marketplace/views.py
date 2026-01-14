@@ -95,13 +95,15 @@ def cotizar_soloenvios(request):
     # TUS CREDENCIALES
     token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     
-    # URL DEFINITIVA (Esta es la que no debería dar 404 ni redirigir)
-    url = "https://api.soloenvios.com/v1/rates"
+    # USAMOS LA URL QUE NO DA "NameResolutionError"
+    # Quitamos el "api." porque Render no lo encuentra
+    url = "https://soloenvios.com/api/v1/rates"
     
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0"
     }
     
     payload = {
@@ -116,47 +118,36 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        # Usamos verify=False por el tema de Render que vimos en los logs
+        # Intentamos la petición
         response = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
         
-        # Log de control para ver en Render
-        print(f"DEBUG: Intentando en {url} - Status: {response.status_code}")
+        print(f"DEBUG: Probando en {url} - Status: {response.status_code}")
 
         if response.status_code == 200:
             data = response.json()
-            # SoloEnvíos a veces devuelve la lista directo o dentro de 'data'
+            # Si la respuesta es una lista, la usamos; si es un dict, buscamos 'rates'
             rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
             for t in rates:
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
-                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
+                        'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
                         'precio_final': precio_con_comision,
                         'tiempo': t.get('delivery_days') or '3-5'
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         
-        elif response.status_code == 404:
-            # Si sigue dando 404, probamos la ruta extendida en el mismo momento
-            url_alt = "https://api.soloenvios.com/v1/shipping/rates"
-            print("Reintentando ruta extendida...")
-            res_alt = requests.post(url_alt, json=payload, headers=headers, timeout=15, verify=False)
-            if res_alt.status_code == 200:
-                # Procesar igual que arriba (simplificado para el ejemplo)
-                return JsonResponse({'tarifas': res_alt.json()})
-            return JsonResponse({'tarifas': [], 'error': 'Servicio de paquetería en mantenimiento (404)'})
-            
         else:
-            print(f"Error detalle: {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code}'})
+            # Si vuelve a dar 404, imprimimos el cuerpo para ver qué ruta sugiere SoloEnvíos
+            print(f"DEBUG ERROR {response.status_code}: {response.text[:200]}")
+            return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code} de comunicación'})
 
     except Exception as e:
-        print(f"Error de conexión final: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el cotizador'})
+        print(f"ERROR TÉCNICO: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el servidor'})
 
 # --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
 def registro(request):
@@ -341,6 +332,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
