@@ -1,53 +1,57 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 30px auto; font-family: sans-serif;">
-    
-    <form method="POST" style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden;">
-        {% csrf_token %}
-        
-        <div style="background: #003366; color: white; padding: 30px; text-align: center;">
-            <h2 style="margin: 0;">Configuración de mi Perfil</h2>
-            <p style="opacity: 0.8;">Llena los campos para poder vender y cobrar</p>
-        </div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-0">Configuración de mi Perfil</h2>
+                    <p class="mb-0">Llena los campos para poder vender y cobrar</p>
+                </div>
+                <div class="card-body p-5">
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-success">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
 
-        <div style="padding: 30px;">
-            <h4 style="color: #003366; border-bottom: 2px solid #eee; padding-bottom: 10px;">Información Personal</h4>
-            <div class="form-group">
-                {{ u_form.as_p }}
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <h4 class="text-primary mb-4">Información Personal</h4>
+                        <hr>
+                        
+                        {% if form %}
+                            <div class="mb-3">
+                                <label class="form-label">Nombre(s)</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Apellidos</label>
+                                {{ form.last_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Correo Electrónico</label>
+                                {{ form.email }}
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-5">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-2"></i> GUARDAR CAMBIOS
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i> 
+                                Error: El formulario de perfil no se cargó desde el servidor.
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
             </div>
-
-            <h4 style="color: #27ae60; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px;">Datos de Contacto y Pago</h4>
-            <div class="form-group">
-                {% if p_form %}
-                    {{ p_form.as_p }}
-                {% else %}
-                    <p style="color: red;">Error: El formulario de perfil no se cargó desde el servidor.</p>
-                {% endif %}
-            </div>
-
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px;">
-                GUARDAR CAMBIOS
-            </button>
         </div>
-    </form>
+    </div>
 </div>
-
-<style>
-    /* Estilo para que los campos de Django no salgan invisibles */
-    p input, p textarea, p select {
-        width: 100%;
-        padding: 10px;
-        margin-top: 5px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        display: block;
-    }
-    label {
-        font-weight: bold;
-        display: block;
-        margin-top: 15px;
-        color: #555;
-    }
-</style>
 {% endblock %}
