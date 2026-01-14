@@ -6,9 +6,12 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 # Asegúrate de que estos nombres de modelos coincidan con los tuyos
 from .models import IndustrialProduct, Category
+import mercadopago
 
 # Desactivar advertencias de seguridad para la conexión desde Render
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 # ==========================================
 # 1. API DE SOLOENVÍOS (Lógica de la Consola)
@@ -331,6 +334,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
