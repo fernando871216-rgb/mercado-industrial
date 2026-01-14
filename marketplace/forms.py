@@ -85,3 +85,15 @@ class ProductForm(forms.ModelForm):
             'alto': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'CM'}),
             'cp_origen': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '5 dígitos'}),
         }
+
+# --- 4. FORMULARIO PARA EDITAR DATOS BÁSICOS DEL USUARIO ---
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
