@@ -51,10 +51,11 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Token manual (Recuerda que si caduca en 2 horas, habrá que pedir uno nuevo o arreglar el paso anterior)
+    # Token que generaste en la página (Asegúrate que no haya expirado)
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
+        # Usamos el endpoint que viste en tu consola de pruebas
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
         
         headers_rates = {
@@ -63,7 +64,7 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Formateo de dimensiones y peso
+        # Obtenemos medidas del formulario con valores de respaldo
         try:
             peso = float(request.GET.get('peso') or 1)
             ancho = int(float(request.GET.get('ancho') or 20))
@@ -72,6 +73,7 @@ def cotizar_soloenvios(request):
         except:
             peso, ancho, alto, largo = 1, 20, 20, 20
 
+        # Construcción del mensaje para la API
         payload_rates = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
@@ -91,32 +93,34 @@ def cotizar_soloenvios(request):
         
         if res.status_code == 200:
             data = res.json()
+            # Buscamos la lista de tarifas en la respuesta
             rates_list = data.get('rates', []) if isinstance(data, dict) else data
             
             tarifas = []
             for t in rates_list:
+                # El precio puede venir en diferentes campos según el endpoint
                 precio = t.get('total_price') or t.get('price') or t.get('cost')
                 if precio:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
-                        'precio_final': round(float(precio) * 1.08, 2),
+                        'precio_final': round(float(precio) * 1.08, 2), # 8% comisión
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             
             if not tarifas:
-                 return JsonResponse({'tarifas': [], 'error': 'Sin coberturas en esta zona.'})
+                 return JsonResponse({'tarifas': [], 'error': 'No hay coberturas para esta ruta.'})
                  
             return JsonResponse({'tarifas': tarifas})
         
-        # En caso de error 422 u otro, devolvemos el detalle
+        # Si sale 422, esto nos dirá qué dato está mal (ej: el CP origen no es válido)
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error API: {res.status_code}', 
+            'error': f'Error de API: {res.status_code}', 
             'detalle': res.text
         })
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        return JsonResponse({'tarifas': [], 'error': f'Error de conexión: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -254,6 +258,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
