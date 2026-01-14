@@ -3,58 +3,50 @@
 {% block content %}
 <div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel de Control Administrativo</h2>
-        <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales y liquidaciones</p>
+    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+            <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrativo</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas y comisiones</p>
+        </div>
+        <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Totales (Comisión 5%)</span>
+            <strong style="font-size: 1.8rem; color: #2ecc71;">${{ tus_ganancias|stringformat:".2f" }}</strong>
+        </div>
     </div>
 
     <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES DE VENTA</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DESGLOSE FINANCIERO</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">ACCIONES</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TOTAL VENTA</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU COMISIÓN</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">VENDEDOR RECIBE</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">ESTADO</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
                 <tr style="border-bottom: 1px solid #f1f1f1;">
                     <td style="padding: 20px;">
-                        <span style="font-size: 0.7rem; color: #95a5a6; display: block;">ID: #{{ venta.id }} | {{ venta.created_at|date:"d/m/Y" }}</span>
-                        <strong style="color: #2c3e50; font-size: 1rem; display: block; margin: 4px 0;">{{ venta.product.title }}</strong>
-                        <span style="font-size: 0.85rem; color: #555;">Vendedor: <strong>{{ venta.product.user.username }}</strong></span>
+                        <strong style="display: block; color: #2c3e50;">{{ venta.product.title }}</strong>
+                        <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: {{ venta.product.user.username }}</span>
                     </td>
-                    <td style="padding: 20px;">
-                        <div style="display: flex; gap: 15px;">
-                            <div style="border-right: 1px solid #eee; padding-right: 15px;">
-                                <span style="display: block; font-size: 0.65rem; color: #95a5a6;">COMISIÓN PLATAFORMA</span>
-                                <strong style="color: #3498db;">${{ venta.get_platform_commission|stringformat:".2f" }}</strong>
-                            </div>
-                            <div>
-                                <span style="display: block; font-size: 0.65rem; color: #27ae60; font-weight: bold;">PAGO A VENDEDOR</span>
-                                <strong style="color: #27ae60; font-size: 1.1rem;">${{ venta.get_net_amount|stringformat:".2f" }}</strong>
-                            </div>
-                        </div>
-                    </td>
+                    <td style="padding: 20px; font-weight: bold;">${{ venta.price }}</td>
+                    <td style="padding: 20px; color: #3498db; font-weight: bold;">${{ venta.get_platform_commission }}</td>
+                    <td style="padding: 20px; color: #27ae60; font-weight: bold;">${{ venta.get_net_amount }}</td>
                     <td style="padding: 20px; text-align: center;">
-                        {% if not venta.pagado_a_vendedor %}
-                            <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
-                                {% csrf_token %}
-                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; width: 100%;">
-                                    <i class="fas fa-check-circle"></i> LIQUIDAR PAGO
-                                </button>
-                            </form>
-                        {% else %}
-                            <span style="background: #e8f5e9; color: #2e7d32; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; display: inline-block;">
-                                <i class="fas fa-check"></i> LIQUIDADO
-                            </span>
-                        {% endif %}
+                        <span style="padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; 
+                            {% if venta.status == 'pagado' %} background: #e8f5e9; color: #2e7d32;
+                            {% elif venta.status == 'pendiente' %} background: #fff3e0; color: #ef6c00;
+                            {% else %} background: #f5f5f5; color: #9e9e9e; {% endif %}">
+                            {{ venta.status|upper }}
+                        </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" style="padding: 50px; text-align: center; color: #95a5a6;">No hay ventas registradas.</td>
+                    <td colspan="5" style="padding: 40px; text-align: center; color: #95a5a6;">No hay transacciones registradas.</td>
                 </tr>
                 {% endfor %}
             </tbody>
