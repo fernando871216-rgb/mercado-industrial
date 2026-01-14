@@ -51,7 +51,7 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # El token que ya sabemos que funciona (asegúrate de que siga siendo el vigente)
+    # Token manual (Recuerda que si caduca en 2 horas, habrá que pedir uno nuevo o arreglar el paso anterior)
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
@@ -63,7 +63,7 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Validamos y formateamos los datos antes de enviar
+        # Formateo de dimensiones y peso
         try:
             peso = float(request.GET.get('peso') or 1)
             ancho = int(float(request.GET.get('ancho') or 20))
@@ -72,7 +72,6 @@ def cotizar_soloenvios(request):
         except:
             peso, ancho, alto, largo = 1, 20, 20, 20
 
-        # Estructura ultra-limpia
         payload_rates = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
@@ -83,7 +82,7 @@ def cotizar_soloenvios(request):
                     "width": ancho,
                     "height": alto,
                     "length": largo,
-                    "quantity": 1 # A veces este campo es obligatorio para evitar el 422
+                    "quantity": 1
                 }
             ]
         }
@@ -92,12 +91,10 @@ def cotizar_soloenvios(request):
         
         if res.status_code == 200:
             data = res.json()
-            # En quotations, el resultado suele venir en una llave llamada 'rates'
             rates_list = data.get('rates', []) if isinstance(data, dict) else data
             
             tarifas = []
             for t in rates_list:
-                # Intentamos obtener el precio de varias llaves posibles
                 precio = t.get('total_price') or t.get('price') or t.get('cost')
                 if precio:
                     tarifas.append({
@@ -107,14 +104,14 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                 return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles para estos CPs.'})
+                 return JsonResponse({'tarifas': [], 'error': 'Sin coberturas en esta zona.'})
                  
             return JsonResponse({'tarifas': tarifas})
         
-        # Si sale 422, devolvemos el JSON de error de SoloEnvíos para leer qué campo falla
+        # En caso de error 422 u otro, devolvemos el detalle
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error de Datos (422)', 
+            'error': f'Error API: {res.status_code}', 
             'detalle': res.text
         })
 
@@ -257,6 +254,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
