@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from decimal import Decimal
 import requests
 import mercadopago
+import json
 
 # Importa tus modelos y formularios
 # IMPORTANTE: Asegúrate de que en models.py el modelo se llame Sale o Venta
@@ -237,5 +238,22 @@ def pago_fallido(request):
     return render(request, 'marketplace/pago_fallido.html')
 
 def mercadopago_webhook(request):
+    # Mercado Pago envía un ID de pago por los parámetros de la URL (query params)
+    payment_id = request.GET.get('data.id') or request.GET.get('id')
+    topic = request.GET.get('type') or request.GET.get('topic')
+
+    if topic == 'payment' and payment_id:
+        # Consultamos a Mercado Pago los detalles de ese pago
+        url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
+        headers = {"Authorization": f"Bearer {SDK.access_token}"}
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            payment_info = response.json()
+            # Si el pago fue aprobado, aquí es donde creas la Sale/Venta en tu DB
+            if payment_info['status'] == 'approved':
+                # Lógica para guardar la venta...
+                print(f"Pago {payment_id} aprobado con éxito.")
+                
     return JsonResponse({'status': 'ok'}, status=200)
 
