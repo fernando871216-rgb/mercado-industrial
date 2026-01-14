@@ -7,10 +7,29 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(IndustrialProduct)
 class IndustrialProductAdmin(admin.ModelAdmin):
-    # 'user' es el vendedor en tu modelo
-    list_display = ('id', 'title', 'brand', 'price', 'stock', 'category', 'user')
-    list_filter = ('category', 'brand')
-    search_fields = ('title', 'brand', 'part_number')
+    # Columnas que verás en la lista principal
+    list_display = ('title', 'price', 'brand', 'peso', 'cp_origen', 'stock')
+    
+    # Filtros laterales para encontrar productos rápido
+    list_filter = ('brand', 'category')
+    
+    # Buscador por nombre y marca
+    search_fields = ('title', 'brand')
+
+    # Organización de los campos dentro del formulario de edición
+    fieldsets = (
+        ('Información General', {
+            'fields': ('title', 'description', 'price', 'brand', 'category', 'image', 'stock')
+        }),
+        ('Logística y Envío (SoloEnvíos)', {
+            'fields': (
+                'cp_origen', 
+                ('largo', 'ancho', 'alto'), 
+                'peso'
+            ),
+            'description': 'Configura las dimensiones reales del paquete para que el cotizador funcione correctamente.',
+        }),
+    )
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -37,3 +56,4 @@ class SaleAdmin(admin.ModelAdmin):
     
     # Buscador por nombre de producto o comprador
     search_fields = ('product__title', 'buyer__username')
+
