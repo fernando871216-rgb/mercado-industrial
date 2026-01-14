@@ -1,22 +1,22 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     
-    <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 0.9rem; display: inline-block; margin-bottom: 20px;">
+    <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 1rem; display: inline-block; margin-bottom: 20px;">
         <i class="fas fa-arrow-left"></i> Volver al catálogo
     </a>
     
-    <div style="display: flex; gap: 40px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); flex-wrap: wrap;">
+    <div style="display: flex; gap: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); flex-wrap: wrap;">
         
-        <div style="flex: 1; min-width: 300px;">
+        <div style="flex: 1; min-width: 100%; max-width: 500px; margin: 0 auto;">
             <div style="display: flex; align-items: center; justify-content: center; background: #fdfdfd; border-radius: 10px; border: 1px solid #f1f1f1; padding: 10px;">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-height: 500px; object-fit: contain; border-radius: 10px;">
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; height: auto; max-height: 400px; object-fit: contain; border-radius: 10px;">
                 {% else %}
-                    <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ced4da;">
-                        <i class="fas fa-image" style="font-size: 5rem;"></i>
-                        <p>Sin imagen disponible</p>
+                    <div style="height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ced4da;">
+                        <i class="fas fa-image" style="font-size: 4rem;"></i>
+                        <p>Sin imagen</p>
                     </div>
                 {% endif %}
             </div>
@@ -29,57 +29,61 @@
                 </span>
             </div>
 
-            <h1 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 2rem;">{{ product.title }}</h1>
+            <h1 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 1.8rem;">{{ product.title }}</h1>
             
-            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 5px;">
+            <div style="font-size: 2rem; font-weight: 800; color: #27ae60; margin-bottom: 5px;">
                 $<span id="display_price">{{ product.price }}</span> <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;">MXN</span>
             </div>
 
-            <p id="envio_info" style="color: #3498db; font-size: 0.9rem; margin-bottom: 20px; display: none; background: #e8f4fd; padding: 10px; border-radius: 8px;">
+            <p id="envio_info" style="color: #3498db; font-size: 0.9rem; margin-bottom: 20px; display: none; background: #e8f4fd; padding: 12px; border-radius: 8px; border-left: 5px solid #3498db;">
                 <i class="fas fa-truck"></i> Envío seleccionado: +$<span id="monto_flete">0</span>
             </p>
 
             <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px solid #e0e6ed; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 15px 0; color: #003366; font-size: 1rem;"><i class="fas fa-calculator"></i> Cotizar Flete SoloEnvíos</h4>
+                <h4 style="margin: 0 0 15px 0; color: #003366; font-size: 1rem;"><i class="fas fa-calculator"></i> Cotizar Envío (SoloEnvíos)</h4>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <div>
-                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'' }}" placeholder="Origen" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold; margin-bottom: 5px;">CP ORIGEN</label>
+                        <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'' }}" style="width:100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px;">
                     </div>
                     <div>
-                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Destino" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold; margin-bottom: 5px;">CP DESTINO</label>
+                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" style="width:100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px;">
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; background: white; padding: 10px; border-radius: 10px; border: 1px solid #eee;">
-                    <div style="text-align: center;">
-                        <small style="display:block; font-size: 0.6rem; color: #999;">LARGO</small>
-                        <input type="number" id="envio_largo" value="{{ product.largo|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
-                    </div>
-                    <div style="text-align: center;">
-                        <small style="display:block; font-size: 0.6rem; color: #999;">ANCHO</small>
-                        <input type="number" id="envio_ancho" value="{{ product.ancho|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
-                    </div>
-                    <div style="text-align: center;">
-                        <small style="display:block; font-size: 0.6rem; color: #999;">ALTO</small>
-                        <input type="number" id="envio_alto" value="{{ product.alto|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
-                    </div>
-                    <div style="text-align: center;">
-                        <small style="display:block; font-size: 0.6rem; color: #27ae60; font-weight:bold;">PESO (KG)</small>
-                        <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; border:none; text-align:center; font-weight:bold; color: #27ae60;">
+                <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px;">
+                    <p style="font-size: 0.75rem; color: #333; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px;">DETALLES DEL PAQUETE</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <small style="display:block; font-size: 0.65rem; color: #999;">LARGO (cm)</small>
+                            <input type="number" id="envio_largo" value="{{ product.largo|default:10 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 5px 0;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.65rem; color: #999;">ANCHO (cm)</small>
+                            <input type="number" id="envio_ancho" value="{{ product.ancho|default:10 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 5px 0;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.65rem; color: #999;">ALTO (cm)</small>
+                            <input type="number" id="envio_alto" value="{{ product.alto|default:10 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 5px 0;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.65rem; color: #27ae60; font-weight:bold;">PESO (KG)</small>
+                            <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; border:none; border-bottom:1px solid #27ae60; font-weight:bold; color: #27ae60; padding: 5px 0;">
+                        </div>
                     </div>
                 </div>
 
-                <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer;">
-                    CALCULAR OPCIONES DE ENVÍO
+                <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                    CALCULAR OPCIONES
                 </button>
 
                 <div id="resultados_flete" style="margin-top: 15px; display: none;">
                     <div id="lista_paqueterias" style="display: flex; flex-direction: column; gap: 10px;"></div>
-                    <button onclick="quitarEnvio()" style="margin-top: 10px; background: none; border: none; color: #e74c3c; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
-                        No deseo envío, acordaré con el vendedor
+                    <button onclick="quitarEnvio()" style="margin-top: 15px; width: 100%; background: none; border: none; color: #e74c3c; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
+                        Quitar envío / Acordar con vendedor
                     </button>
                 </div>
             </div>
@@ -99,20 +103,20 @@
                                 initialization: { preferenceId: prefId, redirectMode: "modal" },
                             });
                         }
-                        
                         // Render inicial
                         renderMPButton("{{ preference_id }}");
                     </script>
                 {% else %}
-                    <p style="text-align: center; color: #e67e22; background: #fff3e0; padding: 15px; border-radius: 10px;">
-                        <i class="fas fa-lock"></i> Inicia sesión o verifica disponibilidad para comprar.
-                    </p>
+                    <div style="text-align: center; color: #e67e22; background: #fff3e0; padding: 15px; border-radius: 10px; border: 1px solid #ffe0b2;">
+                        <i class="fas fa-lock"></i> 
+                        {% if not user.is_authenticated %} Inicia sesión para comprar {% else %} Producto agotado {% endif %}
+                    </div>
                 {% endif %}
             </div>
 
             <div style="margin-top: 30px;">
-                <h3 style="font-size: 1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-bottom: 15px;">Descripción técnica</h3>
-                <p style="line-height: 1.6; color: #4a5568; white-space: pre-line;">{{ product.description }}</p>
+                <h3 style="font-size: 1.1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-bottom: 15px;">Descripción</h3>
+                <p style="line-height: 1.6; color: #4a5568; white-space: pre-line; font-size: 0.95rem;">{{ product.description }}</p>
             </div>
         </div>
     </div>
@@ -128,13 +132,13 @@ function consultarSoloEnvios() {
     const alto = document.getElementById('envio_alto').value;
 
     if(!cp_origen || !cp_destino) { 
-        alert("Por favor ingresa CP de origen y destino"); 
+        alert("Ingresa los Códigos Postales"); 
         return; 
     }
 
     const lista = document.getElementById('lista_paqueterias');
     document.getElementById('resultados_flete').style.display = "block";
-    lista.innerHTML = "<div style='text-align:center; padding:20px;'><i class='fas fa-spinner fa-spin'></i> Buscando tarifas...</div>";
+    lista.innerHTML = "<div style='text-align:center; padding:10px;'><i class='fas fa-circle-notch fa-spin'></i> Cotizando...</div>";
 
     fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
     .then(r => r.json())
@@ -143,33 +147,32 @@ function consultarSoloEnvios() {
         if(data.tarifas && data.tarifas.length > 0) {
             data.tarifas.forEach(t => {
                 lista.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; border:1px solid #e0e6ed;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; border:1px solid #e0e6ed; box-shadow: 0 2px 5px rgba(0,0,0,0.03);">
                         <span>
-                            <strong style="color:#2c3e50;">${t.paqueteria}</strong><br>
-                            <small style="color:#95a5a6;">${t.tiempo} días aprox.</small>
+                            <strong style="color:#2c3e50; font-size: 0.9rem;">${t.paqueteria}</strong><br>
+                            <small style="color:#95a5a6;">Llega en ${t.tiempo} días</small>
                         </span>
-                        <button onclick="seleccionarFlete(${t.precio_final}, '${t.paqueteria}')" style="background:#27ae60; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                        <button onclick="seleccionarFlete(${t.precio_final})" style="background:#27ae60; color:white; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.9rem;">
                             $${t.precio_final}
                         </button>
                     </div>`;
             });
         } else {
-            lista.innerHTML = "<p style='color:red; font-size:0.8rem;'>No se encontraron tarifas. Revisa los CPs.</p>";
+            lista.innerHTML = "<p style='color:#e74c3c; font-size:0.8rem; text-align:center;'>No hay rutas disponibles para estos CPs.</p>";
         }
     });
 }
 
-function seleccionarFlete(precioEnvio, paqueteria) {
+function seleccionarFlete(precioEnvio) {
     document.getElementById('envio_info').style.display = "block";
     document.getElementById('monto_flete').innerText = precioEnvio;
     
-    // Llamada a Django para refrescar el total y la preferencia de MP
+    // Actualizar preferencia de Mercado Pago con el nuevo total
     fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
     .then(r => r.json())
     .then(data => {
         document.getElementById('display_price').innerText = data.total_nuevo;
         renderMPButton(data.preference_id);
-        alert("¡Envío agregado! El botón de pago se ha actualizado.");
     });
 }
 
