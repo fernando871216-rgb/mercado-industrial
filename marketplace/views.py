@@ -8,9 +8,9 @@ from decimal import Decimal
 import requests
 import mercadopago
 import json
-from .models import IndustrialProduct, Category, Sale, Profile
+from .models import IndustrialProduct, Category, Sale, Profile, Product, Sale
 from .forms import RegistroForm, ProductForm, ProfileForm, UserUpdateForm
-from django.shortcuts import get_object_ some_other_imports...
+
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -329,6 +329,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
