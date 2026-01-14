@@ -7,6 +7,10 @@ from .forms import RegistroForm, ProductForm, ProfileForm # Asegúrate de tener 
 import requests
 import mercadopago
 from decimal import Decimal
+from django.shortcuts import get_object_ some_shortcut, redirect
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
+from .models import Venta # Asegúrate de que tu modelo se llame Venta
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("TU_ACCESS_TOKEN_PRODUCCION") # Reemplaza con tu token real
@@ -236,3 +240,47 @@ def confirmar_recepcion(request, venta_id):
 def mercadopago_webhook(request):
     # Por ahora solo para evitar error 404, retorna ok
     return JsonResponse({'status': 'ok'}, status=200)
+@login_required
+def cambiar_estado_venta(request, venta_id):
+    """
+    Esta función permite al vendedor confirmar que ya recibió el pago 
+    o que el producto está listo.
+    """
+    # Buscamos la venta, asegurándonos que pertenezca al usuario que tiene el producto
+    venta = get_object_or_404(Venta, id=venta_id, product__user=request.user)
+    
+    if venta.status == 'pendiente':
+        venta.status = 'completado'
+        venta.save()
+    
+    return redirect('mis_ventas')
+
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    """
+    Esta función es para el Panel de Admin (INITRE).
+    Marca que ya le transferiste el dinero al vendedor.
+    """
+    venta = get_object_or_404(Venta, id=venta_id)
+    venta.pagado_a_vendedor = True
+    venta.save()
+    return redirect('panel_admin')
+
+@login_required
+def cancelar_venta(request, venta_id):
+    """
+    Cancela la venta y devuelve el stock al producto.
+    """
+    venta = get_object_or_404(Venta, id=venta_id)
+    
+    # Solo el vendedor o un admin pueden cancelar
+    if venta.product.user == request.user or request.user.is_staff:
+        if venta.status != 'cancelado':
+            producto = venta.product
+            producto.stock += 1 # Devolvemos el equipo al inventario
+            producto.save()
+            
+            venta.status = 'cancelado'
+            venta.save()
+            
+    return redirect('mis_ventas')
