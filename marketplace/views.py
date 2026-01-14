@@ -110,15 +110,25 @@ def registro(request):
 
 @login_required
 def editar_perfil(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        # Asegúrate de que el nombre ProfileForm coincida con tu forms.py
+        p_form = ProfileForm(request.POST, instance=request.user.profile)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('editar_perfil')
     else:
-        form = ProfileForm(instance=profile)
-    return render(request, 'marketplace/editar_perfil.html', {'form': form})
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileForm(instance=request.user.profile)
+
+    # ESTO ES LO MÁS IMPORTANTE: pasar los formularios al HTML
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
+    return render(request, 'marketplace/editar_perfil.html', context)
 
 @login_required
 def mi_inventario(request):
@@ -256,4 +266,5 @@ def mercadopago_webhook(request):
                 print(f"Pago {payment_id} aprobado con éxito.")
                 
     return JsonResponse({'status': 'ok'}, status=200)
+
 
