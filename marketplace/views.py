@@ -91,7 +91,7 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # URL CORREGIDA (Sin el 'api.' al principio)
+    # URL CORRECTA sin el "api." al inicio
     url = "https://soloenvios.com/api/v1/shipping/rates"
     token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     
@@ -114,22 +114,14 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        urllib3.disable_warnings()
-        # Intentamos la conexión
         response = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
-        
-        print(f"DEBUG: Status {response.status_code}")
-
         if response.status_code == 200:
             data = response.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
-            
             tarifas_finales = []
             for t in rates:
-                # Extraemos el precio del campo 'price' o 'cost'
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
-                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
@@ -138,12 +130,16 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            print(f"Error de API SoloEnvios: {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code} al cotizar'})
-
+            return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code}'})
     except Exception as e:
-        print(f"NUEVO ERROR TÉCNICO: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el servidor de envíos'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+
+# --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
+def registro(request):
+    # Aquí puedes poner tu lógica de creación de usuario después
+    return render(request, 'marketplace/registro.html')
+
+# ... Aquí puedes seguir pegando tus otras funciones (detalle_producto, etc.)
 
 @login_required
 def editar_perfil(request):
@@ -321,6 +317,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
