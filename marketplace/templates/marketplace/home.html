@@ -81,4 +81,14 @@
                         </h4>
 
                         <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
-                            ${{ product.price }} <span style="
+                            ${{ product.price }} <span style="font-size: 0.75rem; font-weight: normal; color: #95a5a6;">MXN</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
+        {% endfor %} 
+    </div>
+</div>
+{% endblock %}
