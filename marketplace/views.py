@@ -89,14 +89,17 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Datos del paquete
-    peso = request.GET.get('peso') or 1
-    largo = request.GET.get('largo') or 10
-    ancho = request.GET.get('ancho') or 10
-    alto = request.GET.get('alto') or 10
+    # Datos del paquete (SoloEnvíos es estricto con números, no strings)
+    try:
+        peso = float(request.GET.get('peso') or 1)
+        largo = float(request.GET.get('largo') or 10)
+        ancho = float(request.GET.get('ancho') or 10)
+        alto = float(request.GET.get('alto') or 10)
+    except ValueError:
+        return JsonResponse({'tarifas': [], 'error': 'Medidas inválidas'})
     
-    # --- LA URL CORREGIDA ---
-    url = "https://soloenvios.com/api/v1/shipping/rates"
+    # URL DE API DE PRODUCCIÓN (Ajustada)
+    url = "https://api.soloenvios.com/v1/shipping/rates"
     
     headers = {
         "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
@@ -104,48 +107,56 @@ def cotizar_soloenvios(request):
         "Accept": "application/json"
     }
     
+    # Payload con estructura de 'package' según documentación estándar
     payload = {
-        "origin_zip_code": str(cp_origen),
-        "destination_zip_code": str(cp_destino),
+        "origin_zip_code": cp_origen,
+        "destination_zip_code": cp_destino,
         "package": {
-            "weight": float(peso),
-            "width": float(ancho),
-            "height": float(alto),
-            "length": float(largo)
+            "weight": peso,
+            "width": ancho,
+            "height": alto,
+            "length": largo
         }
     }
     
     try:
-        print(f"Intentando cotizar en: {url} con CPs: {cp_origen} a {cp_destino}")
+        # Log para que veas en Render qué se está mandando
+        print(f"DEBUG: Consultando API en {url} para CPs {cp_origen} -> {cp_destino}")
+        
         response = requests.post(url, json=payload, headers=headers, timeout=15)
         
         if response.status_code == 200:
             data = response.json()
-            # SoloEnvíos devuelve una lista directamente o un objeto con 'rates'
+            # Si la respuesta es una lista de tarifas
             rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
             for t in rates:
-                # Ajustamos según los nombres de campos reales de su API
-                precio_original = float(t.get('price') or t.get('cost') or 0)
+                # Extraemos el precio buscando en varios campos posibles de la API
+                precio_original = float(t.get('price') or t.get('cost') or t.get('total') or 0)
+                
                 if precio_original > 0:
-                    # Tu comisión del 8%
+                    # Aplicamos tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider', 'Paquetería'),
+                        'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
                         'precio_final': precio_con_comision,
-                        'tiempo': t.get('delivery_days', '3-5')
+                        'tiempo': t.get('delivery_days') or '3-5'
                     })
+            
             return JsonResponse({'tarifas': tarifas_finales})
         
         else:
-            # Esto nos dirá en los logs por qué falló si no es 200
-            print(f"Fallo SoloEnvíos: {response.status_code} - {response.text[:200]}")
-            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
+            # Si da 404 aquí, es que el Token no tiene permiso para 'rates' o la URL base cambió
+            print(f"ERROR API: Código {response.status_code} - Contenido: {response.text[:250]}")
+            return JsonResponse({
+                'tarifas': [], 
+                'error': f'Servicio no disponible (Error {response.status_code}). Verifica tu cuenta de SoloEnvíos.'
+            })
             
     except Exception as e:
-        print(f"Error conexión: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de comunicación con transportista'})
+        print(f"EXCEPCIÓN: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el cotizador'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -329,5 +340,6 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
