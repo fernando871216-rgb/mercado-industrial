@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 # ==========================================
-# 1. PÁGINAS PRINCIPALES (Sincronizadas con URLs)
+# 1. PÁGINAS PRINCIPALES
 # ==========================================
 
 def home(request):
@@ -28,7 +28,6 @@ def home(request):
 
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    # Generar preferencia de Mercado Pago
     preference_data = {
         "items": [{
             "id": str(product.id),
@@ -46,11 +45,7 @@ def detalle_producto(request, product_id):
     }
     preference_result = SDK.preference().create(preference_data)
     preference_id = preference_result["response"]["id"]
-    
-    return render(request, 'marketplace/product_detail.html', {
-        'product': product, 
-        'preference_id': preference_id
-    })
+    return render(request, 'marketplace/product_detail.html', {'product': product, 'preference_id': preference_id})
 
 def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
@@ -159,4 +154,108 @@ def actualizar_guia(request, venta_id):
     if request.method == 'POST':
         venta = get_object_or_404(Sale, id=venta_id)
         if venta.product.user == request.user:
-            venta.shipping_company = request.POST.get('shipping_company
+            # Aquí estaba el error de la comilla, ahora está arreglado
+            venta.shipping_company = request.POST.get('shipping_company')
+            venta.tracking_number = request.POST.get('tracking_number')
+            venta.status = 'enviado'
+            venta.save()
+            messages.success(request, "Guía registrada correctamente.")
+    return redirect('mis_ventas')
+
+# ==========================================
+# 5. MERCADO PAGO Y LOGÍSTICA
+# ==========================================
+
+def procesar_pago(request, product_id):
+    return redirect('detalle_producto', product_id=product_id)
+
+def actualizar_pago(request):
+    product_id = request.GET.get('id')
+    costo_envio = float(request.GET.get('envio', 0))
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    total = float(product.price) + costo_envio
+    preference_data = {
+        "items": [{"id": str(product.id), "title": f"{product.title} + Envío", "quantity": 1, "unit_price": total, "currency_id": "MXN"}],
+        "external_reference": str(product.id),
+    }
+    res = SDK.preference().create(preference_data)
+    return JsonResponse({'preference_id': res["response"]["id"], 'total_nuevo': f"{total:,.2f}"})
+
+def cotizar_soloenvios(request):
+    cp_origen = request.GET.get('cp_origen', '').strip()
+    cp_destino = request.GET.get('cp_destino', '').strip()
+    if not cp_origen or not cp_destino:
+        return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
+    
+    client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
+    
+    try:
+        auth_res = requests.post("https://app.soloenvios.com/api/v1/oauth/token", json={
+            "client_id": client_id, "client_secret": client_secret,
+            "grant_type": "client_credentials", "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
+        }, verify=False, timeout=10)
+        
+        if auth_res.status_code == 200:
+            token = auth_res.json().get('access_token')
+            paquete = {
+                "origin_zip_code": str(cp_origen), "destination_zip_code": str(cp_destino),
+                "package": {"weight": 1, "width": 20, "height": 20, "length": 20}
+            }
+            res = requests.post("https://app.soloenvios.com/api/v1/rates", json=paquete, 
+                               headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}, verify=False)
+            if res.status_code == 200:
+                data = res.json()
+                rates = data if isinstance(data, list) else data.get('rates', [])
+                tarifas = [{'paqueteria': t.get('service_name', 'Envío'), 'precio_final': round(float(t.get('price', 0))*1.08, 2), 'tiempo': t.get('delivery_days', '3-5 días')} for t in rates]
+                return JsonResponse({'tarifas': tarifas})
+        return JsonResponse({'tarifas': [], 'error': 'Error en respuesta'})
+    except:
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+
+@login_required
+def crear_intencion_compra(request, product_id):
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    if producto.stock > 0:
+        Sale.objects.create(product=producto, buyer=request.user, price=producto.price, status='pendiente')
+        producto.stock -= 1
+        producto.save()
+        messages.success(request, "Intención de compra registrada.")
+    return redirect('mis_compras')
+
+# ==========================================
+# 6. RESULTADOS Y ADMIN
+# ==========================================
+
+def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
+def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
+
+def mercadopago_webhook(request):
+    payment_id = request.GET.get('data.id') or request.GET.get('id')
+    topic = request.GET.get('type') or request.GET.get('topic')
+    if topic == 'payment' and payment_id:
+        url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
+        headers = {"Authorization": f"Bearer {SDK.access_token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            payment_info = response.json()
+            if payment_info['status'] == 'approved':
+                product_id = payment_info['external_reference']
+                product = get_object_or_404(IndustrialProduct, id=product_id)
+                sale, _ = Sale.objects.get_or_create(product=product, status='pendiente', defaults={'price': product.price})
+                sale.status = 'pagado'
+                sale.save()
+    return JsonResponse({'status': 'ok'}, status=200)
+
+@staff_member_required
+def panel_administrador(request):
+    ventas = Sale.objects.all().order_by('-created_at')
+    tus_ganancias = sum((v.get_platform_commission() for v in ventas if v.status in ['pagado', 'enviado']), Decimal('0.00'))
+    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas, 'tus_ganancias': tus_ganancias})
+
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = True
+    venta.save()
+    return redirect('panel_administrador')
