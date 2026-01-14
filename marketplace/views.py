@@ -10,6 +10,7 @@ import mercadopago
 import json
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductForm, ProfileForm, UserUpdateForm
+from django.shortcuts import get_object_ some_other_imports...
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -89,16 +90,15 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Datos del paquete (SoloEnvíos es estricto con números, no strings)
     try:
         peso = float(request.GET.get('peso') or 1)
         largo = float(request.GET.get('largo') or 10)
         ancho = float(request.GET.get('ancho') or 10)
         alto = float(request.GET.get('alto') or 10)
-    except ValueError:
+    except:
         return JsonResponse({'tarifas': [], 'error': 'Medidas inválidas'})
     
-    # URL DE API DE PRODUCCIÓN (Ajustada)
+    # URL DEFINITIVA DE PRODUCCIÓN
     url = "https://api.soloenvios.com/v1/shipping/rates"
     
     headers = {
@@ -107,10 +107,9 @@ def cotizar_soloenvios(request):
         "Accept": "application/json"
     }
     
-    # Payload con estructura de 'package' según documentación estándar
     payload = {
-        "origin_zip_code": cp_origen,
-        "destination_zip_code": cp_destino,
+        "origin_zip_code": str(cp_origen),
+        "destination_zip_code": str(cp_destino),
         "package": {
             "weight": peso,
             "width": ancho,
@@ -120,43 +119,33 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        # Log para que veas en Render qué se está mandando
-        print(f"DEBUG: Consultando API en {url} para CPs {cp_origen} -> {cp_destino}")
+        # Hacemos la petición ignorando errores de certificados (verify=False)
+        response = requests.post(url, json=payload, headers=headers, timeout=15, verify=True)
         
-        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        print(f"DEBUG API Status: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
-            # Si la respuesta es una lista de tarifas
             rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
             for t in rates:
-                # Extraemos el precio buscando en varios campos posibles de la API
-                precio_original = float(t.get('price') or t.get('cost') or t.get('total') or 0)
-                
+                precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
-                    # Aplicamos tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
+                        'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
                         'precio_final': precio_con_comision,
                         'tiempo': t.get('delivery_days') or '3-5'
                     })
-            
             return JsonResponse({'tarifas': tarifas_finales})
-        
         else:
-            # Si da 404 aquí, es que el Token no tiene permiso para 'rates' o la URL base cambió
-            print(f"ERROR API: Código {response.status_code} - Contenido: {response.text[:250]}")
-            return JsonResponse({
-                'tarifas': [], 
-                'error': f'Servicio no disponible (Error {response.status_code}). Verifica tu cuenta de SoloEnvíos.'
-            })
-            
-    except Exception as e:
-        print(f"EXCEPCIÓN: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el cotizador'})
+            return JsonResponse({'tarifas': [], 'error': f'API respondió con error {response.status_code}'})
+
+    except requests.exceptions.RequestException as e:
+        # Esto nos dirá en los logs de Render el error técnico real
+        print(f"ERROR TÉCNICO REQUESTS: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': f'Error técnico: {str(e)[:50]}'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -340,6 +329,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
