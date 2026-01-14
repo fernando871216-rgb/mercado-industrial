@@ -5,9 +5,13 @@
     
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px;">
         <div>
-            <h2 style="color: #2c3e50; margin: 0; font-size: 1.6rem;">📦 Inventario General</h2>
+            <h2 style="color: #003366; margin: 0; font-size: 1.6rem;">📦 Mi Inventario</h2>
             <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">
-                {% if user.is_staff %} Modo Administrador: Gestionando todo el catálogo {% else %} Gestiona tus equipos y existencias {% endif %}
+                {% if user.is_staff %} 
+                    <span style="color: #e67e22; font-weight: bold;">Modo Administrador</span>: Gestionando todo el catálogo 
+                {% else %} 
+                    Gestiona tus equipos y existencias 
+                {% endif %}
             </p>
         </div>
         <a href="{% url 'subir_producto' %}" style="background: #27ae60; color: white; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); font-size: 0.9rem;">
@@ -17,9 +21,9 @@
 
     <div style="display: flex; flex-direction: column; gap: 15px;">
         {% for product in products %}
-        <div style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; overflow: hidden; position: relative;">
+        <div style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; overflow: hidden;">
             
-            <div style="padding: 15px; display: flex; gap: 15px; align-items: center;">
+            <div style="padding: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: nowrap;">
                 
                 <div style="width: 70px; height: 70px; background: #f8f9fa; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid #f0f0f0; overflow: hidden;">
                     {% if product.image %}
@@ -40,41 +44,14 @@
                     </div>
 
                     {% if user.is_staff %}
-                    <div style="margin-top: 5px; font-size: 0.8rem; color: #666;">
+                    <div style="margin-top: 5px; font-size: 0.75rem; color: #666;">
                         <i class="fas fa-user-circle"></i> Vendedor: <strong>{{ product.user.username }}</strong>
                     </div>
                     {% endif %}
+                    
+                    <div style="margin-top: 5px; font-size: 0.7rem; color: #95a5a6;">
+                        <i class="fas fa-box"></i> {{ product.peso }}kg | {{ product.largo }}x{{ product.ancho }}x{{ product.alto }}cm | CP: {{ product.cp_origen }}
+                    </div>
                 </div>
 
-                <div style="text-align: right; flex-shrink: 0;">
-                    <div style="font-weight: bold; color: #27ae60; font-size: 1.1rem;">${{ product.price }}</div>
-                    {% if product.stock > 0 %}
-                        <span style="font-size: 0.75rem; color: #087f5b; background: #e6fcf5; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
-                            {{ product.stock }} u.
-                        </span>
-                    {% else %}
-                        <span style="font-size: 0.75rem; color: #fa5252; background: #fff5f5; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
-                            Agotado
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div style="display: flex; border-top: 1px solid #f0f0f0; background: #fafafa;">
-                <a href="{% url 'editar_producto' product.id %}" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #3498db; font-size: 0.85rem; font-weight: bold; border-right: 1px solid #f0f0f0;">
-                    <i class="fas fa-edit"></i> Editar
-                </a>
-                <a href="{% url 'borrar_producto' product.id %}" onclick="return confirm('¿Seguro que quieres eliminar este producto?')" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #e74c3c; font-size: 0.85rem; font-weight: bold;">
-                    <i class="fas fa-trash-alt"></i> Eliminar
-                </a>
-            </div>
-        </div>
-        {% empty %}
-        <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; border: 2px dashed #eee;">
-            <i class="fas fa-box-open" style="font-size: 3rem; color: #ccc; margin-bottom: 15px; display: block;"></i>
-            <p style="color: #95a5a6;">No hay productos registrados en el inventario.</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endblock %}
+                <div style="text-align
