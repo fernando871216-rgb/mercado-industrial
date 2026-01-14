@@ -34,10 +34,8 @@ def cotizar_soloenvios(request):
     
     auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
     auth_payload = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": "client_credentials",
-        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
+        "client_id": client_id, "client_secret": client_secret,
+        "grant_type": "client_credentials", "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
     }
     
     try:
@@ -72,13 +70,12 @@ def cotizar_soloenvios(request):
                             'tiempo': t.get('delivery_days') or '3-5 días'
                         })
                 return JsonResponse({'tarifas': tarifas_finales})
-            return JsonResponse({'tarifas': [], 'error': 'Sin cobertura'})
-        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con paquetería'})
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
 
 # ==========================================
-# 2. VISTAS PRINCIPALES Y NAVEGACIÓN
+# 2. VISTAS DE NAVEGACIÓN
 # ==========================================
 def home(request):
     products = IndustrialProduct.objects.all().order_by('-created_at')
@@ -88,19 +85,9 @@ def home(request):
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
     preference_data = {
-        "items": [{
-            "id": str(product.id),
-            "title": product.title,
-            "quantity": 1,
-            "unit_price": float(product.price),
-            "currency_id": "MXN"
-        }],
-        "back_urls": {
-            "success": request.build_absolute_uri('/pago-exitoso/'),
-            "failure": request.build_absolute_uri('/pago-fallido/')
-        },
-        "auto_return": "approved",
-        "external_reference": str(product.id),
+        "items": [{"id": str(product.id), "title": product.title, "quantity": 1, "unit_price": float(product.price), "currency_id": "MXN"}],
+        "back_urls": {"success": request.build_absolute_uri('/pago-exitoso/'), "failure": request.build_absolute_uri('/pago-fallido/')},
+        "auto_return": "approved", "external_reference": str(product.id),
     }
     preference_result = SDK.preference().create(preference_data)
     preference_id = preference_result["response"]["id"]
@@ -119,7 +106,7 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html')
 
 # ==========================================
-# 3. GESTIÓN DE PRODUCTOS (VENDEDOR)
+# 3. GESTIÓN DE PRODUCTOS
 # ==========================================
 @login_required
 def mi_inventario(request):
@@ -159,16 +146,8 @@ def borrar_producto(request, pk):
     return redirect('mi_inventario')
 
 # ==========================================
-# 4. FLUJO DE VENTAS Y ESTADOS (AQUÍ ESTÁ TU ERROR)
+# 4. FLUJO DE VENTAS (Recuperadas todas)
 # ==========================================
-@login_required
-def cambiar_estado_venta(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
-    if venta.status == 'pendiente':
-        venta.status = 'completado'
-        venta.save()
-    return redirect('mis_ventas')
-
 @login_required
 def mis_ventas(request):
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
@@ -178,6 +157,37 @@ def mis_ventas(request):
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_compras.html', {'compras': compras})
+
+@login_required
+def confirmar_recepcion(request, venta_id):
+    if request.method == 'POST':
+        venta = get_object_or_404(Sale, id=venta_id)
+        if venta.buyer == request.user:
+            venta.recibido_por_comprador = True
+            venta.status = 'entregado'
+            venta.save()
+            messages.success(request, "¡Recepción confirmada!")
+    return redirect('mis_compras')
+
+@login_required
+def cambiar_estado_venta(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    if venta.status == 'pendiente':
+        venta.status = 'completado'
+        venta.save()
+    return redirect('mis_ventas')
+
+@login_required
+def actualizar_guia(request, venta_id):
+    if request.method == 'POST':
+        venta = get_object_or_404(Sale, id=venta_id)
+        if venta.product.user == request.user:
+            venta.shipping_company = request.POST.get('shipping_company')
+            venta.tracking_number = request.POST.get('tracking_number')
+            venta.status = 'enviado'
+            venta.save()
+            messages.success(request, "Guía registrada correctamente.")
+    return redirect('mis_ventas')
 
 @login_required
 def cancelar_venta(request, venta_id):
@@ -193,16 +203,14 @@ def cancelar_venta(request, venta_id):
     return redirect('mis_ventas')
 
 @login_required
-def actualizar_guia(request, venta_id):
-    if request.method == 'POST':
-        venta = get_object_or_404(Sale, id=venta_id)
-        if venta.product.user == request.user:
-            venta.shipping_company = request.POST.get('shipping_company')
-            venta.tracking_number = request.POST.get('tracking_number')
-            venta.status = 'enviado'
-            venta.save()
-            messages.success(request, "Guía registrada correctamente.")
-    return redirect('mis_ventas')
+def crear_intencion_compra(request, product_id):
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    if producto.stock > 0:
+        Sale.objects.create(product=producto, buyer=request.user, price=producto.price, status='pendiente')
+        producto.stock -= 1
+        producto.save()
+        messages.success(request, "Intención de compra registrada.")
+    return redirect('mis_compras')
 
 # ==========================================
 # 5. PAGOS Y ADMIN
@@ -225,9 +233,36 @@ def panel_administrador(request):
     tus_ganancias = sum((v.get_platform_commission() for v in ventas if v.status in ['pagado', 'enviado']), Decimal('0.00'))
     return render(request, 'marketplace/panel_admin.html', {'ventas': ventas, 'tus_ganancias': tus_ganancias})
 
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = True
+    venta.save()
+    return redirect('panel_administrador')
+
+def mercadopago_webhook(request):
+    payment_id = request.GET.get('data.id') or request.GET.get('id')
+    topic = request.GET.get('type') or request.GET.get('topic')
+    if topic == 'payment' and payment_id:
+        url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
+        headers = {"Authorization": f"Bearer {SDK.access_token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            payment_info = response.json()
+            if payment_info['status'] == 'approved':
+                product_id = payment_info['external_reference']
+                product = get_object_or_404(IndustrialProduct, id=product_id)
+                sale, _ = Sale.objects.get_or_create(product=product, status='pendiente', defaults={'price': product.price})
+                sale.status = 'pagado'
+                sale.save()
+    return JsonResponse({'status': 'ok'}, status=200)
+
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 
 def lista_productos(request):
     productos = IndustrialProduct.objects.all()
     return render(request, 'marketplace/lista_productos.html', {'productos': productos})
+
+def procesar_pago(request, product_id):
+    return redirect('product_detail', product_id=product_id)
