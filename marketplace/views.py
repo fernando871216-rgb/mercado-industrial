@@ -51,35 +51,29 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Credenciales (Asegúrate que no tengan espacios accidentales)
-    client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
-    client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
+    # NUEVAS CREDENCIALES ACTUALIZADAS
+    client_id = "puouHyooEp4uBo0Nnov46lUFOf-memYBLGRYhdB1eRA"
+    client_secret = "vzVupeT2PMAktJp5SbXlyivRf8ajqqRD0015Pxhz-Ps"
     
     try:
-        # 1. PASO: OBTENER EL TOKEN (Formato súper simple)
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
         
-        # Enviamos los datos como un diccionario simple de Python
-        auth_data = {
+        auth_payload = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
             "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
 
-        # Intentamos la petición sin headers complejos, que el sistema decida
-        auth_res = requests.post(auth_url, data=auth_data, verify=False, timeout=10)
+        # Petición de token
+        auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=15)
         
-        # Si esto falla, intentamos enviarlo como JSON (algunas versiones de su API cambiaron a esto)
         if auth_res.status_code != 200:
-            auth_res = requests.post(auth_url, json=auth_data, verify=False, timeout=10)
-
-        # Si después de los dos intentos sigue fallando
-        if auth_res.status_code != 200:
+            print(f"DEBUG SOLOENVIOS: {auth_res.status_code} - {auth_res.text}")
             return JsonResponse({
                 'tarifas': [], 
                 'error': f'Auth Error: {auth_res.status_code}',
-                'respuesta_servidor': auth_res.text # Esto nos dirá el motivo real
+                'detalle': 'Error al validar nuevas credenciales'
             })
             
         token = auth_res.json().get('access_token')
@@ -263,6 +257,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
