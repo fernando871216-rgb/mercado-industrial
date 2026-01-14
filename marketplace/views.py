@@ -83,74 +83,71 @@ def actualizar_pago(request):
 
 # --- SOLOENVÍOS ---
 def cotizar_soloenvios(request):
-    # Obtenemos los CPs y aseguramos que sean strings limpios
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Si no hay CPs, no intentamos cotizar
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Forzamos dimensiones mínimas si vienen vacías o en 0
-    # Las APIs de envío suelen fallar si el peso es 0
-    peso = float(request.GET.get('peso') or 1)
-    largo = float(request.GET.get('largo') or 10)
-    ancho = float(request.GET.get('ancho') or 10)
-    alto = float(request.GET.get('alto') or 10)
+    # Datos del paquete
+    peso = request.GET.get('peso') or 1
+    largo = request.GET.get('largo') or 10
+    ancho = request.GET.get('ancho') or 10
+    alto = request.GET.get('alto') or 10
     
-    url = "https://soloenvios.com/api/v1/rates"
+    # --- LA URL CORREGIDA ---
+    url = "https://soloenvios.com/api/v1/shipping/rates"
+    
     headers = {
-        "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs", # Añadí 'Bearer ' que es el estándar
+        "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
     
-    # Estructura exacta que pide SoloEnvíos
     payload = {
-        "origin_zip_code": cp_origen,
-        "destination_zip_code": cp_destino,
+        "origin_zip_code": str(cp_origen),
+        "destination_zip_code": str(cp_destino),
         "package": {
-            "weight": peso,
-            "width": ancho,
-            "height": alto,
-            "length": largo
+            "weight": float(peso),
+            "width": float(ancho),
+            "height": float(alto),
+            "length": float(largo)
         }
     }
     
     try:
-        # Imprimimos en la consola de Render para que puedas ver si hay error
-        print(f"Cotizando: De {cp_origen} a {cp_destino} con peso {peso}")
+        print(f"Intentando cotizar en: {url} con CPs: {cp_origen} a {cp_destino}")
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
         
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        
-        # Si la respuesta es 200 (OK)
         if response.status_code == 200:
             data = response.json()
-            tarifas_finales = []
-            
-            # SoloEnvíos a veces devuelve una lista, a veces un objeto con 'rates'
-            # Esta lógica cubre ambos casos
+            # SoloEnvíos devuelve una lista directamente o un objeto con 'rates'
             rates = data if isinstance(data, list) else data.get('rates', [])
             
+            tarifas_finales = []
             for t in rates:
-                # Calculamos tu comisión del 8%
-                precio_original = float(t.get('price', 0))
+                # Ajustamos según los nombres de campos reales de su API
+                precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
+                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name', 'Servicio Estándar'),
+                        'paqueteria': t.get('service_name') or t.get('provider', 'Paquetería'),
                         'precio_final': precio_con_comision,
-                        'tiempo': t.get('delivery_days', 'N/D')
+                        'tiempo': t.get('delivery_days', '3-5')
                     })
             return JsonResponse({'tarifas': tarifas_finales})
+        
         else:
-            print(f"Error API SoloEnvíos: {response.status_code} - {response.text}")
-            return JsonResponse({'tarifas': [], 'error': 'No se encontraron rutas disponibles'})
+            # Esto nos dirá en los logs por qué falló si no es 200
+            print(f"Fallo SoloEnvíos: {response.status_code} - {response.text[:200]}")
+            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
             
     except Exception as e:
-        print(f"Excepción en cotizador: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
-
+        print(f"Error conexión: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de comunicación con transportista'})
+            
+  
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
 def registro(request):
     if request.method == 'POST':
@@ -332,4 +329,5 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
