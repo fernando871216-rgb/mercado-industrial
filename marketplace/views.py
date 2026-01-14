@@ -55,7 +55,7 @@ def cotizar_soloenvios(request):
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        # Endpoint de cotizaciones que vimos en tu manual
+        # Endpoint de cotizaciones
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
         
         headers_rates = {
@@ -71,7 +71,7 @@ def cotizar_soloenvios(request):
             alto = int(float(request.GET.get('alto') or 20))
             largo = int(float(request.GET.get('largo') or 20))
         except:
-            peso, ancho, alto, largo = 1, 20, 20, 20
+            peso, ancho, alto, largo = 1.0, 20, 20, 20
 
         # Cuerpo de la petición (Payload)
         payload_rates = {
@@ -94,12 +94,11 @@ def cotizar_soloenvios(request):
         
         if res.status_code == 200:
             data = res.json()
-            # Buscamos la lista de tarifas (rates)
+            # Buscamos la lista de tarifas
             rates_list = data.get('rates', []) if isinstance(data, dict) else data
             
             tarifas = []
             for t in rates_list:
-                # Buscamos el precio en los campos reportados por SoloEnvios
                 precio = t.get('total_price') or t.get('price') or t.get('cost')
                 if precio:
                     tarifas.append({
@@ -113,7 +112,7 @@ def cotizar_soloenvios(request):
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si sale 422, devolvemos el detalle técnico para corregirlo
+        # Si sale 422, devolvemos el detalle técnico
         return JsonResponse({
             'tarifas': [], 
             'error': f'Error API: {res.status_code}', 
@@ -121,7 +120,7 @@ def cotizar_soloenvios(request):
         })
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'}
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -259,6 +258,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
