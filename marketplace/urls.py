@@ -31,6 +31,10 @@ urlpatterns = [
     path('confirmar-recepcion/<int:venta_id>/', views.confirmar_recepcion, name='confirmar_recepcion'),
     path('actualizar-guia/<int:venta_id>/', views.actualizar_guia, name='actualizar_guia'),
     path('admin/liquidar/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
+    path('venta/actualizar-guia/<int:venta_id>/', views.actualizar_guia, name='actualizar_guia'),
+    path('venta/confirmar-recepcion/<int:venta_id>/', views.confirmar_recepcion, name='confirmar_recepcion'),
+    path('venta/estado/<int:venta_id>/', views.cambiar_estado_venta, name='cambiar_estado_venta'),
+    
     
     # --- LOGÍSTICA (SOLOENVÍOS) Y REFRESCAR PAGO ---
     path('cotizar-soloenvios/', views.cotizar_soloenvios, name='cotizar_soloenvios'),
@@ -45,4 +49,5 @@ urlpatterns = [
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
