@@ -83,42 +83,73 @@ def actualizar_pago(request):
 
 # --- SOLOENVÍOS ---
 def cotizar_soloenvios(request):
-    cp_origen = request.GET.get('cp_origen')
-    cp_destino = request.GET.get('cp_destino')
-    peso = request.GET.get('peso', 1)
-    largo = request.GET.get('largo', 10)
-    ancho = request.GET.get('ancho', 10)
-    alto = request.GET.get('alto', 10)
+    # Obtenemos los CPs y aseguramos que sean strings limpios
+    cp_origen = request.GET.get('cp_origen', '').strip()
+    cp_destino = request.GET.get('cp_destino', '').strip()
+    
+    # Si no hay CPs, no intentamos cotizar
+    if not cp_origen or not cp_destino:
+        return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
+
+    # Forzamos dimensiones mínimas si vienen vacías o en 0
+    # Las APIs de envío suelen fallar si el peso es 0
+    peso = float(request.GET.get('peso') or 1)
+    largo = float(request.GET.get('largo') or 10)
+    ancho = float(request.GET.get('ancho') or 10)
+    alto = float(request.GET.get('alto') or 10)
     
     url = "https://soloenvios.com/api/v1/rates"
     headers = {
-        "Authorization": "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
-        "Content-Type": "application/json"
+        "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs", # Añadí 'Bearer ' que es el estándar
+        "Content-Type": "application/json",
+        "Accept": "application/json"
     }
+    
+    # Estructura exacta que pide SoloEnvíos
     payload = {
-        "origin_zip_code": str(cp_origen),
-        "destination_zip_code": str(cp_destino),
+        "origin_zip_code": cp_origen,
+        "destination_zip_code": cp_destino,
         "package": {
-            "weight": float(peso), 
-            "width": float(ancho), 
-            "height": float(alto), 
-            "length": float(largo)
+            "weight": peso,
+            "width": ancho,
+            "height": alto,
+            "length": largo
         }
     }
+    
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        data = response.json()
-        tarifas_finales = []
-        for t in data:
-            precio_con_comision = round(float(t['price']) * 1.08, 2)
-            tarifas_finales.append({
-                'paqueteria': t['service_name'],
-                'precio_final': precio_con_comision,
-                'tiempo': t['delivery_days']
-            })
-        return JsonResponse({'tarifas': tarifas_finales})
-    except:
-        return JsonResponse({'tarifas': []})
+        # Imprimimos en la consola de Render para que puedas ver si hay error
+        print(f"Cotizando: De {cp_origen} a {cp_destino} con peso {peso}")
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        # Si la respuesta es 200 (OK)
+        if response.status_code == 200:
+            data = response.json()
+            tarifas_finales = []
+            
+            # SoloEnvíos a veces devuelve una lista, a veces un objeto con 'rates'
+            # Esta lógica cubre ambos casos
+            rates = data if isinstance(data, list) else data.get('rates', [])
+            
+            for t in rates:
+                # Calculamos tu comisión del 8%
+                precio_original = float(t.get('price', 0))
+                if precio_original > 0:
+                    precio_con_comision = round(precio_original * 1.08, 2)
+                    tarifas_finales.append({
+                        'paqueteria': t.get('service_name', 'Servicio Estándar'),
+                        'precio_final': precio_con_comision,
+                        'tiempo': t.get('delivery_days', 'N/D')
+                    })
+            return JsonResponse({'tarifas': tarifas_finales})
+        else:
+            print(f"Error API SoloEnvíos: {response.status_code} - {response.text}")
+            return JsonResponse({'tarifas': [], 'error': 'No se encontraron rutas disponibles'})
+            
+    except Exception as e:
+        print(f"Excepción en cotizador: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
 
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
 def registro(request):
@@ -301,3 +332,4 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
