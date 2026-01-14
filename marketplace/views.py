@@ -322,17 +322,16 @@ def crear_intencion_compra(request, product_id):
 
 
 
+
+# --- FUNCIONES PARA QUE EL BUILD NO FALLE ---
+
+def editar_perfil(request):
+    # Esta función es necesaria para que Render no dé error
+    # Después puedes ponerle la lógica real para editar datos
+    return render(request, 'marketplace/editar_perfil.html')
+
 def registro(request):
-    # Esta es una función temporal para que el build pase
-    # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
-    return render(request, 'registro.html')
-
-
-
-
-
-
-
+    return render(request, 'marketplace/registro.html')
 
 
 
