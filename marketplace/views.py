@@ -1,18 +1,109 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import messages
-from django.http import JsonResponse
-from decimal import Decimal
 import requests
-import mercadopago
-import json
-from .models import IndustrialProduct, Category, Sale, Profile    
-from .forms import RegistroForm, ProductForm, ProfileForm, UserUpdateForm
 import urllib3
+import json
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+# Asegúrate de que estos nombres de modelos coincidan con los tuyos
+from .models import IndustrialProduct, Category
 
+# Desactivar advertencias de seguridad para la conexión desde Render
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# ==========================================
+# 1. API DE SOLOENVÍOS (Lógica de la Consola)
+# ==========================================
+def cotizar_soloenvios(request):
+    cp_origen = request.GET.get('cp_origen', '').strip()
+    cp_destino = request.GET.get('cp_destino', '').strip()
+    
+    if not cp_origen or not cp_destino:
+        return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
+
+    # TUS LLAVES
+    client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
+    
+    auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
+    
+    auth_payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials",
+        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
+    }
+    
+    try:
+        # Intento de Autenticación
+        auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=15)
+        
+        if auth_res.status_code == 200:
+            access_token = auth_res.json().get('access_token')
+            
+            # Paso de Cotización
+            rates_url = "https://app.soloenvios.com/api/v1/rates"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            
+            paquete = {
+                "origin_zip_code": str(cp_origen),
+                "destination_zip_code": str(cp_destino),
+                "package": {
+                    "weight": float(request.GET.get('peso') or 1),
+                    "width": float(request.GET.get('ancho') or 20),
+                    "height": float(request.GET.get('alto') or 20),
+                    "length": float(request.GET.get('largo') or 20)
+                }
+            }
+            
+            response = requests.post(rates_url, json=paquete, headers=headers, verify=False, timeout=15)
+            
+            if response.status_code == 200:
+                data = response.json()
+                rates = data if isinstance(data, list) else data.get('rates', [])
+                
+                tarifas_finales = []
+                for t in rates:
+                    precio = float(t.get('price') or t.get('cost') or 0)
+                    if precio > 0:
+                        tarifas_finales.append({
+                            'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
+                            'precio_final': round(precio * 1.08, 2), # Tu 8%
+                            'tiempo': t.get('delivery_days') or '3-5 días'
+                        })
+                return JsonResponse({'tarifas': tarifas_finales})
+            else:
+                return JsonResponse({'tarifas': [], 'error': 'No hay cobertura para esta ruta'})
+        else:
+            print(f"ERROR AUTH: {auth_res.text}")
+            return JsonResponse({'tarifas': [], 'error': 'Error de autenticación con la paquetería'})
+
+    except Exception as e:
+        print(f"EXCEPCION API: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+
+# ==========================================
+# 2. FUNCIONES DE VISTA (Para que el Build pase)
+# ==========================================
+
+def registro(request):
+    return render(request, 'marketplace/registro.html')
+
+@login_required
+def editar_perfil(request):
+    return render(request, 'marketplace/editar_perfil.html')
+
+def detalle_producto(request, product_id):
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    return render(request, 'marketplace/detalle_producto.html', {'producto': producto})
+
+def lista_productos(request):
+    productos = IndustrialProduct.objects.all()
+    return render(request, 'marketplace/lista_productos.html', {'productos': productos})
+
+# Si tienes más funciones como 'home', 'contacto', etc., añádelas abajo siguiendo el mismo formato.
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -84,87 +175,8 @@ def actualizar_pago(request):
         'total_nuevo': f"{total:,.2f}"
     })
 
-# --- SOLOENVÍOS ---
-def cotizar_soloenvios(request):
-    cp_origen = request.GET.get('cp_origen', '').strip()
-    cp_destino = request.GET.get('cp_destino', '').strip()
-    
-    if not cp_origen or not cp_destino:
-        return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
 
-    # TUS LLAVES (Confirmadas en tus capturas)
-    client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
-    client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
-    
-    # 1. PASO UNO: OBTENER EL TOKEN (Siguiendo exactamente tu captura)
-    auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-    
-    # Estos son los parámetros exactos que aparecen en el recuadro gris de tu imagen
-    auth_payload = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": "client_credentials",
-        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob" # Esto es lo que pedía la consola
-    }
-    
-    try:
-        # Enviamos como JSON según lo que sugiere la estructura de tu captura
-        auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=15)
-        
-        if auth_res.status_code != 200:
-            # Si falla como JSON, intentamos como formulario por si acaso
-            auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=15)
 
-        if auth_res.status_code == 200:
-            access_token = auth_res.json().get('access_token')
-            
-            # 2. PASO DOS: COTIZAR
-            # Usamos el dominio 'app.' que es el que muestra tu documentación
-            rates_url = "https://app.soloenvios.com/api/v1/rates"
-            
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
-            }
-            
-            # Datos del paquete (ajustados a medidas estándar)
-            paquete = {
-                "origin_zip_code": str(cp_origen),
-                "destination_zip_code": str(cp_destino),
-                "package": {
-                    "weight": float(request.GET.get('peso') or 1),
-                    "width": float(request.GET.get('ancho') or 20),
-                    "height": float(request.GET.get('alto') or 20),
-                    "length": float(request.GET.get('largo') or 20)
-                }
-            }
-            
-            response = requests.post(rates_url, json=paquete, headers=headers, verify=False, timeout=15)
-            
-            if response.status_code == 200:
-                data = response.json()
-                rates = data if isinstance(data, list) else data.get('rates', [])
-                
-                tarifas_finales = []
-                for t in rates:
-                    precio = float(t.get('price') or t.get('cost') or 0)
-                    if precio > 0:
-                        tarifas_finales.append({
-                            'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
-                            'precio_final': round(precio * 1.08, 2), # Tu 8% de comisión
-                            'tiempo': t.get('delivery_days') or '3-5 días'
-                        })
-                return JsonResponse({'tarifas': tarifas_finales})
-            else:
-                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para esta ruta'})
-        
-        else:
-            print(f"ERROR EN CONSOLA: {auth_res.text}")
-            return JsonResponse({'tarifas': [], 'error': 'Las llaves no fueron aceptadas por la consola de SoloEnvíos'})
-
-    except Exception as e:
-        print(f"EXCEPCION: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
 @login_required
 def mi_inventario(request):
     products = IndustrialProduct.objects.filter(user=request.user)
@@ -322,16 +334,6 @@ def crear_intencion_compra(request, product_id):
 
 
 
-
-# --- FUNCIONES PARA QUE EL BUILD NO FALLE ---
-
-def editar_perfil(request):
-    # Esta función es necesaria para que Render no dé error
-    # Después puedes ponerle la lógica real para editar datos
-    return render(request, 'marketplace/editar_perfil.html')
-
-def registro(request):
-    return render(request, 'marketplace/registro.html')
 
 
 
