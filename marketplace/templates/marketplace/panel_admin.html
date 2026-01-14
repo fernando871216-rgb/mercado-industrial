@@ -34,79 +34,18 @@
                 </div>
             </div>
 
-            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; text-align: center;">
-                {% if venta.recibido_por_comprador %}
-                    <div style="background: #eafaf1; color: #27ae60; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; border: 1px solid #d4edda; display: inline-block; width: 100%;">
-                        <i class="fas fa-user-check"></i> ¡EL CLIENTE YA RECIBIÓ EL PRODUCTO! (LISTO PARA PAGAR)
+            <div style="padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee;">
+                <span style="display: block; font-size: 0.7rem; color: #95a5a6; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">Información de Rastreo:</span>
+                {% if venta.tracking_number %}
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <span style="font-size: 0.9rem; color: #2c3e50;"><i class="fas fa-truck"></i> <strong>{{ venta.shipping_company }}</strong></span>
+                        <code style="font-size: 1rem; color: #3498db; background: #f0f7ff; padding: 2px 8px; border-radius: 4px;">{{ venta.tracking_number }}</code>
                     </div>
                 {% else %}
-                    <div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; border: 1px solid #ffeeba; display: inline-block; width: 100%;">
-                        <i class="fas fa-truck-loading"></i> EL CLIENTE AÚN NO CONFIRMA RECEPCIÓN
-                    </div>
+                    <span style="font-size: 0.85rem; color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> El vendedor aún no registra la guía de envío.</span>
                 {% endif %}
             </div>
 
-            <div style="background: #ebf5ff; padding: 15px; border-bottom: 1px solid #d1e9ff;">
-                <span style="display: block; font-size: 0.7rem; color: #3498db; font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">Datos para Depósito:</span>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 5px; font-size: 0.85rem; color: #2c3e50;">
-                    <div><strong>Banco:</strong> {{ venta.product.user.profile.banco|default:"No registrado" }}</div>
-                    <div><strong>Titular:</strong> {{ venta.product.user.profile.beneficiario|default:"---" }}</div>
-                    <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 8px; border-radius: 8px; border: 1px solid #d1e9ff; margin-top: 5px;">
-                        <span style="font-weight: bold; color: #003366;">CLABE:</span>
-                        <code id="clabe-{{ venta.id }}" style="font-size: 1rem; color: #e83e8c;">{{ venta.product.user.profile.clabe|default:"No registrada" }}</code>
-                        {% if venta.product.user.profile.clabe %}
-                        <button onclick="copiarClabe('clabe-{{ venta.id }}')" style="margin-left: auto; background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer;">
-                            <i class="fas fa-copy"></i> Copiar
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div style="padding: 15px;">
-                <div style="margin-bottom: 12px;">
-                    <span style="font-size: 0.75rem; color: #95a5a6; text-transform: uppercase; display: block;">Producto vendido:</span>
-                    <strong style="color: #34495e;">{{ venta.product.title }}</strong>
-                </div>
-
-                <div style="background: #f4fff9; padding: 12px; border-radius: 10px; border: 1px solid #eafaf1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-weight: bold; color: #27ae60; font-size: 0.85rem;">Monto a enviar al vendedor:</span>
-                    <span style="font-weight: 800; color: #27ae60; font-size: 1.1rem;">
-                        ${{ venta.price|calcular_ganancia_neta|stringformat:".2f" }}
-                    </span>
-                </div>
-
-                <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" style="width: 100%; background: {% if venta.pagado_a_vendedor %}#95a5a6{% else %}#003366{% endif %}; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
-                        {% if venta.pagado_a_vendedor %}
-                            <i class="fas fa-undo"></i> Desmarcar Pago Realizado
-                        {% else %}
-                            <i class="fas fa-check"></i> Marcar como Pagado
-                        {% endif %}
-                    </button>
-                </form>
-            </div>
-        </div>
-        {% empty %}
-        <div style="text-align: center; padding: 50px; color: #bdc3c7;">
-            <i class="fas fa-history" style="font-size: 3rem; opacity: 0.3; margin-bottom: 10px;"></i>
-            <p>No hay ventas registradas.</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<script>
-function copiarClabe(idElemento) {
-    var aux = document.createElement("input");
-    aux.setAttribute("value", document.getElementById(idElemento).innerHTML);
-    document.body.appendChild(aux);
-    aux.select();
-    document.execCommand("copy");
-    document.body.removeChild(aux);
-    alert("CLABE copiada al portapapeles");
-}
-</script>
-
-{% endblock %}
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; text-align: center;">
+                {% if venta.recibido_por_comprador %}
+                    <div style="background: #eafaf1; color: #27ae60; padding:
