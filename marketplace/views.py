@@ -1,19 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
 from django.http import JsonResponse
-from .models import IndustrialProduct, Category, Sale, Profile
-from .forms import RegistroForm, ProductForm, ProfileForm # Asegúrate de tener estos formularios en forms.py
+from decimal import Decimal
 import requests
 import mercadopago
-from decimal import Decimal
-from django.shortcuts import get_object_ some_shortcut, redirect
-from django.contrib.admin.views.decorators import staff_member_required
-from .models import Product, Venta, Profile
-from django.contrib import messages
+
+# Importa tus modelos y formularios
+# Nota: He usado 'Sale' como el modelo principal de ventas según tu código
+from .models import IndustrialProduct, Category, Sale, Profile
+from .forms import RegistroForm, ProductForm, ProfileForm
 
 # --- CONFIGURACIÓN ---
-SDK = mercadopago.SDK("TU_ACCESS_TOKEN_PRODUCCION") # Reemplaza con tu token real
+SDK = mercadopago.SDK("TU_ACCESS_TOKEN_PRODUCCION")
 
 # --- VISTAS PRINCIPALES ---
 def home(request):
@@ -23,7 +24,6 @@ def home(request):
 
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    # Preferencia inicial (sin envío)
     preference_data = {
         "items": [{
             "title": product.title,
@@ -55,13 +55,10 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen')
     cp_destino = request.GET.get('cp_destino')
     peso = request.GET.get('peso', 1)
-    largo = request.GET.get('largo', 10)
-    ancho = request.GET.get('ancho', 10)
-    alto = request.GET.get('alto', 10)
-
+    
     url = "https://soloenvios.com/api/v1/rates"
     headers = {
-        "Authorization": "Bearer TU_TOKEN_SOLOENVIO", # Tu token de SoloEnvíos
+        "Authorization": "Bearer TU_TOKEN_SOLOENVIO",
         "Content-Type": "application/json"
     }
     
@@ -70,9 +67,7 @@ def cotizar_soloenvios(request):
         "destination_zip_code": str(cp_destino),
         "package": {
             "weight": float(peso),
-            "width": int(ancho),
-            "height": int(alto),
-            "length": int(largo)
+            "width": 10, "height": 10, "length": 10
         }
     }
 
@@ -80,11 +75,8 @@ def cotizar_soloenvios(request):
         response = requests.post(url, json=payload, headers=headers)
         data = response.json()
         tarifas_finales = []
-        
         for t in data:
-            precio_base = float(t['price'])
-            # Tu comisión del 8%
-            precio_con_comision = round(precio_base * 1.08, 2)
+            precio_con_comision = round(float(t['price']) * 1.08, 2)
             tarifas_finales.append({
                 'paqueteria': t['service_name'],
                 'precio_final': precio_con_comision,
@@ -98,7 +90,6 @@ def actualizar_preferencia_pago(request):
     product_id = request.GET.get('id')
     costo_envio = float(request.GET.get('envio', 0))
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    
     total = float(product.price) + costo_envio
     
     preference_data = {
@@ -116,7 +107,7 @@ def actualizar_preferencia_pago(request):
     res = SDK.preference().create(preference_data)
     return JsonResponse({'preference_id': res["response"]["id"], 'total_nuevo': total})
 
-# --- GESTIÓN DE USUARIOS Y PRODUCTOS (Faltantes para el Build) ---
+# --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
 def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -158,8 +149,6 @@ def subir_producto(request):
         form = ProductForm()
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
-# (Aquí agregarías editar_producto, borrar_producto, mis_ventas, etc. siguiendo el mismo patrón)
-
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
@@ -179,6 +168,7 @@ def borrar_producto(request, pk):
         producto.delete()
     return redirect('mi_inventario')
 
+# --- FLUJO DE VENTAS (Vendedor y Comprador) ---
 @login_required
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
@@ -189,16 +179,10 @@ def mis_ventas(request):
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
-def pago_exitoso(request):
-    return render(request, 'marketplace/pago_exitoso.html')
-
-def pago_fallido(request):
-    return render(request, 'marketplace/pago_fallido.html')
-
 @login_required
 def actualizar_guia(request, venta_id):
     if request.method == 'POST':
-        venta = get_object_or_404(Venta, id=venta_id)
+        venta = get_object_or_404(Sale, id=venta_id)
         if venta.product.user == request.user:
             venta.shipping_company = request.POST.get('shipping_company')
             venta.tracking_number = request.POST.get('tracking_number')
@@ -208,33 +192,9 @@ def actualizar_guia(request, venta_id):
     return redirect('mis_ventas')
 
 @login_required
-def cancelar_venta(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
-    venta.status = 'cancelado'
-    venta.save()
-    return redirect('mis_ventas')
-
-# Estas son funciones adicionales para tu panel de control
-@login_required
-def panel_administrador(request):
-    if not request.user.is_staff:
-        return redirect('home')
-    ventas = Sale.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas})
-
-@login_required
-def marcar_como_pagado(request, venta_id):
-    if not request.user.is_staff:
-        return redirect('home')
-    venta = get_object_or_404(Sale, id=venta_id)
-    venta.pagado_a_vendedor = True
-    venta.save()
-    return redirect('panel_administrador')
-
-@login_required
 def confirmar_recepcion(request, venta_id):
     if request.method == 'POST':
-        venta = get_object_or_404(Venta, id=venta_id)
+        venta = get_object_or_404(Sale, id=venta_id)
         if venta.buyer == request.user:
             venta.recibido_por_comprador = True
             venta.status = 'entregado'
@@ -242,28 +202,17 @@ def confirmar_recepcion(request, venta_id):
             messages.success(request, "¡Recepción confirmada!")
     return redirect('mis_compras')
 
-def mercadopago_webhook(request):
-    # Por ahora solo para evitar error 404, retorna ok
-    return JsonResponse({'status': 'ok'}, status=200)
-@login_required
 @login_required
 def cambiar_estado_venta(request, venta_id):
-    venta = get_object_or_404(Venta, id=venta_id, product__user=request.user)
+    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
     if venta.status == 'pendiente':
         venta.status = 'completado'
         venta.save()
     return redirect('mis_ventas')
 
-@staff_member_required
-def marcar_como_pagado(request, venta_id):
-    venta = get_object_or_404(Venta, id=venta_id)
-    venta.pagado_a_vendedor = True
-    venta.save()
-    return redirect('panel_admin')
-
 @login_required
 def cancelar_venta(request, venta_id):
-    venta = get_object_or_404(Venta, id=venta_id)
+    venta = get_object_or_404(Sale, id=venta_id)
     if venta.product.user == request.user or request.user.is_staff:
         if venta.status != 'cancelado':
             producto = venta.product
@@ -274,5 +223,31 @@ def cancelar_venta(request, venta_id):
             messages.success(request, "Venta cancelada y stock devuelto.")
     return redirect('mis_ventas')
 
+# --- PANEL ADMINISTRADOR (INITRE) ---
+@staff_member_required
+def panel_administrador(request):
+    ventas = Sale.objects.all().order_by('-created_at')
+    # Cálculo simple de ganancias para el panel
+    tus_ganancias = sum(v.get_platform_commission() for v in ventas if v.status != 'cancelado')
+    return render(request, 'marketplace/panel_admin.html', {
+        'ventas': ventas,
+        'tus_ganancias': tus_ganancias
+    })
 
+@staff_member_required
+def marcar_como_pagado(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = True
+    venta.save()
+    messages.success(request, "Venta marcada como liquidada.")
+    return redirect('panel_administrador')
 
+# --- OTROS ---
+def pago_exitoso(request):
+    return render(request, 'marketplace/pago_exitoso.html')
+
+def pago_fallido(request):
+    return render(request, 'marketplace/pago_fallido.html')
+
+def mercadopago_webhook(request):
+    return JsonResponse({'status': 'ok'}, status=200)
