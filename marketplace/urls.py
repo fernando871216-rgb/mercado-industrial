@@ -30,6 +30,7 @@ urlpatterns = [
     path('venta/cancelar/<int:venta_id>/', views.cancelar_venta, name='cancelar_venta'),
     path('confirmar-recepcion/<int:venta_id>/', views.confirmar_recepcion, name='confirmar_recepcion'),
     path('actualizar-guia/<int:venta_id>/', views.actualizar_guia, name='actualizar_guia'),
+    path('actualizar-pago/', views.actualizar_preferencia_pago, name='actualizar_pago'),
     
     # --- RESULTADOS DE PAGO ---
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
@@ -41,6 +42,7 @@ urlpatterns = [
     path('panel-control/', views.panel_administrador, name='panel_administrador'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
