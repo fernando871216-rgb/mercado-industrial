@@ -1,85 +1,91 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 900px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+    <div style="border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 30px;">
         <h2 style="color: #2c3e50; margin: 0; font-size: 1.6rem;">🛍️ Mis Compras</h2>
-        <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">Historial de pedidos y seguimiento.</p>
+        <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">Sigue el estado de tus pedidos y confirma la recepción.</p>
     </div>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div style="padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
-                <i class="fas fa-check-circle"></i> {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
 
     <div style="display: flex; flex-direction: column; gap: 20px;">
         {% for compra in compras %}
         <div style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; overflow: hidden;">
             
-            <div style="padding: 12px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 0.8rem; color: #95a5a6; font-weight: bold;">
-                    {{ compra.created_at|date:"d/m/Y" }}
-                </span>
+            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    {% if compra.status == 'completado' %}
-                        <span style="background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Confirmado</span>
+                    <span style="display: block; color: #95a5a6; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Producto</span>
+                    <strong style="color: #2c3e50; font-size: 1.1rem;">{{ compra.product.title }}</strong>
+                </div>
+                <div style="text-align: right;">
+                    <span style="display: block; color: #95a5a6; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Total Pagado</span>
+                    <strong style="color: #27ae60; font-size: 1.1rem;">${{ compra.price }} MXN</strong>
+                </div>
+            </div>
+
+            <div style="padding: 20px;">
+                <div style="background: #f0f7ff; border: 1px solid #d0e3ff; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-truck"></i> ESTADO DEL ENVÍO
+                    </h4>
+                    
+                    {% if compra.tracking_number %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <p style="margin: 0; font-size: 0.85rem; color: #5a6b7d;">Paquetería:</p>
+                                <strong style="color: #2c3e50;">{{ compra.shipping_company }}</strong>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-size: 0.85rem; color: #5a6b7d;">Número de Guía:</p>
+                                <code style="font-size: 1.1rem; color: #003366; font-weight: bold; background: white; padding: 2px 8px; border-radius: 5px; border: 1px solid #d0e3ff;">{{ compra.tracking_number }}</code>
+                            </div>
+                            <div style="margin-left: auto;">
+                                <span style="background: #27ae60; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">
+                                    ¡EN CAMINO!
+                                </span>
+                            </div>
+                        </div>
+                        <p style="margin: 10px 0 0 0; font-size: 0.75rem; color: #7f8c8d;">
+                            * Copia el número de guía en la página oficial de {{ compra.shipping_company }} para ver el detalle.
+                        </p>
                     {% else %}
-                        <span style="background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Pendiente</span>
+                        <div style="display: flex; align-items: center; gap: 10px; color: #856404;">
+                            <i class="fas fa-box-open" style="font-size: 1.2rem;"></i>
+                            <span style="font-size: 0.9rem; font-weight: 500;">El vendedor está preparando tu paquete. Pronto aparecerá aquí tu guía.</span>
+                        </div>
                     {% endif %}
                 </div>
-            </div>
 
-            <div style="padding: 15px; display: flex; gap: 15px; align-items: center;">
-                <div style="width: 60px; height: 60px; background: #f4f4f4; border-radius: 10px; flex-shrink: 0; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center;">
-                    {% if compra.product.image %}
-                        <img src="{{ compra.product.image.url }}" style="width: 100%; height: 100%; object-fit: contain;">
-                    {% else %}
-                        <i class="fas fa-image" style="color: #ccc;"></i>
-                    {% endif %}
-                </div>
-
-                <div style="flex-grow: 1; min-width: 0;">
-                    <h3 style="margin: 0; font-size: 1rem; color: #2c3e50;">{{ compra.product.title }}</h3>
-                    <p style="margin: 3px 0; color: #27ae60; font-weight: bold; font-size: 1.1rem;">${{ compra.price }} MXN</p>
-                </div>
-            </div>
-
-            <div style="display: flex; border-top: 1px solid #eee; background: #fafafa;">
-                <a href="{% url 'detalle_producto' compra.product.id %}" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #34495e; font-size: 0.8rem; font-weight: 600; border-right: 1px solid #eee;">
-                    Ver Producto
-                </a>
-                {% if compra.product.user.profile.phone %}
-                <a href="https://wa.me/{{ compra.product.user.profile.phone }}" target="_blank" style="flex: 1; text-align: center; padding: 12px; text-decoration: none; color: #25D366; font-size: 0.8rem; font-weight: bold;">
-                    <i class="fab fa-whatsapp"></i> Contactar
-                </a>
-                {% endif %}
-            </div>
-
-            <div style="padding: 15px; background: #fff; border-top: 1px solid #eee; text-align: center;">
-                {% if not compra.recibido_por_comprador %}
-                    <form action="{% url 'confirmar_recepcion' compra.id %}" method="POST" style="margin: 0;">
-                        {% csrf_token %}
-                        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
-                            <i class="fas fa-box-open"></i> Ya recibí mi producto
-                        </button>
-                    </form>
-                {% else %}
-                    <div style="background: #eafaf1; color: #27ae60; padding: 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; border: 1px solid #d4edda;">
-                        <i class="fas fa-check-double"></i> Entrega Confirmada
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <span style="display: block; color: #95a5a6; font-size: 0.75rem;">Vendedor:</span>
+                        <strong style="color: #34495e;">{{ compra.product.user.username }}</strong>
                     </div>
-                {% endif %}
+
+                    {% if not compra.recibido_por_comprador %}
+                        <form action="{% url 'confirmar_recepcion' compra.id %}" method="POST" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                                    onclick="return confirm('¿Confirmas que ya tienes el producto en tus manos y todo está correcto?')"
+                                    style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.3s;">
+                                <i class="fas fa-check"></i> CONFIRMAR RECEPCIÓN
+                            </button>
+                        </form>
+                    {% else %}
+                        <div style="display: flex; align-items: center; gap: 8px; color: #27ae60; font-weight: bold; font-size: 0.9rem;">
+                            <i class="fas fa-check-double"></i> ¡Producto Recibido!
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
         {% empty %}
-        <div style="text-align: center; padding: 60px; border: 2px dashed #eee;">
-            <p style="color: #95a5a6;">Aún no tienes compras.</p>
+        <div style="text-align: center; padding: 60px; background: white; border-radius: 15px; border: 2px dashed #eee;">
+            <i class="fas fa-shopping-bag" style="font-size: 3rem; color: #eee; margin-bottom: 15px; display: block;"></i>
+            <p style="color: #bdc3c7; font-size: 1.1rem;">Aún no has realizado ninguna compra.</p>
+            <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Ir al catálogo</a>
         </div>
         {% endfor %}
-        </div>
+    </div>
 </div>
 {% endblock %}
-
