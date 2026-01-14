@@ -215,7 +215,12 @@ def cancelar_venta(request, venta_id):
 @staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas})
+    # Sumar la comisión de todas las ventas que no estén canceladas
+    tus_ganancias = sum(v.get_platform_commission() for v in ventas if v.status != 'cancelado')
+    return render(request, 'marketplace/panel_admin.html', {
+        'ventas': ventas, 
+        'tus_ganancias': tus_ganancias
+    })
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -233,3 +238,4 @@ def pago_fallido(request):
 
 def mercadopago_webhook(request):
     return JsonResponse({'status': 'ok'}, status=200)
+
