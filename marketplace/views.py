@@ -1,71 +1,59 @@
 import os
 import mercadopago
+import json
+import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.core.mail import send_mail
+from django.conf import settings # Agregado para el correo
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
-import json
-from .models import IndustrialProduct, Sale, Profile
-from .forms import UserUpdateForm, ProfileUpdateForm
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
-from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
-import requests
-from django.http import JsonResponse
+from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm, RegistroForm
 
+# --- 1. FUNCIÓN PARA COTIZAR (SOLO ENVÍOS) ---
 def cotizar_soloenvios(request):
-    # 1. Obtener claves desde las variables de entorno de Render
-    client_id = os.environ.get('-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs')
-    client_secret = os.environ.get('MweefVUPz-__8ECmutghmvda-YTOOB7W6zFiXwJD8yw')
+    # IMPORTANTE: Aquí va el NOMBRE de la variable que pusiste en Render
+    client_id = os.environ.get('SOLOENVIOS_KEY')
+    client_secret = os.environ.get('SOLOENVIOS_SECRET')
 
-    # 2. Paso OBLIGATORIO: Obtener el Token de Acceso
     auth_url = "https://api.soloenvios.com/v1/auth/login"
-    auth_payload = {
-        "client_id": client_id,
-        "client_secret": client_secret
-    }
     
     try:
-        auth_response = requests.post(auth_url, json=auth_payload)
-        auth_data = auth_response.json()
-        # El token que usaremos para cotizar
-        access_token = auth_data.get('access_token')
+        # Autenticación
+        auth_response = requests.post(auth_url, json={
+            "client_id": client_id, 
+            "client_secret": client_secret
+        })
+        access_token = auth_response.json().get('access_token')
 
         if not access_token:
-            return JsonResponse({"error": "No se pudo autenticar con SoloEnvíos"}, status=401)
+            return JsonResponse({"error": "Error de autenticación"}, status=401)
 
-        # 3. Recibir datos del formulario del cliente (HTML)
+        # Datos del cliente
         cp_destino = request.GET.get('cp')
         peso = request.GET.get('peso', 1)
         largo = request.GET.get('largo', 10)
         ancho = request.GET.get('ancho', 10)
         alto = request.GET.get('alto', 10)
         
-        # CP de Origen (puedes hacerlo dinámico después, por ahora fijo)
-        cp_origen = "72000" 
-
-        # 4. Consultar las Tarifas
+        # Cotización
         quotation_url = "https://api.soloenvios.com/v1/quotations"
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-        
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
         payload = {
-            "origin": {"postal_code": cp_origen, "country": "MX"},
+            "origin": {"postal_code": "72000", "country": "MX"}, # CP Puebla origen
             "destination": {"postal_code": cp_destino, "country": "MX"},
             "packages": [{
-                "weight": float(peso),
-                "width": int(ancho),
-                "height": int(alto),
+                "weight": float(peso), 
+                "width": int(ancho), 
+                "height": int(alto), 
                 "length": int(largo)
             }]
         }
@@ -73,11 +61,10 @@ def cotizar_soloenvios(request):
         response = requests.post(quotation_url, json=payload, headers=headers)
         tarifas_api = response.json()
 
-        # 5. Aplicar tu GANANCIA del 8%
         tarifas_finales = []
         for t in tarifas_api:
             precio_original = float(t['price'])
-            # Sumamos tu comisión
+            # TU GANANCIA DEL 8%
             precio_con_comision = round(precio_original * 1.08, 2)
             
             tarifas_finales.append({
@@ -87,9 +74,45 @@ def cotizar_soloenvios(request):
             })
 
         return JsonResponse({"tarifas": tarifas_finales})
-
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+# --- 2. DETALLE DEL PRODUCTO (MERCADO PAGO) ---
+def detalle_producto(request, product_id):
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    preference_id = None
+    
+    # Tu Token de Mercado Pago
+    mp_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" 
+    
+    try:
+        sdk = mercadopago.SDK(mp_token)
+        preference_data = {
+            "items": [
+                {
+                    "title": product.title,
+                    "quantity": 1,
+                    "unit_price": float(product.price),
+                    "currency_id": "MXN"
+                }
+            ],
+            "external_reference": str(product.id),
+            "back_urls": {
+                "success": request.build_absolute_uri(reverse('pago_exitoso')),
+                "failure": request.build_absolute_uri(reverse('pago_fallido')),
+            },
+            "auto_return": "approved",
+        }
+        preference_response = sdk.preference().create(preference_data)
+        preference_id = preference_response["response"].get("id")
+    except Exception as e:
+        print(f"Error MP: {e}")
+
+    # Cambié el nombre del template a product_detail.html como lo tienes en tu código
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product,
+        'preference_id': preference_id
+    })
 
 def home(request):
     query = request.GET.get('q')
@@ -367,6 +390,7 @@ def confirmar_recepcion(request, venta_id):
     venta.save()
     messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
     return redirect('mis_compras') # O como se llame tu vista de historial
+
 
 
 
