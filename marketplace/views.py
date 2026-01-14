@@ -50,75 +50,65 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
+    # Llaves de tu imagen
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     try:
-        # 1. AUTENTICACIÓN: Forzamos el formato que pide la consola de tu imagen
+        # 1. TOKEN: Usamos los parámetros EXACTOS de tu imagen
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
         auth_payload = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
-            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
+            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob" # Parámetro crucial
         }
-        # SoloEnvíos es estricto con los Headers para soltar el Token
-        auth_headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        # Forzamos JSON en los headers para evitar el 401
+        headers_auth = {"Content-Type": "application/json", "Accept": "application/json"}
         
-        auth_res = requests.post(auth_url, json=auth_payload, headers=auth_headers, verify=False)
+        auth_res = requests.post(auth_url, json=auth_payload, headers=headers_auth, verify=False)
         
         if auth_res.status_code != 200:
             return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
             
         token = auth_res.json().get('access_token')
 
-        # 2. COTIZACIÓN: Incluimos el tipo de empaque sugerido por tu imagen
+        # 2. COTIZACIÓN: Incluimos el empaque "Caja de cartón"
         rates_url = "https://app.soloenvios.com/api/v1/rates"
-        headers = {
+        headers_rates = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Obtenemos dimensiones de tu ProductForm o usamos estándar
-        peso = float(request.GET.get('peso') or 1)
-        largo = int(float(request.GET.get('largo') or 10))
-        ancho = int(float(request.GET.get('ancho') or 10))
-        alto = int(float(request.GET.get('alto') or 10))
-
         payload = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
             "package": {
-                "weight": peso,
-                "width": ancho,
-                "height": alto,
-                "length": largo,
-                "description": "Caja de cartón" # Agregamos la descripción del empaque
+                "weight": float(request.GET.get('peso') or 1),
+                "width": int(float(request.GET.get('ancho') or 10)),
+                "height": int(float(request.GET.get('alto') or 10)),
+                "length": int(float(request.GET.get('largo') or 10)),
+                "description": "Caja de cartón" # Notaste correctamente que esto es necesario
             }
         }
         
-        res = requests.post(rates_url, json=payload, headers=headers, verify=False)
+        res = requests.post(rates_url, json=payload, headers=headers_rates, verify=False)
         
         if res.status_code == 200:
             data = res.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
-            
-            tarifas_finales = []
+            tarifas = []
             for t in rates:
                 costo = t.get('price') or t.get('cost') or 0
                 if costo:
-                    tarifas_finales.append({
+                    tarifas.append({
                         'paqueteria': t.get('service_name') or 'Envío',
-                        'precio_final': round(float(costo) * 1.08, 2),
+                        'precio_final': round(float(costo) * 1.08, 2), # Tu 8% de comisión
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
-            return JsonResponse({'tarifas': tarifas_finales})
-        else:
-            return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
+            return JsonResponse({'tarifas': tarifas})
+        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -259,6 +249,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
