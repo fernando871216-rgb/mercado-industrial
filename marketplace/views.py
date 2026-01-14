@@ -92,20 +92,17 @@ def cotizar_soloenvios(request):
 # ==========================================
 @login_required
 def editar_perfil(request):
-    # Intentamos obtener el perfil del usuario actual
-    # Nota: Asegúrate de tener un modelo Profile vinculado al User
-    user = request.user
     if request.method == 'POST':
-        # Aquí procesarías el guardado de datos
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = request.POST.get('email', user.email)
-        user.save()
-        messages.success(request, "Perfil actualizado correctamente")
-        return redirect('editar_perfil')
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "¡Perfil actualizado con éxito!")
+            return redirect('editar_perfil')
+    else:
+        # Aquí está el truco: le pasamos el formulario al HTML
+        form = UserProfileForm(instance=request.user)
     
-    return render(request, 'marketplace/editar_perfil.html', {'user': user})
-
+    return render(request, 'marketplace/editar_perfil.html', {'form': form})
 # ==========================================
 # RESTO DE VISTAS (Mantener sin cambios para no romper URLs)
 # ==========================================
@@ -269,3 +266,4 @@ def procesar_pago(request, product_id):
 def lista_productos(request):
     productos = IndustrialProduct.objects.all()
     return render(request, 'marketplace/lista_productos.html', {'productos': productos})
+
