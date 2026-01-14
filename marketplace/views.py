@@ -207,3 +207,38 @@ def category_detail(request, category_id):
         'products': products, 
         'category': category
     })
+
+# --- FUNCIÓN DE REGISTRO ---
+def registro(request):
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = RegistroForm()
+    return render(request, 'marketplace/registro.html', {'form': form})
+
+# --- FUNCIÓN DE CAMBIAR ESTADO DE VENTA ---
+def cambiar_estado_venta(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    venta.status = 'completado' if venta.status == 'pendiente' else 'pendiente'
+    venta.save()
+    return redirect('mis_ventas')
+
+# --- FUNCIÓN DE PROCESAR PAGO (BÁSICO) ---
+def procesar_pago(request, product_id):
+    if request.method == 'POST':
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        if producto.stock > 0:
+            Sale.objects.create(
+                product=producto,
+                buyer=request.user,
+                price=producto.price,
+                status='pendiente'
+            )
+            producto.stock -= 1
+            producto.save()
+            return redirect('pago_exitoso')
+    return redirect('detalle_producto', product_id=product_id)
