@@ -281,23 +281,22 @@ def mercadopago_webhook(request):
 def crear_intencion_compra(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
     
+    # Verificamos si hay stock antes de hacer nada
     if producto.stock > 0:
-        # 1. Creamos la venta (Sale)
-        nueva_venta = Sale.objects.create(
+        # Creamos el registro en el modelo Sale (Venta)
+        Sale.objects.create(
             product=producto,
             buyer=request.user,
             price=producto.price,
             status='pendiente'
         )
         
-        # 2. DESCONTAMOS EL STOCK
+        # DESCONTAMOS EL STOCK
         producto.stock -= 1
         producto.save()
         
-        return redirect('mis_compras')
-    else:
-        # Si no hay stock, podrías mandar un mensaje de error
-        return redirect('detalle_producto', pk=product_id)
+    return redirect('mis_compras')
+
 
 
 
