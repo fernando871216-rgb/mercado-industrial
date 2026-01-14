@@ -9,7 +9,6 @@ import mercadopago
 from decimal import Decimal
 from django.shortcuts import get_object_ some_shortcut, redirect
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
 from .models import Venta # Asegúrate de que tu modelo se llame Venta
 
 # --- CONFIGURACIÓN ---
@@ -284,3 +283,4 @@ def cancelar_venta(request, venta_id):
             venta.save()
             
     return redirect('mis_ventas')
+
