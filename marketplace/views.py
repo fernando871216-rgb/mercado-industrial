@@ -8,26 +8,27 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.db.models import Q, Sum
 from django.core.mail import send_mail
-from django.conf import settings # Agregado para el correo
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 
-# Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
-from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm, RegistroForm
+from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 
-
+# --- 1. ACTUALIZAR PREFERENCIA (MERCADO PAGO) ---
 def actualizar_preferencia_pago(request):
+    """ Esta función refresca el botón de pago cuando se elige un flete """
     if request.method == 'GET':
         producto_id = request.GET.get('id')
         precio_envio = float(request.GET.get('envio', 0))
         
-        producto = IndustrialProduct.objects.get(id=producto_id)
+        producto = get_object_or_404(IndustrialProduct, id=producto_id)
         total = float(producto.price) + precio_envio
 
-        sdk = mercadopago.SDK("TU_ACCESS_TOKEN_DE_MERCADO_PAGO")
+        # Usa tu token real aquí también
+        sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
         preference_data = {
             "items": [
@@ -38,9 +39,10 @@ def actualizar_preferencia_pago(request):
                     "currency_id": "MXN",
                 }
             ],
+            "external_reference": str(producto.id),
             "back_urls": {
-                "success": "https://tu-sitio.com/success",
-                "failure": "https://tu-sitio.com/failure",
+                "success": request.build_absolute_uri(reverse('pago_exitoso')),
+                "failure": request.build_absolute_uri(reverse('pago_fallido')),
             },
             "auto_return": "approved",
         }
@@ -50,78 +52,63 @@ def actualizar_preferencia_pago(request):
 
         return JsonResponse({'preference_id': nuevo_id, 'total_nuevo': total})
 
-# --- 1. FUNCIÓN PARA COTIZAR (SOLO ENVÍOS) ---
+# --- 2. COTIZAR (SOLO ENVÍOS) ---
 def cotizar_soloenvios(request):
-    if request.method == 'POST':
-        producto_id = request.POST.get('producto_id')
-        producto = IndustrialProduct.objects.get(id=producto_id)
-        
-        # El CP de origen viene del producto o del perfil del vendedor
-        cp_origen = producto.cp_origen  # O producto.user.profile.cp
-        cp_destino = request.POST.get('cp_destino')
-    # IMPORTANTE: Aquí va el NOMBRE de la variable que pusiste en Render
-    client_id = os.environ.get('-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs')
-    client_secret = os.environ.get('MweefVUPz-__8ECmutghmvda-YTOOB7W6zFiXwJD8yw')
+    """ Conecta con SoloEnvíos y añade 8% de comisión """
+    cp_origen = request.GET.get('cp_origen')
+    cp_destino = request.GET.get('cp_destino')
+    peso = request.GET.get('peso', 1)
+    largo = request.GET.get('largo', 10)
+    ancho = request.GET.get('ancho', 10)
+    alto = request.GET.get('alto', 10)
 
-    auth_url = "https://api.soloenvios.com/v1/auth/login"
+    # URL y Token de SoloEnvíos
+    url = "https://soloenvios.com/api/v1/rates" 
+    token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs" # Tu Token
     
-    try:
-        # Autenticación
-        auth_response = requests.post(auth_url, json={
-            "client_id": client_id, 
-            "client_secret": client_secret
-        })
-        access_token = auth_response.json().get('access_token')
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
-        if not access_token:
-            return JsonResponse({"error": "Error de autenticación"}, status=401)
-
-        # Datos del cliente
-        cp_destino = request.GET.get('cp')
-        peso = request.GET.get('peso', 1)
-        largo = request.GET.get('largo', 10)
-        ancho = request.GET.get('ancho', 10)
-        alto = request.GET.get('alto', 10)
-        
-        # Cotización
-        quotation_url = "https://api.soloenvios.com/v1/quotations"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        payload = {
-            "origin": {"postal_code": "72000", "country": "MX"}, # CP Puebla origen
-            "destination": {"postal_code": cp_destino, "country": "MX"},
-            "packages": [{
-                "weight": float(peso), 
-                "width": int(ancho), 
-                "height": int(alto), 
-                "length": int(largo)
-            }]
+    payload = {
+        "origin_zip_code": cp_origen,
+        "destination_zip_code": cp_destino,
+        "package": {
+            "weight": float(peso),
+            "width": int(ancho),
+            "height": int(alto),
+            "length": int(largo)
         }
+    }
 
-        response = requests.post(quotation_url, json=payload, headers=headers)
-        tarifas_api = response.json()
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        data = response.json()
 
         tarifas_finales = []
-        for t in tarifas_api:
-            precio_original = float(t['price'])
-            # TU GANANCIA DEL 8%
+        # SoloEnvíos devuelve los resultados en la llave 'rates'
+        for rate in data.get('rates', []):
+            precio_original = float(rate['total_price'])
+            # APLICAMOS TU GANANCIA DEL 8%
             precio_con_comision = round(precio_original * 1.08, 2)
             
             tarifas_finales.append({
-                "paqueteria": t['provider'],
-                "tiempo": t['service_type'],
-                "precio_final": precio_con_comision
+                'paqueteria': rate['provider'],
+                'tiempo': rate['delivery_days'],
+                'precio_final': precio_con_comision
             })
 
-        return JsonResponse({"tarifas": tarifas_finales})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({'tarifas': tarifas_finales})
 
-# --- 2. DETALLE DEL PRODUCTO (MERCADO PAGO) ---
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'tarifas': []})
+
+# --- 3. DETALLE DEL PRODUCTO ---
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
     preference_id = None
     
-    # Tu Token de Mercado Pago
     mp_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" 
     
     try:
@@ -147,11 +134,12 @@ def detalle_producto(request, product_id):
     except Exception as e:
         print(f"Error MP: {e}")
 
-    # Cambié el nombre del template a product_detail.html como lo tienes en tu código
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
         'preference_id': preference_id
     })
+
+# --- RESTO DE TUS VISTAS (HOME, LOGIN, ETC) ---
 
 def home(request):
     query = request.GET.get('q')
@@ -163,41 +151,6 @@ def home(request):
         products = IndustrialProduct.objects.all().order_by('-created_at')
     return render(request, 'marketplace/home.html', {'products': products, 'query': query})
 
-def detalle_producto(request, product_id):
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    preference_id = None
-    
-    # --- CONFIGURACIÓN DE MERCADO PAGO ---
-    token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" 
-    
-    try:
-        sdk = mercadopago.SDK(token)
-        preference_data = {
-            "items": [
-                {
-                    "title": product.title,
-                    "quantity": 1,
-                    "unit_price": float(product.price),
-                    "currency_id": "MXN"
-                }
-            ],
-            "external_reference": str(product.id),
-            "back_urls": {
-                "success": request.build_absolute_uri(reverse('pago_exitoso')),
-                "failure": request.build_absolute_uri(reverse('pago_fallido')),
-            },
-            "auto_return": "approved",
-        }
-        preference_response = sdk.preference().create(preference_data)
-        preference_id = preference_response["response"].get("id")
-    except Exception as e:
-        print(f"Error MP: {e}")
-
-    return render(request, 'marketplace/product_detail.html', {
-        'product': product,
-        'preference_id': preference_id
-    })
-
 @login_required
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
@@ -207,32 +160,6 @@ def mis_compras(request):
 def mis_ventas(request):
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
-
-@login_required
-def cambiar_estado_venta(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
-    venta.status = 'completado' if venta.status == 'pendiente' else 'pendiente'
-    venta.save()
-    return redirect('mis_ventas')
-
-@login_required
-def procesar_pago(request, product_id):
-    if request.method == 'POST':
-        producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # Evitamos comprar si no hay stock
-        if producto.stock > 0:
-            Sale.objects.create(
-                product=producto,
-                buyer=request.user,
-                price=producto.price,
-                status='pendiente'
-            )
-            producto.stock -= 1
-            producto.save()
-            return redirect('pago_exitoso')
-        
-    return redirect('detalle_producto', product_id=product_id)
 
 @login_required
 def subir_producto(request):
@@ -266,197 +193,8 @@ def borrar_producto(request, pk):
     return redirect('mi_inventario')
 
 @login_required
-def editar_perfil(request):
-    # Aseguramos que el perfil exista
-    profile, created = Profile.objects.get_or_create(user=request.user)
-    
-    if request.method == 'POST':
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
-        
-        if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
-            messages.success(request, '¡Datos guardados correctamente!')
-            return redirect('editar_perfil')
-        else:
-            # SI HAY UN ERROR, ESTO NOS LO MOSTRARÁ EN LA PANTALLA
-            messages.error(request, f"Error en User: {u_form.errors}")
-            messages.error(request, f"Error en Profile: {p_form.errors}")
-    else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
-    
-    return render(request, 'marketplace/editar_perfil.html', {
-        'u_form': u_form, 
-        'p_form': p_form
-    })
-def registro(request):
-    if request.method == 'POST':
-        form = RegistroForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = RegistroForm()
-    return render(request, 'marketplace/registro.html', {'form': form})
-
-def category_detail(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
-    return render(request, 'marketplace/home.html', {'products': products, 'category': category})
-
-def pago_fallido(request):
-    return render(request, 'marketplace/pago_fallido.html')
-
-@login_required
-def pago_exitoso(request):
-    # Intentamos obtener el ID del producto desde la URL que envía Mercado Pago
-    product_id = request.GET.get('external_reference')
-    producto_obj = None
-    venta_creada = False
-
-    if product_id:
-        producto_obj = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # Verificamos si ya existe una venta registrada para este pago (para no duplicar)
-        # Si no existe, la creamos y descontamos stock
-        if producto_obj.stock > 0:
-            Sale.objects.create(
-                product=producto_obj,
-                buyer=request.user,
-                price=producto_obj.price,
-                status='completado' # Al ser pago real, entra como completado
-            )
-            producto_obj.stock -= 1
-            producto_obj.save()
-            venta_creada = True
-
-    return render(request, 'marketplace/pago_exitoso.html', {
-        'producto': producto_obj,
-        'venta_creada': venta_creada
-    })
-
-@staff_member_required
-def panel_administrador(request):
-    ventas = Sale.objects.all().order_by('-created_at')
-    resumen = ventas.aggregate(Sum('price'))
-    total_ventas = resumen['price__sum'] or 0
-    tus_ganancias = float(total_ventas) * 0.05
-    return render(request, 'marketplace/panel_admin.html', {
-        'ventas': ventas,
-        'total_ventas': total_ventas,
-        'tus_ganancias': tus_ganancias,
-    })
-
-@login_required
 def mi_inventario(request):
-    # Si eres el administrador principal, te mostramos TODOS los productos para que puedas gestionarlos
     if request.user.is_staff:
         productos = IndustrialProduct.objects.all().order_by('-created_at')
     else:
-        # Si eres un vendedor normal, solo ves los tuyos
-        productos = IndustrialProduct.objects.filter(user=request.user).order_by('-created_at')
-    
-    return render(request, 'marketplace/mi_inventario.html', {
-        'products': productos
-    })
-
-@staff_member_required
-def marcar_como_pagado(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id)
-    venta.pagado_a_vendedor = not venta.pagado_a_vendedor 
-    venta.save()
-    # Cambiado de 'panel_admin' a 'panel_administrador' para que coincida con la función
-    return redirect('panel_administrador')
-
-@login_required
-def cancelar_venta(request, venta_id):
-    # Buscamos la venta. Solo el vendedor del producto o un admin pueden cancelarla.
-    venta = get_object_or_404(Sale, id=venta_id)
-    
-    # Verificamos permisos: Solo el dueño del producto (vendedor) o admin
-    if request.user == venta.product.user or request.user.is_staff:
-        if venta.status != 'cancelado':
-            # 1. Devolvemos el stock al producto
-            producto = venta.product
-            producto.stock += 1
-            producto.save()
-            
-            # 2. Marcamos la venta como cancelada
-            venta.status = 'cancelado'
-            venta.save()
-            
-    return redirect('mis_ventas')
-
-@csrf_exempt
-def mercadopago_webhook(request):
-    if request.method == 'POST':
-        # 1. Intentamos sacar el ID del pago
-        payment_id = request.GET.get('id') or request.GET.get('data.id')
-        
-        if not payment_id:
-            try:
-                data = json.loads(request.body)
-                payment_id = data.get('data', {}).get('id') or data.get('id')
-            except: pass
-
-        if payment_id:
-            # 2. Obtenemos el producto (Mercado Pago nos devuelve el external_reference que enviamos)
-            # En una implementación real usarías el SDK para consultar el external_reference, 
-            # pero si ya configuraste el 'pago_exitoso', el registro ya se hace ahí.
-            
-            # 3. Avisamos por correo para que tú lo valides manualmente si algo falla
-            try:
-                send_mail(
-                    f"✅ Pago Confirmado #{payment_id}",
-                    f"Se ha recibido un pago. Revisa tu panel administrativo para confirmar el stock.",
-                    settings.DEFAULT_FROM_EMAIL,
-                    [settings.ADMIN_EMAIL],
-                    fail_silently=False,
-                )
-            except: pass
-
-        return HttpResponse(status=200) # SIEMPRE respondemos 200
-    return HttpResponse(status=200)
-
-@login_required
-def confirmar_recepcion(request, venta_id):
-    # Buscamos la venta, asegurándonos de que sea de este usuario
-    venta = get_object_or_404(Sale, id=venta_id, buyer=request.user)
-    venta.recibido_por_comprador = True
-    venta.save()
-    messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
-    return redirect('mis_compras') # O como se llame tu vista de historial
-
-
-@login_required
-def actualizar_guia(request, venta_id):
-    if request.method == 'POST':
-        venta = get_object_or_404(Sale, id=venta_id)
-        # Solo el vendedor del producto o el admin pueden poner la guía
-        if request.user == venta.product.user or request.user.is_staff:
-            venta.tracking_number = request.POST.get('tracking_number')
-            venta.shipping_company = request.POST.get('shipping_company')
-            venta.save()
-            messages.success(request, f"Guía {venta.tracking_number} guardada correctamente.")
-    
-    return redirect('mis_ventas')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        productos = IndustrialProduct.objects
