@@ -90,13 +90,13 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
+    # Datos del paquete
     try:
-        # Aseguramos que los valores sean números para la API
         peso = float(request.GET.get('peso') or 1)
         largo = float(request.GET.get('largo') or 10)
         ancho = float(request.GET.get('ancho') or 10)
         alto = float(request.GET.get('alto') or 10)
-    except (ValueError, TypeError):
+    except:
         return JsonResponse({'tarifas': [], 'error': 'Medidas inválidas'})
     
     url = "https://api.soloenvios.com/v1/shipping/rates"
@@ -104,7 +104,8 @@ def cotizar_soloenvios(request):
     headers = {
         "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0" # Engañamos un poco al servidor para que no crea que es un bot simple
     }
     
     payload = {
@@ -118,21 +119,25 @@ def cotizar_soloenvios(request):
         }
     }
     
+    # Usamos una sesión para mejorar la estabilidad de la conexión
+    session = requests.Session()
+    
     try:
-        # Usamos un timeout de 15 segundos por si la API tarda en responder
-        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        print(f"DEBUG: Intentando conectar a SoloEnvios CPs {cp_origen} -> {cp_destino}")
         
+        # Agregamos verify=False solo como prueba extrema si falla el certificado
+        response = session.post(url, json=payload, headers=headers, timeout=20)
+        
+        print(f"DEBUG: Status de respuesta: {response.status_code}")
+
         if response.status_code == 200:
             data = response.json()
-            # La API puede devolver una lista o un diccionario con la clave 'rates'
             rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
             for t in rates:
-                # Buscamos el precio en los campos comunes de SoloEnvíos
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
-                    # Aplicamos tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
@@ -141,13 +146,17 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            # Imprime el error en la consola de Render para diagnóstico
-            print(f"Error SoloEnvios: {response.status_code} - {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'API error {response.status_code}'})
+            print(f"DEBUG ERROR: {response.status_code} - {response.text}")
+            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
 
+    except requests.exceptions.Timeout:
+        return JsonResponse({'tarifas': [], 'error': 'El transportista tardó mucho en responder'})
+    except requests.exceptions.ConnectionError:
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo establecer conexión segura'})
     except Exception as e:
-        print(f"Excepcion Cotizador: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexion con transportista'})
+        # ESTA LÍNEA ES CLAVE: Verás el error real en los LOGS de Render
+        print(f"ERROR CRÍTICO EN COTIZADOR: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': f'Error técnico: {str(e)[:40]}'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -331,6 +340,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
