@@ -42,7 +42,7 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html', {
         'u_form': u_form,
         'p_form': p_form
-    })1 1
+    })
 
 # ==========================================
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
@@ -259,6 +259,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
