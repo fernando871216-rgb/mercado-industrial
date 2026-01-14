@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.shortcuts import get_object_ some_shortcut, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Venta # Asegúrate de que tu modelo se llame Venta
+from django.contrib import messages
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("TU_ACCESS_TOKEN_PRODUCCION") # Reemplaza con tu token real
@@ -194,14 +195,21 @@ def pago_exitoso(request):
 def pago_fallido(request):
     return render(request, 'marketplace/pago_fallido.html')
 
-@login_required
 def actualizar_guia(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    """Permite al vendedor registrar la paquetería y el número de guía"""
     if request.method == 'POST':
-        venta.tracking_number = request.POST.get('tracking_number')
-        venta.shipping_company = request.POST.get('shipping_company')
-        venta.status = 'enviado'
-        venta.save()
+        venta = get_object_or_404(Venta, id=venta_id)
+        
+        # Solo el dueño del producto puede poner la guía
+        if venta.product.user == request.user:
+            venta.shipping_company = request.POST.get('shipping_company')
+            venta.tracking_number = request.POST.get('tracking_number')
+            venta.status = 'enviado' # Cambiamos el estado automáticamente
+            venta.save()
+            messages.success(request, f"Guía de {venta.shipping_company} registrada correctamente.")
+        else:
+            messages.error(request, "No tienes permiso para editar esta venta.")
+            
     return redirect('mis_ventas')
 
 @login_required
@@ -228,12 +236,20 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     return redirect('panel_administrador')
 
-@login_required
 def confirmar_recepcion(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, buyer=request.user)
-    venta.recibido_por_comprador = True
-    venta.status = 'entregado'
-    venta.save()
+    """Permite al comprador confirmar que ya tiene el producto"""
+    if request.method == 'POST':
+        venta = get_object_or_404(Venta, id=venta_id)
+        
+        # Solo el comprador puede confirmar
+        if venta.buyer == request.user:
+            venta.recibido_por_comprador = True
+            venta.status = 'entregado'
+            venta.save()
+            messages.success(request, "¡Gracias por confirmar! La venta ha sido finalizada.")
+        else:
+            messages.error(request, "Operación no permitida.")
+            
     return redirect('mis_compras')
 
 def mercadopago_webhook(request):
@@ -283,4 +299,5 @@ def cancelar_venta(request, venta_id):
             venta.save()
             
     return redirect('mis_ventas')
+
 
