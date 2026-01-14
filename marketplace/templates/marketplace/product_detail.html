@@ -118,11 +118,13 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
+    // Inicialización de Mercado Pago
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
     const bricksBuilder = mp.bricks();
     
     function renderMPButton(prefId) {
         const container = document.getElementById("wallet_container");
+        if (!container) return;
         container.innerHTML = ""; 
         bricksBuilder.create("wallet", "wallet_container", {
             initialization: { preferenceId: prefId, redirectMode: "modal" },
@@ -154,14 +156,11 @@
         btn.disabled = true;
         btn.style.opacity = "0.5";
 
-        // URL limpia con parámetros
+        // URL apuntando a tu función en views.py
         const url = `/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`;
 
         fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error('Error en el servidor');
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             btn.disabled = false;
             btn.style.opacity = "1";
@@ -171,20 +170,21 @@
                 data.tarifas.forEach(t => {
                     lista.innerHTML += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; border:1px solid #eee; margin-bottom:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <span><strong style="font-size:0.8rem; color:#003366;">${t.paqueteria}</strong><br><small style="color:#7f8c8d;">Entrega: ${t.tiempo} días</small></span>
+                            <span><strong style="font-size:0.8rem; color:#003366;">${t.paqueteria}</strong><br><small style="color:#7f8c8d;">Entrega: ${t.tiempo}</small></span>
                             <button onclick="seleccionarFlete(${t.precio_final})" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:0.9rem;">$${t.precio_final}</button>
                         </div>`;
                 });
             } else {
+                // Aquí ahora mostramos el error real (como el 401 si llegara a suceder)
                 lista.innerHTML = `<p style='color:#e74c3c; font-size:0.85rem; text-align:center; padding:10px; background:#fdeded; border-radius:8px;'>
-                    <i class="fas fa-exclamation-circle"></i> ${data.error || 'No se encontraron rutas para estos códigos postales.'}
+                    <i class="fas fa-exclamation-circle"></i> ${data.error || 'No hay rutas disponibles.'}
                 </p>`;
             }
         })
         .catch(error => {
             btn.disabled = false;
             btn.style.opacity = "1";
-            lista.innerHTML = "<p style='color:red; font-size:0.8rem;'>Error al conectar con el servidor. Inténtalo de nuevo.</p>";
+            lista.innerHTML = "<p style='color:red; font-size:0.8rem;'>Error de red o servidor.</p>";
             console.error(error);
         });
     }
@@ -193,12 +193,12 @@
         document.getElementById('envio_info').style.display = "block";
         document.getElementById('monto_flete').innerText = precioEnvio;
         
+        // Llamada a tu servidor para actualizar el total con Mercado Pago
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
         .then(r => r.json())
         .then(data => {
             document.getElementById('display_price').innerText = data.total_nuevo;
             renderMPButton(data.preference_id);
-            // Hacer scroll suave hacia el botón de pago
             document.getElementById('wallet_container').scrollIntoView({ behavior: 'smooth' });
         });
     }
