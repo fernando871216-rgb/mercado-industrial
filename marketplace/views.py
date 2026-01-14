@@ -90,16 +90,22 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # TUS CREDENCIALES (Sacadas de tu captura de pantalla)
+    # Usamos tus credenciales reales de la captura
     api_key = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
-    api_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     url = "https://api.soloenvios.com/v1/shipping/rates"
     
+    # Medidas seguras: Si vienen de la web las usamos, si no, valores de una caja real
+    try:
+        peso = float(request.GET.get('peso') or 1)
+        largo = float(request.GET.get('largo') or 20)
+        ancho = float(request.GET.get('ancho') or 20)
+        alto = float(request.GET.get('alto') or 20)
+    except:
+        peso, largo, ancho, alto = 1, 20, 20, 20
+
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "Api-Key": api_key,          # Enviamos la Key normal
-        "Api-Secret": api_secret,    # Enviamos la Secret Key por si acaso
         "Content-Type": "application/json",
         "Accept": "application/json",
         "User-Agent": "Mozilla/5.0"
@@ -109,17 +115,17 @@ def cotizar_soloenvios(request):
         "origin_zip_code": str(cp_origen),
         "destination_zip_code": str(cp_destino),
         "package": {
-            "weight": float(request.GET.get('peso') or 1),
-            "width": float(request.GET.get('ancho') or 20),
-            "height": float(request.GET.get('alto') or 20),
-            "length": float(request.GET.get('largo') or 20)
+            "weight": peso,
+            "width": ancho,
+            "height": alto,
+            "length": largo
         }
     }
     
     try:
-        # Mantenemos verify=False para evitar el error de conexión en Render
+        # Bypass de seguridad para Render (verify=False)
         import urllib3
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings()
         
         response = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
@@ -131,6 +137,7 @@ def cotizar_soloenvios(request):
             for t in rates:
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
+                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
@@ -139,12 +146,13 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            print(f"DEBUG: Error {response.status_code} - {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
+            # Esto nos dirá en los logs de Render si es un tema de CPs o de Saldo
+            print(f"Respuesta API SoloEnvíos: {response.status_code} - {response.text}")
+            return JsonResponse({'tarifas': [], 'error': f'El transportista no devolvió tarifas (Error {response.status_code})'})
 
     except Exception as e:
-        print(f"ERROR TÉCNICO: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el transportista'})
+        print(f"Error técnico en el servidor: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el cotizador'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -328,6 +336,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
