@@ -6,48 +6,20 @@
         <div class="col-md-8">
             <div class="card shadow border-0">
                 <div class="card-header bg-primary text-white text-center py-4">
-                    <h2 class="mb-0">Configuración de mi Perfil</h2>
-                    <p class="mb-0">Llena los campos para poder vender y cobrar</p>
+                    <h2 class="mb-0">Mi Perfil</h2>
                 </div>
                 <div class="card-body p-5">
-                    
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-success">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-
                     <form method="POST">
                         {% csrf_token %}
+                        <h4 class="text-primary mb-3">Datos de Usuario</h4>
+                        {{ u_form.as_p }}
                         
-                        <h4 class="text-primary mb-4">Información Personal</h4>
-                        <hr>
+                        <h4 class="text-primary mt-4 mb-3">Datos de Vendedor</h4>
+                        {{ p_form.as_p }}
                         
-                        {% if form %}
-                            <div class="mb-3">
-                                <label class="form-label">Nombre(s)</label>
-                                {{ form.first_name }}
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Apellidos</label>
-                                {{ form.last_name }}
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Correo Electrónico</label>
-                                {{ form.email }}
-                            </div>
-                            
-                            <div class="d-grid gap-2 mt-5">
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-save me-2"></i> GUARDAR CAMBIOS
-                                </button>
-                            </div>
-                        {% else %}
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i> 
-                                Error: El formulario de perfil no se cargó desde el servidor.
-                            </div>
-                        {% endif %}
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">GUARDAR CAMBIOS</button>
+                        </div>
                     </form>
                 </div>
             </div>
