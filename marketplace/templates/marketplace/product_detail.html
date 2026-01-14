@@ -49,4 +49,162 @@
                     </div>
                     <div>
                         <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 3px;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-
+                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px;">
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div>
+                            <small style="display:block; font-size: 0.6rem; color: #999;">LARGO (cm)</small>
+                            <input type="number" id="envio_largo" value="{{ product.largo|default:30 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 3px 0; font-size: 14px;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.6rem; color: #999;">ANCHO (cm)</small>
+                            <input type="number" id="envio_ancho" value="{{ product.ancho|default:30 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 3px 0; font-size: 14px;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.6rem; color: #999;">ALTO (cm)</small>
+                            <input type="number" id="envio_alto" value="{{ product.alto|default:30 }}" style="width:100%; border:none; border-bottom:1px solid #ccc; font-weight:bold; padding: 3px 0; font-size: 14px;">
+                        </div>
+                        <div>
+                            <small style="display:block; font-size: 0.6rem; color: #27ae60; font-weight:bold;">PESO (KG)</small>
+                            <input type="number" id="envio_peso" value="{{ product.peso|default:5 }}" style="width:100%; border:none; border-bottom:1px solid #27ae60; font-weight:bold; color: #27ae60; padding: 3px 0; font-size: 14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                    CALCULAR OPCIONES
+                </button>
+
+                <div id="resultados_flete" style="margin-top: 15px; display: none;">
+                    <div id="lista_paqueterias" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <button onclick="quitarEnvio()" style="margin-top: 12px; width: 100%; background: none; border: none; color: #e74c3c; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+                        Quitar envío / Acordar con vendedor
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                {% if product.stock > 0 and user.is_authenticated %}
+                    <div style="margin-bottom: 12px;">
+                        <button type="button" onclick="confirmarIntencion()" id="btn-intencion" style="width: 100%; background: #f39c12; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                            <i class="fas fa-hand-paper"></i> CONFIRMAR INTENCIÓN
+                        </button>
+                        <p id="msg-intencion" style="display:none; font-size: 0.85rem; color: #27ae60; text-align: center; margin-top: 10px; background: #eef9f1; padding: 10px; border-radius: 8px;">
+                            <i class="fas fa-check-circle"></i> Intención registrada. El vendedor recibirá una notificación. Procede al pago seguro.
+                        </p>
+                    </div>
+
+                    <div id="wallet_container" style="min-height: 50px;"></div>
+                    <script src="https://sdk.mercadopago.com/js/v2"></script>
+                    <script>
+                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                        const bricksBuilder = mp.bricks();
+                        
+                        function renderMPButton(prefId) {
+                            const container = document.getElementById("wallet_container");
+                            container.innerHTML = ""; 
+                            bricksBuilder.create("wallet", "wallet_container", {
+                                initialization: { preferenceId: prefId, redirectMode: "modal" },
+                            });
+                        }
+                        renderMPButton("{{ preference_id }}");
+                    </script>
+                {% else %}
+                    <div style="text-align: center; color: #e67e22; background: #fff3e0; padding: 15px; border-radius: 10px; border: 1px solid #ffe0b2;">
+                        <i class="fas fa-lock"></i> 
+                        {% if not user.is_authenticated %} 
+                            <a href="{% url 'login' %}" style="color: inherit; font-weight: bold;">Inicia sesión para comprar</a>
+                        {% else %} 
+                            Producto agotado 
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-bottom: 12px;">Descripción del Equipo</h3>
+                <p style="line-height: 1.5; color: #4a5568; white-space: pre-line; font-size: 0.9rem;">{{ product.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Tu JavaScript original se mantiene igual ---
+function confirmarIntencion() {
+    const btn = document.getElementById('btn-intencion');
+    const msg = document.getElementById('msg-intencion');
+    
+    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Registrando...";
+    btn.disabled = true;
+
+    // Aquí llamamos a la URL de descuento de stock
+    fetch("{% url 'crear_intencion_compra' product.id %}")
+    .then(response => {
+        btn.style.display = "none";
+        msg.style.display = "block";
+    });
+}
+
+function consultarSoloEnvios() {
+    const cp_origen = document.getElementById('envio_cp_origen').value;
+    const cp_destino = document.getElementById('envio_cp_destino').value;
+    const peso = document.getElementById('envio_peso').value;
+    const largo = document.getElementById('envio_largo').value;
+    const ancho = document.getElementById('envio_ancho').value;
+    const alto = document.getElementById('envio_alto').value;
+
+    if(!cp_origen || !cp_destino) { 
+        alert("Ingresa los Códigos Postales"); 
+        return; 
+    }
+
+    const lista = document.getElementById('lista_paqueterias');
+    document.getElementById('resultados_flete').style.display = "block";
+    lista.innerHTML = "<div style='text-align:center; padding:10px;'><i class='fas fa-circle-notch fa-spin'></i> Cotizando...</div>";
+
+    fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
+    .then(r => r.json())
+    .then(data => {
+        lista.innerHTML = "";
+        if(data.tarifas && data.tarifas.length > 0) {
+            data.tarifas.forEach(t => {
+                lista.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:10px; border:1px solid #e0e6ed; margin-bottom: 5px;">
+                        <span>
+                            <strong style="color:#2c3e50; font-size: 0.85rem;">${t.paqueteria}</strong><br>
+                            <small style="color:#95a5a6;">${t.tiempo} días aprox.</small>
+                        </span>
+                        <button onclick="seleccionarFlete(${t.precio_final})" style="background:#27ae60; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.85rem;">
+                            $${t.precio_final}
+                        </span>
+                    </div>`;
+            });
+        } else {
+            lista.innerHTML = "<p style='color:#e74c3c; font-size:0.75rem; text-align:center;'>Sin rutas disponibles.</p>";
+        }
+    });
+}
+
+function seleccionarFlete(precioEnvio) {
+    document.getElementById('envio_info').style.display = "block";
+    document.getElementById('monto_flete').innerText = precioEnvio;
+    
+    fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('display_price').innerText = data.total_nuevo;
+        renderMPButton(data.preference_id);
+    });
+}
+
+function quitarEnvio() {
+    document.getElementById('envio_info').style.display = "none";
+    document.getElementById('display_price').innerText = "{{ product.price }}";
+    renderMPButton("{{ preference_id }}");
+}
+</script>
+{% endblock %}
