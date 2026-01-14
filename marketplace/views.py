@@ -48,88 +48,91 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    cp_origen = request.GET.get('cp_origen', '').strip()
-    cp_destino = request.GET.get('cp_destino', '').strip()
+    # 1. Obtener y limpiar CPs (Asegurar 5 dígitos como pide MX)
+    cp_origen = request.GET.get('cp_origen', '').strip().zfill(5)
+    cp_destino = request.GET.get('cp_destino', '').strip().zfill(5)
     
-    # Aseguramos que el CP tenga 5 dígitos (rellena con ceros a la izquierda si falta)
-    cp_origen = cp_origen.zfill(5)
-    cp_destino = cp_destino.zfill(5)
-    
+    # Tu token manual actual
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        rates_url = "https://app.soloenvios.com/api/v1/quotations"
+        url = "https://app.soloenvios.com/api/v1/quotations"
         
-        headers_rates = {
+        headers = {
             "Authorization": f"Bearer {token_manual}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Forzamos a que sean valores numéricos correctos
+        # 2. Forzar valores a enteros (excepto peso) como se ve en tu captura
         try:
-            # SoloEnvios a veces prefiere el peso como entero si no tiene decimales reales
             v_peso = float(request.GET.get('peso') or 1)
+            v_largo = int(float(request.GET.get('largo') or 20))
             v_ancho = int(float(request.GET.get('ancho') or 20))
             v_alto = int(float(request.GET.get('alto') or 20))
-            v_largo = int(float(request.GET.get('largo') or 20))
         except:
-            v_peso, v_ancho, v_alto, v_largo = 1.0, 20, 20, 20
+            v_peso, v_largo, v_ancho, v_alto = 1.0, 20, 20, 20
 
-        payload_rates = {
+        # 3. Payload ajustado al formulario de la imagen
+        payload = {
             "origin_zip_code": cp_origen,
             "destination_zip_code": cp_destino,
+            "country_code": "MX",  # Agregamos el país que sale en tu captura
             "packages": [
                 {
-                    "description": "Caja de carton",
+                    "content": "Productos industriales", # Descripción más clara
+                    "amount": 1, # Cantidad de paquetes
+                    "type": "box", # Tipo de empaque estándar
                     "weight": v_peso,
                     "width": v_ancho,
                     "height": v_alto,
                     "length": v_largo,
-                    "quantity": 1
+                    "weight_unit": "kg",
+                    "dimension_unit": "cm"
                 }
             ]
         }
         
-        res = requests.post(rates_url, json=payload_rates, headers=headers_rates, verify=False, timeout=15)
+        res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # Si la respuesta es una lista directa, la usamos; si no, buscamos 'rates'
+            # Manejar si devuelve lista o diccionario con llave 'rates'
             rates_list = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas = []
             for t in rates_list:
-                precio = t.get('total_price') or t.get('price') or t.get('cost')
-                if precio:
+                # Extraer precio (total_price es el estándar en quotations)
+                costo = t.get('total_price') or t.get('price') or t.get('cost')
+                if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
-                        'precio_final': round(float(precio) * 1.08, 2),
+                        'precio_final': round(float(costo) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas para esta ruta.'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si hay error 422, intentamos extraer el mensaje amigable de SoloEnvios
-        detalle_error = res.text
+        # 4. Si falla con 422, capturamos el error exacto para leerlo
+        error_msg = res.text
         try:
-            error_json = res.json()
-            if 'errors' in error_json:
-                detalle_error = json.dumps(error_json['errors'], ensure_ascii=False)
+            error_data = res.json()
+            if 'errors' in error_data:
+                error_msg = json.dumps(error_data['errors'], ensure_ascii=False)
         except:
             pass
 
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error de validación (422)', 
-            'detalle': detalle_error
+            'error': f'Error 422: Datos Inválidos', 
+            'detalle': error_msg
         })
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error crítico: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -267,6 +270,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
