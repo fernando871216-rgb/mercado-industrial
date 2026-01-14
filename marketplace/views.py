@@ -155,3 +155,84 @@ def subir_producto(request):
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
 # (Aquí agregarías editar_producto, borrar_producto, mis_ventas, etc. siguiendo el mismo patrón)
+
+@login_required
+def editar_producto(request, pk):
+    producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('mi_inventario')
+    else:
+        form = ProductForm(instance=producto)
+    return render(request, 'marketplace/editar_producto.html', {'form': form})
+
+@login_required
+def borrar_producto(request, pk):
+    producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
+    if request.method == 'POST':
+        producto.delete()
+    return redirect('mi_inventario')
+
+@login_required
+def mis_compras(request):
+    compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mis_compras.html', {'compras': compras})
+
+@login_required
+def mis_ventas(request):
+    ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
+
+def pago_exitoso(request):
+    return render(request, 'marketplace/pago_exitoso.html')
+
+def pago_fallido(request):
+    return render(request, 'marketplace/pago_fallido.html')
+
+@login_required
+def actualizar_guia(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    if request.method == 'POST':
+        venta.tracking_number = request.POST.get('tracking_number')
+        venta.shipping_company = request.POST.get('shipping_company')
+        venta.status = 'enviado'
+        venta.save()
+    return redirect('mis_ventas')
+
+@login_required
+def cancelar_venta(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    venta.status = 'cancelado'
+    venta.save()
+    return redirect('mis_ventas')
+
+# Estas son funciones adicionales para tu panel de control
+@login_required
+def panel_administrador(request):
+    if not request.user.is_staff:
+        return redirect('home')
+    ventas = Sale.objects.all().order_by('-created_at')
+    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas})
+
+@login_required
+def marcar_como_pagado(request, venta_id):
+    if not request.user.is_staff:
+        return redirect('home')
+    venta = get_object_or_404(Sale, id=venta_id)
+    venta.pagado_a_vendedor = True
+    venta.save()
+    return redirect('panel_administrador')
+
+@login_required
+def confirmar_recepcion(request, venta_id):
+    venta = get_object_or_404(Sale, id=venta_id, buyer=request.user)
+    venta.recibido_por_comprador = True
+    venta.status = 'entregado'
+    venta.save()
+    return redirect('mis_compras')
+
+def mercadopago_webhook(request):
+    # Por ahora solo para evitar error 404, retorna ok
+    return JsonResponse({'status': 'ok'}, status=200)
