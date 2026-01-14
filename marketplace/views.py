@@ -92,48 +92,42 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
 
-    # TUS LLAVES (Verifica que no tengan espacios ocultos)
+    # TUS LLAVES (Confirmadas en tus capturas)
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
+    # 1. PASO UNO: OBTENER EL TOKEN (Siguiendo exactamente tu captura)
     auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
     
+    # Estos son los parámetros exactos que aparecen en el recuadro gris de tu imagen
+    auth_payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials",
+        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob" # Esto es lo que pedía la consola
+    }
+    
     try:
-        # Según el estándar que muestra tu doc, intentamos enviar las llaves como "Basic Auth"
-        # Esto es lo que significa el encabezado "Authorization" en muchos sistemas de tokens
-        payload_auth = {"grant_type": "client_credentials"}
+        # Enviamos como JSON según lo que sugiere la estructura de tu captura
+        auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=15)
         
-        auth_res = requests.post(
-            auth_url, 
-            data=payload_auth, 
-            auth=HTTPBasicAuth(client_id, client_secret), # Esto junta las llaves de forma segura
-            verify=False, 
-            timeout=15
-        )
-        
-        # Si falla el anterior, intentamos como lo pusimos antes pero con un pequeño ajuste
         if auth_res.status_code != 200:
-            auth_res = requests.post(
-                auth_url, 
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": client_id,
-                    "client_secret": client_secret
-                },
-                verify=False,
-                timeout=15
-            )
+            # Si falla como JSON, intentamos como formulario por si acaso
+            auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=15)
 
         if auth_res.status_code == 200:
             access_token = auth_res.json().get('access_token')
             
-            # PASO 2: COTIZAR
+            # 2. PASO DOS: COTIZAR
+            # Usamos el dominio 'app.' que es el que muestra tu documentación
             rates_url = "https://app.soloenvios.com/api/v1/rates"
+            
             headers = {
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": "application/json"
             }
             
+            # Datos del paquete (ajustados a medidas estándar)
             paquete = {
                 "origin_zip_code": str(cp_origen),
                 "destination_zip_code": str(cp_destino),
@@ -148,53 +142,29 @@ def cotizar_soloenvios(request):
             response = requests.post(rates_url, json=paquete, headers=headers, verify=False, timeout=15)
             
             if response.status_code == 200:
-                # Procesamos tarifas...
                 data = response.json()
                 rates = data if isinstance(data, list) else data.get('rates', [])
+                
                 tarifas_finales = []
                 for t in rates:
                     precio = float(t.get('price') or t.get('cost') or 0)
                     if precio > 0:
                         tarifas_finales.append({
                             'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
-                            'precio_final': round(precio * 1.08, 2),
+                            'precio_final': round(precio * 1.08, 2), # Tu 8% de comisión
                             'tiempo': t.get('delivery_days') or '3-5 días'
                         })
                 return JsonResponse({'tarifas': tarifas_finales})
             else:
-                return JsonResponse({'tarifas': [], 'error': f'Error API Rates: {response.status_code}'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para esta ruta'})
         
         else:
-            # Imprimimos el error exacto que nos da SoloEnvíos para saber qué llave no le gusta
-            print(f"ERROR DE AUTH: {auth_res.text}")
-            return JsonResponse({'tarifas': [], 'error': f'SoloEnvíos rechazó las llaves: {auth_res.status_code}'})
+            print(f"ERROR EN CONSOLA: {auth_res.text}")
+            return JsonResponse({'tarifas': [], 'error': 'Las llaves no fueron aceptadas por la consola de SoloEnvíos'})
 
     except Exception as e:
+        print(f"EXCEPCION: {str(e)}")
         return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
-
-
-# --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
-def registro(request):
-    # Aquí puedes poner tu lógica de creación de usuario después
-    return render(request, 'marketplace/registro.html')
-
-# ... Aquí puedes seguir pegando tus otras funciones (detalle_producto, etc.)
-
-@login_required
-def editar_perfil(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
-    if request.method == 'POST':
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileForm(request.POST, instance=profile)
-        if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
-            return redirect('editar_perfil')
-    else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileForm(instance=profile)
-    return render(request, 'marketplace/editar_perfil.html', {'u_form': u_form, 'p_form': p_form})
-
 @login_required
 def mi_inventario(request):
     products = IndustrialProduct.objects.filter(user=request.user)
@@ -356,6 +326,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
