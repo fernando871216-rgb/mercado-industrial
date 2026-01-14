@@ -48,4 +48,55 @@
                         <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'' }}" placeholder="Origen" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
                     </div>
                     <div>
-                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold;">CP DESTINO</label
+                        <label style="display:block; font-size: 0.7rem; color: #666; font-weight: bold;">CP DESTINO</label>
+                        <input type="text" id="envio_cp_destino" placeholder="Destino" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; background: white; padding: 10px; border-radius: 10px; border: 1px solid #eee;">
+                    <div style="text-align: center;">
+                        <small style="display:block; font-size: 0.6rem; color: #999;">LARGO</small>
+                        <input type="number" id="envio_largo" value="{{ product.largo|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
+                    </div>
+                    <div style="text-align: center;">
+                        <small style="display:block; font-size: 0.6rem; color: #999;">ANCHO</small>
+                        <input type="number" id="envio_ancho" value="{{ product.ancho|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
+                    </div>
+                    <div style="text-align: center;">
+                        <small style="display:block; font-size: 0.6rem; color: #999;">ALTO</small>
+                        <input type="number" id="envio_alto" value="{{ product.alto|default:10 }}" style="width:100%; border:none; text-align:center; font-weight:bold;">
+                    </div>
+                    <div style="text-align: center;">
+                        <small style="display:block; font-size: 0.6rem; color: #27ae60; font-weight:bold;">PESO (KG)</small>
+                        <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; border:none; text-align:center; font-weight:bold; color: #27ae60;">
+                    </div>
+                </div>
+
+                <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                    CALCULAR OPCIONES DE ENVÍO
+                </button>
+
+                <div id="resultados_flete" style="margin-top: 15px; display: none;">
+                    <div id="lista_paqueterias" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    <button onclick="quitarEnvio()" style="margin-top: 10px; background: none; border: none; color: #e74c3c; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+                        No deseo envío, acordaré con el vendedor
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                {% if product.stock > 0 and user.is_authenticated %}
+                    <div id="wallet_container"></div>
+                    <script src="https://sdk.mercadopago.com/js/v2"></script>
+                    <script>
+                        const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
+                        const bricksBuilder = mp.bricks();
+                        let currentPreferenceId = "{{ preference_id }}";
+
+                        function renderMPButton(prefId) {
+                            const container = document.getElementById("wallet_container");
+                            container.innerHTML = ""; 
+                            bricksBuilder.create("wallet", "wallet_container", {
+                                initialization: { preferenceId: prefId, redirectMode: "modal" },
+                            });
+                        }
