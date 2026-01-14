@@ -50,34 +50,29 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
+    # Credenciales según tu configuración
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     try:
-        # PASO 1: AUTENTICACIÓN
+        # 1. AUTENTICACIÓN (Formato corregido para evitar el 401)
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-        
-        # Intentamos enviar como FORM DATA (Este suele ser el estándar para OAuth2)
-        auth_payload = {
+        auth_data = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
             "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
         
-        # Primero intentamos con data= (form-encoded) que es lo más común para 401
-        auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=10)
+        # IMPORTANTE: Usamos 'data=' en lugar de 'json=' para el token
+        auth_res = requests.post(auth_url, data=auth_data, verify=False, timeout=10)
         
-        # Si sigue fallando, intentamos como JSON
-        if auth_res.status_code != 200:
-            auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=10)
-
         if auth_res.status_code != 200:
             return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
             
         token = auth_res.json().get('access_token')
 
-        # PASO 2: COTIZACIÓN
+        # 2. COTIZACIÓN (Usando el empaque que viste en la imagen)
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -85,16 +80,15 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Limpieza de datos
         payload = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
             "package": {
                 "weight": float(request.GET.get('peso') or 1),
-                "width": int(float(request.GET.get('ancho') or 10)),
-                "height": int(float(request.GET.get('alto') or 10)),
-                "length": int(float(request.GET.get('largo') or 10)),
-                "description": "Caja de cartón"
+                "width": int(float(request.GET.get('ancho') or 20)),
+                "height": int(float(request.GET.get('alto') or 20)),
+                "length": int(float(request.GET.get('largo') or 20)),
+                "description": "Caja de cartón" # Basado en tu observación de image_15ea3f.png
             }
         }
         
@@ -109,14 +103,16 @@ def cotizar_soloenvios(request):
                 if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or 'Envío',
-                        'precio_final': round(float(costo) * 1.08, 2),
+                        'precio_final': round(float(costo) * 1.08, 2), # Tu comisión del 8%
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
             return JsonResponse({'tarifas': tarifas})
-        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
+
+
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -254,6 +250,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
