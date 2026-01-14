@@ -8,6 +8,7 @@ from decimal import Decimal
 import requests
 import mercadopago
 import json
+from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 
 # Importa tus modelos y formularios
 # IMPORTANTE: Asegúrate de que en models.py el modelo se llame Sale o Venta
@@ -266,5 +267,6 @@ def mercadopago_webhook(request):
                 print(f"Pago {payment_id} aprobado con éxito.")
                 
     return JsonResponse({'status': 'ok'}, status=200)
+
 
 
