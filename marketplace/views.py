@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+import base64
 
 # IMPORTANTE: Usando tus nombres exactos de forms.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -54,28 +55,37 @@ def cotizar_soloenvios(request):
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     try:
-        # Paso A: Obtener Token usando FORM DATA (Evita el 401 en muchas APIs)
+        # 1. AUTENTICACIÓN (Usando Basic Auth Header)
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
+        
+        # Codificamos las credenciales en Base64 para máxima seguridad
+        keys = f"{client_id}:{client_secret}"
+        auth_str = base64.b64encode(keys.encode()).decode()
+        
+        auth_headers = {
+            "Authorization": f"Basic {auth_str}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+        }
+        
         auth_payload = {
-            "client_id": client_id,
-            "client_secret": client_secret,
             "grant_type": "client_credentials",
             "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
         
-        # Intentamos primero como data (form-encoded)
-        auth_res = requests.post(auth_url, data=auth_payload, verify=False, timeout=10)
+        # Intentamos obtener el token
+        auth_res = requests.post(auth_url, data=auth_payload, headers=auth_headers, verify=False, timeout=10)
         
-        # Si falla, intentamos como JSON
+        # Si falla el Basic Auth, intentamos el método normal por si acaso
         if auth_res.status_code != 200:
-            auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=10)
+            auth_res = requests.post(auth_url, data={"client_id": client_id, "client_secret": client_secret, "grant_type": "client_credentials"}, verify=False)
 
         if auth_res.status_code != 200:
             return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}', 'detalle': auth_res.text})
             
         token = auth_res.json().get('access_token')
 
-        # Paso B: Cotizar con los datos de tu formulario
+        # 2. COTIZACIÓN (Aquí enviamos la "Caja de cartón")
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -91,7 +101,7 @@ def cotizar_soloenvios(request):
                 "width": int(float(request.GET.get('ancho') or 20)),
                 "height": int(float(request.GET.get('alto') or 20)),
                 "length": int(float(request.GET.get('largo') or 20)),
-                "description": "Caja de cartón"
+                "description": "Caja de cartón"  # AQUÍ SE ENVÍA LO DE LA CAJA
             }
         }
         
@@ -110,8 +120,8 @@ def cotizar_soloenvios(request):
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
             return JsonResponse({'tarifas': tarifas})
-        
-        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
+            
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}', 'detalle': res.text})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -254,6 +264,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
