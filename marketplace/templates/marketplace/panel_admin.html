@@ -1,11 +1,11 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
     
     <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel de Control Administrativo</h2>
-        <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales y liquidaciones a vendedores</p>
+        <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales y liquidaciones</p>
     </div>
 
     <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
@@ -54,10 +54,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" style="padding: 50px; text-align: center; color: #95a5a6;">
-                        <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                        Aún no hay ventas registradas en el sistema.
-                    </td>
+                    <td colspan="3" style="padding: 50px; text-align: center; color: #95a5a6;">No hay ventas registradas.</td>
                 </tr>
                 {% endfor %}
             </tbody>
