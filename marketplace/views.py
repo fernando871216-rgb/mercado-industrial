@@ -90,29 +90,34 @@ def cotizar_soloenvios(request):
     cp_destino = request.GET.get('cp_destino', '').strip()
     
     if not cp_origen or not cp_destino:
-        return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
+        return JsonResponse({'tarifas': [], 'error': 'Faltan datos de envío'})
 
-    # TUS CREDENCIALES (Sacadas de tu captura anterior)
+    # TUS CREDENCIALES
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
-    # 1. PASO UNO: OBTENER EL ACCESS TOKEN (Basado en tu doc)
+    # 1. PASO UNO: OBTENER EL TOKEN (Formato x-www-form-urlencoded según tu doc)
     auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-    auth_payload = {
+    
+    auth_data = {
         "grant_type": "client_credentials",
         "client_id": client_id,
         "client_secret": client_secret
     }
     
     try:
-        auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=15)
+        # Aquí usamos 'data=' en lugar de 'json=' para cumplir con el estándar OAuth2 de tu doc
+        auth_res = requests.post(auth_url, data=auth_data, verify=False, timeout=15)
+        
         if auth_res.status_code != 200:
-            return JsonResponse({'tarifas': [], 'error': 'No se pudo autenticar con SoloEnvíos'})
+            print(f"DEBUG AUTH ERROR: {auth_res.status_code} - {auth_res.text}")
+            return JsonResponse({'tarifas': [], 'error': 'No se pudo validar el acceso (Revisa tus llaves)'})
         
-        access_token = auth_res.json().get('access_token')
+        token_data = auth_res.json()
+        access_token = token_data.get('access_token')
         
-        # 2. PASO DOS: COTIZAR CON EL TOKEN NUEVO
-        # La ruta de rates suele seguir el mismo patrón de dominio
+        # 2. PASO DOS: COTIZAR
+        # Probamos la ruta estándar de rates bajo el dominio app.
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         
         headers = {
@@ -136,7 +141,6 @@ def cotizar_soloenvios(request):
         
         if response.status_code == 200:
             rates = response.json()
-            # Si es un diccionario con clave 'rates', la extraemos
             if isinstance(rates, dict): rates = rates.get('rates', [])
             
             tarifas_finales = []
@@ -144,25 +148,24 @@ def cotizar_soloenvios(request):
                 precio = float(t.get('price') or t.get('cost') or 0)
                 if precio > 0:
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
+                        'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
                         'precio_final': round(precio * 1.08, 2),
                         'tiempo': t.get('delivery_days') or '3-5 días'
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            # Si la ruta /rates no existe en 'app.', probamos la que ya resolvió antes
-            alt_url = "https://soloenvios.com/api/v1/rates"
-            alt_res = requests.post(alt_url, json=payload, headers=headers, verify=False, timeout=10)
-            if alt_res.status_code == 200:
-                # ... (procesar igual que arriba)
-                return JsonResponse({'tarifas': alt_res.json()})
-                
-            return JsonResponse({'tarifas': [], 'error': f'Error de API: {response.status_code}'})
+            # Si rates falla en app., intentamos la URL de soloenvios.com normal
+            url_respaldo = "https://soloenvios.com/api/v1/rates"
+            res_respaldo = requests.post(url_respaldo, json=payload, headers=headers, verify=False, timeout=10)
+            if res_respaldo.status_code == 200:
+                # Procesar igual
+                return JsonResponse({'tarifas': res_respaldo.json()})
+            
+            return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas disponibles'})
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Fallo de conexión'})
-
+        print(f"ERROR FINAL: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con la paquetería'})
 # --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
 def registro(request):
     # Aquí puedes poner tu lógica de creación de usuario después
@@ -346,6 +349,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
