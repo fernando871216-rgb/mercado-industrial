@@ -47,42 +47,33 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Obtener datos y asegurar que no sean nulos
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Convertimos dimensiones, si no vienen usamos valores estándar para que no truene
-    try:
-        peso = float(request.GET.get('peso') or 1)
-        largo = int(float(request.GET.get('largo') or 10))
-        ancho = int(float(request.GET.get('ancho') or 10))
-        alto = int(float(request.GET.get('alto') or 10))
-    except ValueError:
-        return JsonResponse({'tarifas': [], 'error': 'Dimensiones inválidas'})
-
-    if not cp_origen or not cp_destino:
-        return JsonResponse({'tarifas': [], 'error': 'Faltan Códigos Postales'})
-
+    # Credenciales según tu imagen
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     try:
-        # Paso A: Obtener Token
+        # PASO 1: AUTENTICACIÓN (CORREGIDO HEADERS)
         auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-        auth_data = {
+        auth_payload = {
             "client_id": client_id,
             "client_secret": client_secret,
             "grant_type": "client_credentials",
             "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
         }
-        auth_res = requests.post(auth_url, json=auth_data, verify=False, timeout=10)
+        # SoloEnvíos requiere Content-Type explícito para soltar el token
+        auth_headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        
+        auth_res = requests.post(auth_url, json=auth_payload, headers=auth_headers, verify=False)
         
         if auth_res.status_code != 200:
             return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
             
         token = auth_res.json().get('access_token')
 
-        # Paso B: Cotizar con formato estricto
+        # PASO 2: COTIZACIÓN
         rates_url = "https://app.soloenvios.com/api/v1/rates"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -90,6 +81,16 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
+        # Validar y convertir datos de tu ProductForm
+        try:
+            peso = float(request.GET.get('peso') or 1)
+            # Aseguramos que las dimensiones sean enteros (algunas APIs fallan con decimales en dimensiones)
+            largo = int(float(request.GET.get('largo') or 10))
+            ancho = int(float(request.GET.get('ancho') or 10))
+            alto = int(float(request.GET.get('alto') or 10))
+        except:
+            return JsonResponse({'tarifas': [], 'error': 'Datos de paquete inválidos'})
+
         payload = {
             "origin_zip_code": str(cp_origen),
             "destination_zip_code": str(cp_destino),
@@ -101,30 +102,28 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(rates_url, json=payload, headers=headers, verify=False, timeout=10)
+        res = requests.post(rates_url, json=payload, headers=headers, verify=False)
         
         if res.status_code == 200:
             data = res.json()
-            # La API a veces devuelve una lista directo o un objeto con llave 'rates'
-            rates_list = data if isinstance(data, list) else data.get('rates', [])
+            # La API devuelve la lista de tarifas
+            rates = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas_finales = []
-            for t in rates_list:
-                # Buscamos el precio en diferentes posibles llaves de la API
-                costo = t.get('price') or t.get('cost') or t.get('total')
+            for t in rates:
+                costo = t.get('price') or t.get('cost') or 0
                 if costo:
                     tarifas_finales.append({
-                        'paqueteria': t.get('service_name') or t.get('provider_name') or 'Servicio',
-                        'precio_final': round(float(costo) * 1.08, 2),
-                        'tiempo': t.get('delivery_days') or 'N/A'
+                        'paqueteria': t.get('service_name') or 'Envío Económico',
+                        'precio_final': round(float(costo) * 1.08, 2), # Tu 8% de comisión
+                        'tiempo': t.get('delivery_days') or '3-5 días'
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            # Esto nos dirá qué dice la API de SoloEnvíos exactamente
-            return JsonResponse({'tarifas': [], 'error': f'API responde: {res.status_code}'})
-            
+            return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Error interno: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -262,4 +261,5 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
