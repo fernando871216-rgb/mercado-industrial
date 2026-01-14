@@ -1,58 +1,59 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
-    <div style="background: #eef2f7; border-radius: 15px; padding: 30px; margin-bottom: 40px; border-left: 6px solid #003366;">
+    <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366;">
         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 2; min-width: 300px;">
-                <h2 style="color: #003366; margin: 0 0 10px 0; font-size: 1.5rem;">
+            
+            <div style="flex: 2; min-width: 280px;">
+                <h2 style="color: #003366; margin: 0 0 10px 0; font-size: clamp(1.2rem, 4vw, 1.5rem);">
                     <i class="fas fa-handshake"></i> Comercio Directo y Seguro
                 </h2>
-                <p style="color: #4a5568; line-height: 1.6; margin: 0; font-size: 1rem;">
-                    Nuestra plataforma facilita el contacto y el pago seguro entre profesionales industriales. 
-                    <strong>El vendedor y el comprador tienen total libertad</strong> para acordar los términos de entrega, envío o recolección del equipo. 
+                <p style="color: #4a5568; line-height: 1.5; margin: 0; font-size: 0.95rem;">
+                    Nuestra plataforma facilita el contacto y el pago seguro entre profesionales. 
+                    <strong>Vendedor y comprador acuerdan libremente</strong> la entrega o envío del equipo. 
                 </p>
             </div>
             
-            <div style="flex: 1; display: flex; gap: 10px; min-width: 250px; justify-content: center;">
-                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
-                    <i class="fas fa-search" style="color: #3498db; font-size: 1.3rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Busca</span>
+            <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-width: 280px;">
+                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <i class="fas fa-search" style="color: #3498db; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Busca</span>
                 </div>
-                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
-                    <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.3rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Contacta</span>
+                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Contacta</span>
                 </div>
-                <div style="flex: 1; text-align: center; background: white; padding: 15px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-width: 80px;">
-                    <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.3rem; margin-bottom: 8px;"></i>
-                    <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
+                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
                 </div>
             </div>
         </div>
     </div>
 
     <div style="margin-bottom: 40px; text-align: center;">
-        <form method="GET" action="{% url 'home' %}" style="max-width: 600px; margin: 0 auto; display: flex; gap: 10px;">
-            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar equipos, marcas..." 
+        <form method="GET" action="{% url 'home' %}" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: row; gap: 8px; padding: 0 10px;">
+            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Equipos, marcas..." 
                    style="flex: 1; padding: 12px 20px; border: 2px solid #ddd; border-radius: 30px; font-size: 1rem; outline: none; min-width: 0;">
-            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; white-space: nowrap;">
-                Buscar
+            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">
+                <i class="fas fa-search"></i>
             </button>
         </form>
     </div>
 
-    <h3 style="color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px;">
+    <h3 style="color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">
         {% if query %} Resultados para "{{ query }}" {% else %} Equipos Recientes {% endif %}
     </h3>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
         {% for product in products %}
             <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}">
                 
                 <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
                     
-                    <div style="height: 200px; background: #fdfdfd; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                    <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 10px;">
                         {% if product.image %}
                             <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                         {% else %}
@@ -60,34 +61,24 @@
                         {% endif %}
                     </div>
                     
-                    <div style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="color: #3498db; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{{ product.brand }}</span>
+                    <div style="padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #3498db; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
                             
                             {% if product.stock > 0 %}
-                                <span style="font-size: 0.7rem; background: #e6fcf5; color: #087f5b; padding: 2px 8px; border-radius: 4px; font-weight: bold;">
-                                    Stock: {{ product.stock }}
+                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+                                    En Stock
                                 </span>
                             {% else %}
-                                <span style="font-size: 0.7rem; background: #fff5f5; color: #fa5252; padding: 2px 8px; border-radius: 4px; font-weight: bold;">
+                                <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
                                     Agotado
                                 </span>
                             {% endif %}
                         </div>
 
-                        <h4 style="margin: 5px 0 10px 0; font-size: 1.1rem; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #2c3e50; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             {{ product.title }}
                         </h4>
 
-                        <div style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">
-                            ${{ product.price }} <span style="font-size: 0.8rem; font-weight: normal; color: #95a5a6;">MXN</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        {% empty %}
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
-        {% endfor %} 
-    </div>
-</div>
-{% endblock %}
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
+                            ${{ product.price }} <span style="
