@@ -18,6 +18,38 @@ from django.contrib import messages
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm, RegistroForm
 
+
+def actualizar_preferencia_pago(request):
+    if request.method == 'GET':
+        producto_id = request.GET.get('id')
+        precio_envio = float(request.GET.get('envio', 0))
+        
+        producto = IndustrialProduct.objects.get(id=producto_id)
+        total = float(producto.price) + precio_envio
+
+        sdk = mercadopago.SDK("TU_ACCESS_TOKEN_DE_MERCADO_PAGO")
+
+        preference_data = {
+            "items": [
+                {
+                    "title": f"{producto.title} + Envío",
+                    "quantity": 1,
+                    "unit_price": total,
+                    "currency_id": "MXN",
+                }
+            ],
+            "back_urls": {
+                "success": "https://tu-sitio.com/success",
+                "failure": "https://tu-sitio.com/failure",
+            },
+            "auto_return": "approved",
+        }
+
+        preference_response = sdk.preference().create(preference_data)
+        nuevo_id = preference_response["response"]["id"]
+
+        return JsonResponse({'preference_id': nuevo_id, 'total_nuevo': total})
+
 # --- 1. FUNCIÓN PARA COTIZAR (SOLO ENVÍOS) ---
 def cotizar_soloenvios(request):
     if request.method == 'POST':
@@ -411,6 +443,7 @@ def actualizar_guia(request, venta_id):
             messages.success(request, f"Guía {venta.tracking_number} guardada correctamente.")
     
     return redirect('mis_ventas')
+
 
 
 
