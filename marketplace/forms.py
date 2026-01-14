@@ -3,27 +3,8 @@ from django.contrib.auth.models import User
 from .models import IndustrialProduct, Category, Profile
 import re
 
-# --- FORMULARIOS DE PERFIL ---
-class UserUpdateForm(forms.ModelForm):
-    first_name = forms.CharField(label="Nombre(s)", required=True)
-    last_name = forms.CharField(label="Apellidos", required=True)
-    email = forms.EmailField(label="Correo Electrónico", required=True)
-
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name', 'email']
-        labels = {
-            'username': 'Nombre de Usuario',
-        }
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-        }
-
-class ProfileUpdateForm(forms.ModelForm):
-    # Ponemos todo como False para que no bloquee el guardado si falta algo
+# --- 1. FORMULARIO DE PERFIL (Antes ProfileUpdateForm) ---
+class ProfileForm(forms.ModelForm):
     phone = forms.CharField(required=False)
     clabe = forms.CharField(required=False)
     banco = forms.CharField(required=False)
@@ -33,7 +14,6 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['phone', 'address', 'clabe', 'banco', 'beneficiario']
-        
         widgets = {
             'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '10 dígitos'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -50,14 +30,7 @@ class ProfileUpdateForm(forms.ModelForm):
                 raise forms.ValidationError("El número debe tener 10 dígitos.")
         return phone_data
 
-    def clean_clabe(self):
-        clabe_data = self.cleaned_data.get('clabe')
-        if clabe_data:
-            clabe_data = re.sub(r'\D', '', clabe_data)
-            if len(clabe_data) != 18:
-                raise forms.ValidationError("La CLABE debe tener 18 dígitos.")
-        return clabe_data
-# --- 1. FORMULARIO DE REGISTRO ---
+# --- 2. FORMULARIO DE REGISTRO ---
 class RegistroForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirmar Contraseña'}))
@@ -73,7 +46,7 @@ class RegistroForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Este correo ya está registrado. Intenta con otro.")
+            raise forms.ValidationError("Este correo ya está registrado.")
         return email
 
     def clean(self):
@@ -91,21 +64,24 @@ class RegistroForm(forms.ModelForm):
             user.save()
         return user
 
-# --- 2. FORMULARIO DE PRODUCTOS ---
-class ProductoForm(forms.ModelForm):
+# --- 3. FORMULARIO DE PRODUCTOS (Corregido: ProductForm con campos de envío) ---
+class ProductForm(forms.ModelForm):
     class Meta:
         model = IndustrialProduct
-        fields = ['title', 'brand', 'part_number', 'description', 'price', 'stock', 'category', 'image']
+        fields = [
+            'title', 'brand', 'part_number', 'description', 'price', 
+            'stock', 'category', 'image', 'peso', 'largo', 'ancho', 'alto', 'cp_origen'
+        ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'brand': forms.TextInput(attrs={'class': 'form-control'}),
-            'part_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'price': forms.NumberInput(attrs={'class': 'form-control'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
+            'peso': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'KG'}),
+            'largo': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'CM'}),
+            'ancho': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'CM'}),
+            'alto': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'CM'}),
+            'cp_origen': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '5 dígitos'}),
         }
-
-
-
-
