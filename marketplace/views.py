@@ -14,7 +14,7 @@ from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductForm, ProfileForm
 
 # --- CONFIGURACIÓN ---
-SDK = mercadopago.SDK("TU_ACCESS_TOKEN_PRODUCCION")
+SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 # --- VISTAS PRINCIPALES ---
 def home(request):
@@ -58,7 +58,7 @@ def cotizar_soloenvios(request):
     
     url = "https://soloenvios.com/api/v1/rates"
     headers = {
-        "Authorization": "Bearer TU_TOKEN_SOLOENVIO",
+        "Authorization": "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
         "Content-Type": "application/json"
     }
     
@@ -251,3 +251,4 @@ def pago_fallido(request):
 
 def mercadopago_webhook(request):
     return JsonResponse({'status': 'ok'}, status=200)
+
