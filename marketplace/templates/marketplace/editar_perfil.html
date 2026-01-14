@@ -1,73 +1,85 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
+<style>
+    .profile-card { border-radius: 15px; overflow: hidden; }
+    .form-section-title { 
+        background-color: #f8f9fa; 
+        padding: 10px 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+        color: #0d6efd;
+        font-weight: bold;
+    }
+    .form-control:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15); }
+</style>
+
 <div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0 text-center"><i class="fas fa-user-edit me-2"></i>Configuración de Perfil</h4>
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card profile-card shadow-lg border-0">
+                <div class="card-header bg-dark text-white py-4 text-center">
+                    <h2 class="h4 mb-0"><i class="fas fa-id-card me-2"></i>Configuración de Perfil</h2>
+                    <p class="small opacity-75 mb-0">Mantén tu información actualizada para ventas y cobros</p>
                 </div>
-                <div class="card-body p-4">
+                
+                <div class="card-body p-4 p-md-5">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
+                            <div class="alert alert-success border-0 shadow-sm mb-4">{{ message }}</div>
                         {% endfor %}
                     {% endif %}
 
                     <form method="POST">
                         {% csrf_token %}
                         
-                        <div class="mb-4">
-                            <h5 class="text-secondary border-bottom pb-2 mb-3">Datos Personales</h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="small text-muted mb-1">Nombre(s)</label>
-                                    {{ u_form.first_name }}
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="small text-muted mb-1">Apellidos</label>
-                                    {{ u_form.last_name }}
-                                </div>
-                                <div class="col-12">
-                                    <label class="small text-muted mb-1">Correo Electrónico</label>
-                                    {{ u_form.email }}
-                                </div>
+                        <div class="form-section-title">
+                            <i class="fas fa-user me-2"></i>Información Personal
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label small fw-bold">Nombre(s)</label>
+                                {{ u_form.first_name }}
+                            </div>
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label small fw-bold">Apellidos</label>
+                                {{ u_form.last_name }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Correo Electrónico</label>
+                                {{ u_form.email }}
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <h5 class="text-secondary border-bottom pb-2 mb-3">Información de Vendedor y Pagos</h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="small text-muted mb-1">Teléfono</label>
-                                    {{ p_form.phone }}
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="small text-muted mb-1">Banco</label>
-                                    {{ p_form.banco }}
-                                </div>
-                                <div class="col-12">
-                                    <label class="small text-muted mb-1">CLABE Interbancaria (18 dígitos)</label>
-                                    {{ p_form.clabe }}
-                                </div>
-                                <div class="col-12">
-                                    <label class="small text-muted mb-1">Nombre del Beneficiario</label>
-                                    {{ p_form.beneficiario }}
-                                </div>
-                                <div class="col-12">
-                                    <label class="small text-muted mb-1">Dirección Completa (Para recolección)</label>
-                                    {{ p_form.address }}
-                                </div>
+                        <div class="form-section-title">
+                            <i class="fas fa-university me-2"></i>Datos de Contacto y Pago
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label small fw-bold">Teléfono de Contacto</label>
+                                {{ p_form.phone }}
+                            </div>
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label small fw-bold">Institución Bancaria</label>
+                                {{ p_form.banco }}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label small fw-bold">CLABE Interbancaria (18 dígitos)</label>
+                                {{ p_form.clabe }}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label small fw-bold">Nombre del Beneficiario</label>
+                                {{ p_form.beneficiario }}
+                            </div>
+                            <div class="col-12 mb-4">
+                                <label class="form-label small fw-bold">Dirección Fiscal / Recolección</label>
+                                {{ p_form.address }}
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2 pt-3">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                <i class="fas fa-save me-2"></i>Actualizar Mi Información
+                        <div class="d-grid mt-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow">
+                                <i class="fas fa-check-circle me-2"></i>Actualizar Mi Información
                             </button>
                         </div>
                     </form>
