@@ -71,7 +71,7 @@ def cotizar_soloenvios(request):
             auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=10)
 
         if auth_res.status_code != 200:
-            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}'})
+            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}', 'detalle': auth_res.text})
             
         token = auth_res.json().get('access_token')
 
@@ -254,6 +254,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
