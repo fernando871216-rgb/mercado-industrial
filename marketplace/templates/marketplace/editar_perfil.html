@@ -1,113 +1,93 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 650px; margin: 30px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 800px; margin: 30px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     
-    <div style="background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0;">
+    <form method="POST" style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+        {% csrf_token %}
         
-        <div style="background: #003366; padding: 30px; text-align: center; color: white;">
+        <div style="background: #003366; color: white; padding: 30px; text-align: center;">
             <i class="fas fa-user-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
-            <h2 style="margin: 0; font-size: 1.5rem;">Configuración de mi Perfil</h2>
-            <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Administra tu información personal y datos de cobro</p>
+            <h2 style="margin: 0;">Configuración de mi Perfil</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Administra tu información personal y datos de cobro</p>
         </div>
-        
-        {% if messages %}
-            {% for message in messages %}
-                <div style="padding: 15px; border-radius: 10px; margin: 20px; text-align: center; font-weight: bold; 
-                    {% if message.tags == 'success' %} background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
-                    {% else %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
-                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i> 
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
-        <form method="POST" style="padding: 25px;">
-            {% csrf_token %}
 
-            <div style="margin-bottom: 30px;">
-                <h4 style="color: #003366; border-bottom: 2px solid #f4f7f6; padding-bottom: 10px; margin-bottom: 20px;">
-                    <i class="fas fa-id-card"></i> Información Personal
-                </h4>
-                
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Nombre de Usuario:</label>
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 10px; border: 1px solid #eee; color: #7f8c8d;">
-                        {{ u_form.username.value }} <small>(No editable)</small>
-                        <input type="hidden" name="username" value="{{ u_form.username.value }}">
-                    </div>
-                </div>
+        <div style="padding: 30px;">
+            <h4 style="color: #003366; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-bottom: 20px;">
+                <i class="fas fa-id-card"></i> Información Personal
+            </h4>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre de Usuario:</label>
+                <input type="text" value="{{ user.username }}" disabled style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #f9f9f9; color: #999; cursor: not-allowed;">
+                <small style="color: #999;">(No editable)</small>
+            </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Nombre:</label>
-                        {{ u_form.first_name }}
-                    </div>
-                    <div>
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Apellidos:</label>
-                        {{ u_form.last_name }}
-                    </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre:</label>
+                    {{ u_form.first_name }}
                 </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Correo Electrónico:</label>
-                    {{ u_form.email }}
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Apellidos:</label>
+                    {{ u_form.last_name }}
                 </div>
             </div>
 
-            <div style="margin-bottom: 30px; background: #fdfdfd; padding: 20px; border-radius: 15px; border: 1px solid #f0f0f0;">
-                <h4 style="color: #25D366; margin-top: 0; margin-bottom: 20px;">
-                    <i class="fab fa-whatsapp"></i> Datos de Contacto
-                </h4>
-                
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Correo Electrónico:</label>
+                {{ u_form.email }}
+            </div>
+
+            <div style="background: #f0fff4; padding: 20px; border-radius: 12px; border: 1px solid #c6f6d5; margin-bottom: 25px;">
+                <h4 style="color: #27ae60; margin-top: 0; margin-bottom: 15px;"><i class="fab fa-whatsapp"></i> Datos de Contacto</h4>
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Teléfono / WhatsApp (10 dígitos):</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Teléfono / WhatsApp (10 dígitos):</label>
                     {{ p_form.phone }}
                 </div>
-
                 <div>
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Dirección Completa:</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Dirección Completa:</label>
                     {{ p_form.address }}
                 </div>
             </div>
 
-            <div style="margin-bottom: 30px; background: #fffcf5; padding: 20px; border-radius: 15px; border: 1px solid #ffeeba;">
-                <h4 style="color: #e67e22; margin-top: 0; margin-bottom: 10px;">
-                    <i class="fas fa-university"></i> Datos de Pagos para Vendedores
-                </h4>
-                
+            <div style="background: #fffaf0; padding: 20px; border-radius: 12px; border: 1px solid #feebc8; margin-bottom: 30px;">
+                <h4 style="color: #dd6b20; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-university"></i> Datos de Pagos para Vendedores</h4>
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Nombre del Banco:</label>
-                    {{ p_form.banco }}
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre del Banco:</label>
+                    {{ p_form.bank_name }}
                 </div>
-
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">CLABE Interbancaria (18 dígitos):</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">CLABE Interbancaria (18 dígitos):</label>
                     {{ p_form.clabe }}
                 </div>
-
                 <div>
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">Nombre del Beneficiario:</label>
-                    {{ p_form.beneficiario }}
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 5px;">Nombre del Beneficiario:</label>
+                    {{ p_form.beneficiary_name }}
                 </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #28a745; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(40,167,69,0.3);">
-                <i class="fas fa-save"></i> Guardar Todos los Cambios
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s;">
+                <i class="fas fa-save"></i> GUARDAR CAMBIOS PERFIL
             </button>
-
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 <style>
-    input[type="text"], input[type="email"], textarea {
-        width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 10px; font-size: 1rem; box-sizing: border-box;
+    /* Estilizamos los campos de Django para que se vean bien */
+    input[type="text"], input[type="email"], textarea, input[type="tel"] {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    input:focus {
+        border-color: #003366;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0,51,102,0.1);
     }
 </style>
-
-{% endblock %} ```
-
-
-
-
+{% endblock %}
