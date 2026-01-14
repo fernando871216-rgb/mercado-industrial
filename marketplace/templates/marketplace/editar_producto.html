@@ -1,30 +1,49 @@
 {% extends 'marketplace/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container" style="max-width: 700px; margin: 30px auto; font-family: sans-serif;">
-    <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 30px;">
-        <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-edit"></i> Editar Producto</h2>
+<div class="container" style="max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Editar Producto</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
         
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px;">
-                GUARDAR CAMBIOS
-            </button>
-        </form>
+        {% for field in form %}
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #34495e;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color: #e74c3c; font-size: 0.8rem;">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
 
-        <a href="{% url 'mi_inventario' %}" style="display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none;">Cancelar</a>
+        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px;">
+            GUARDAR CAMBIOS
+        </button>
+    </form>
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+    <a href="{% url 'mi_inventario' %}" style="display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 0.9rem;">
+        Cancelar
+    </a>
 
-        {% if producto %}
-        <form action="{% url 'borrar_producto' producto.pk %}" method="POST" onsubmit="return confirm('¿Seguro que quieres eliminar este producto?');">
-            {% csrf_token %}
-            <button type="submit" style="width: 100%; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 10px; cursor: pointer; opacity: 0.8;">
-                <i class="fas fa-trash"></i> Eliminar Producto Definitivamente
-            </button>
-        </form>
-        {% endif %}
-    </div>
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+    <form action="{% url 'borrar_producto' producto.pk %}" method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este producto?');">
+        {% csrf_token %}
+        <button type="submit" style="width: 100%; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 10px; font-weight: normal; font-size: 0.9rem; cursor: pointer; opacity: 0.8;">
+            <i class="fas fa-trash"></i> Eliminar Producto Definitivamente
+        </button>
+    </form>
 </div>
+
+<style>
+    input, textarea, select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+</style>
 {% endblock %}
