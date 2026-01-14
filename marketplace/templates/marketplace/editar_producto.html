@@ -8,8 +8,7 @@
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }}
-            
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px;">
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px;">
                 GUARDAR CAMBIOS
             </button>
         </form>
@@ -18,17 +17,14 @@
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
+        {% if producto %}
         <form action="{% url 'borrar_producto' producto.pk %}" method="POST" onsubmit="return confirm('¿Seguro que quieres eliminar este producto?');">
             {% csrf_token %}
             <button type="submit" style="width: 100%; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 10px; cursor: pointer; opacity: 0.8;">
                 <i class="fas fa-trash"></i> Eliminar Producto Definitivamente
             </button>
         </form>
+        {% endif %}
     </div>
 </div>
-
-<style>
-    input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-    label { font-weight: bold; color: #555; }
-</style>
 {% endblock %}
