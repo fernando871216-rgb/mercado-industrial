@@ -23,7 +23,6 @@ def home(request):
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
     
-    # GENERAR PREFERENCIA INICIAL PARA QUE EL BOTÓN APAREZCA AL CARGAR
     preference_data = {
         "items": [{
             "id": str(product.id),
@@ -37,7 +36,7 @@ def detalle_producto(request, product_id):
             "failure": request.build_absolute_uri('/pago-fallido/')
         },
         "auto_return": "approved",
-        "external_reference": str(product.id), # Importante para saber qué se vendió
+        "external_reference": str(product.id),
     }
     
     preference_result = SDK.preference().create(preference_data)
@@ -45,13 +44,42 @@ def detalle_producto(request, product_id):
     
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
-        'preference_id': preference_id  # <--- Esto es lo que hacía falta para el HTML
+        'preference_id': preference_id
     })
 
 def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
+
+# --- MERCADO PAGO Y LOGÍSTICA ---
+
+# Esta función es necesaria porque tu urls.py la menciona
+def procesar_pago(request, product_id):
+    # Por ahora redirigimos al detalle para evitar errores
+    return redirect('product_detail', product_id=product_id)
+
+def actualizar_pago(request):
+    product_id = request.GET.get('id')
+    costo_envio = float(request.GET.get('envio', 0))
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    total = float(product.price) + costo_envio
+    
+    preference_data = {
+        "items": [{
+            "id": str(product.id),
+            "title": f"{product.title} + Envío",
+            "quantity": 1, 
+            "unit_price": total, 
+            "currency_id": "MXN"
+        }],
+        "external_reference": str(product.id),
+    }
+    res = SDK.preference().create(preference_data)
+    return JsonResponse({
+        'preference_id': res["response"]["id"], 
+        'total_nuevo': f"{total:,.2f}"
+    })
 
 # --- SOLOENVÍOS ---
 def cotizar_soloenvios(request):
@@ -82,7 +110,6 @@ def cotizar_soloenvios(request):
         data = response.json()
         tarifas_finales = []
         for t in data:
-            # Tu comisión del 8%
             precio_con_comision = round(float(t['price']) * 1.08, 2)
             tarifas_finales.append({
                 'paqueteria': t['service_name'],
@@ -92,41 +119,6 @@ def cotizar_soloenvios(request):
         return JsonResponse({'tarifas': tarifas_finales})
     except:
         return JsonResponse({'tarifas': []})
-
-def actualizar_preferencia_pago(request):
-    product_id = request.GET.get('id')
-    costo_envio = float(request.GET.get('envio', 0))
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    total = float(product.price) + costo_envio
-    
-    preference_data = {
-        "items": [{"title": f"{product.title} + Envío", "quantity": 1, "unit_price": total, "currency_id": "MXN"}]
-    }
-    res = SDK.preference().create(preference_data)
-    return JsonResponse({'preference_id': res["response"]["id"], 'total_nuevo': total})
-
-
-def actualizar_pago(request):
-    product_id = request.GET.get('id')
-    costo_envio = float(request.GET.get('envio', 0))
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    total = float(product.price) + costo_envio
-    
-    preference_data = {
-        "items": [{
-            "id": str(product.id),
-            "title": f"{product.title} + Envío",
-            "quantity": 1, 
-            "unit_price": total, 
-            "currency_id": "MXN"
-        }],
-        "external_reference": str(product.id),
-    }
-    res = SDK.preference().create(preference_data)
-    return JsonResponse({
-        'preference_id': res["response"]["id"], 
-        'total_nuevo': f"{total:,.2f}" # Formateado con comas
-    })
 
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
 def registro(request):
@@ -142,9 +134,7 @@ def registro(request):
 
 @login_required
 def editar_perfil(request):
-    # Intentamos obtener el perfil, si no existe lo creamos para evitar errores
     profile, created = Profile.objects.get_or_create(user=request.user)
-    
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileForm(request.POST, instance=profile)
@@ -155,11 +145,7 @@ def editar_perfil(request):
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileForm(instance=profile)
-
-    return render(request, 'marketplace/editar_perfil.html', {
-        'u_form': u_form,
-        'p_form': p_form
-    })
+    return render(request, 'marketplace/editar_perfil.html', {'u_form': u_form, 'p_form': p_form})
 
 @login_required
 def mi_inventario(request):
@@ -179,7 +165,6 @@ def subir_producto(request):
         form = ProductForm()
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
-# VISTA PARA EDITAR (Asegura que pase el objeto 'producto')
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
@@ -190,8 +175,6 @@ def editar_producto(request, pk):
             return redirect('mi_inventario')
     else:
         form = ProductForm(instance=producto)
-    
-    # Es vital que aquí diga 'producto': producto
     return render(request, 'marketplace/editar_producto.html', {'form': form, 'producto': producto})
 
 @login_required
@@ -209,8 +192,6 @@ def mis_compras(request):
 
 @login_required
 def mis_ventas(request):
-    # Usamos "Sale" porque así se llama en tu models.py
-    # Buscamos productos que pertenecen al usuario logueado
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
@@ -262,18 +243,11 @@ def cancelar_venta(request, venta_id):
 @staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
-    
-    # Calculamos ganancias sumando comisiones de ventas que NO estén pendientes ni canceladas
-    # Solo sumamos lo que ya es un ingreso real o pagado
     tus_ganancias = sum(
         (v.get_platform_commission() for v in ventas if v.status == 'pagado' or v.status == 'enviado'), 
         Decimal('0.00')
     )
-    
-    return render(request, 'marketplace/panel_admin.html', {
-        'ventas': ventas, 
-        'tus_ganancias': tus_ganancias
-    })
+    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas, 'tus_ganancias': tus_ganancias})
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -301,12 +275,9 @@ def mercadopago_webhook(request):
         if response.status_code == 200:
             payment_info = response.json()
             if payment_info['status'] == 'approved':
-                # Obtenemos el ID del producto que guardamos en external_reference
                 product_id = payment_info['external_reference']
-                product = IndustrialProduct.objects.get(id=product_id)
+                product = get_object_or_404(IndustrialProduct, id=product_id)
                 
-                # Buscamos si ya existe la venta pendiente para marcarla como pagada
-                # O creamos una nueva si no existía
                 sale, created = Sale.objects.get_or_create(
                     product=product,
                     status='pendiente',
@@ -314,34 +285,19 @@ def mercadopago_webhook(request):
                 )
                 sale.status = 'pagado'
                 sale.save()
-                
     return JsonResponse({'status': 'ok'}, status=200)
 
-
-
-# VISTA DE COMPRA (Aquí es donde descontamos el stock)
 @login_required
 def crear_intencion_compra(request, product_id):
     producto = get_object_or_404(IndustrialProduct, id=product_id)
-    
-    # Verificamos si hay stock antes de hacer nada
     if producto.stock > 0:
-        # Creamos el registro en el modelo Sale (Venta)
         Sale.objects.create(
             product=producto,
             buyer=request.user,
             price=producto.price,
             status='pendiente'
         )
-        
-        # DESCONTAMOS EL STOCK
         producto.stock -= 1
         producto.save()
-        
+        messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
-
-
-
-
-
-
