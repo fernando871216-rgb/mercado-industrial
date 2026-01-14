@@ -1,83 +1,72 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="bg-light min-vh-100 d-flex align-items-center">
-    <div class="container py-5">
+<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh; background-color: #f4f7f6;">
+    <div class="container">
         <div class="row justify-content-center">
-            <div class="col-12 col-md-10 col-lg-7">
+            <div class="col-12 col-md-10 col-lg-8">
                 
-                <div class="card shadow-lg border-0 overflow-hidden" style="border-radius: 20px;">
-                    <div class="card-header bg-primary bg-gradient text-white py-4 text-center">
-                        <h2 class="h4 mb-0 fw-bold"><i class="fas fa-user-gear me-2"></i>Configuración de Perfil</h2>
+                <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                    <div class="card-header bg-dark text-white py-4 text-center" style="border-radius: 20px 20px 0 0;">
+                        <h2 class="h4 mb-0"><i class="fas fa-user-cog me-2"></i>Configuración de Perfil</h2>
                     </div>
                     
-                    <div class="card-body p-4 p-md-5 bg-white">
+                    <div class="card-body p-4 p-md-5">
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-success border-0 shadow-sm mb-4 text-center">{{ message }}</div>
+                                <div class="alert alert-success text-center shadow-sm">{{ message }}</div>
                             {% endfor %}
                         {% endif %}
 
                         <form method="POST">
                             {% csrf_token %}
                             
-                            <div class="mb-5">
-                                <h5 class="text-primary border-bottom pb-2 mb-4 fw-bold">1. Información Personal</h5>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold small text-dark">Nombre(s)</label>
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold">Personales</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Nombre</label>
                                         {{ u_form.first_name }}
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold small text-dark">Apellidos</label>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Apellidos</label>
                                         {{ u_form.last_name }}
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold small text-dark">Correo Electrónico</label>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Email</label>
                                         {{ u_form.email }}
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="mb-4">
-                                <h5 class="text-primary border-bottom pb-2 mb-4 fw-bold">2. Datos de Vendedor y Pagos</h5>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold small text-dark">Teléfono Celular</label>
+                                <div class="col-md-6 mb-4">
+                                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold">Vendedor / Pagos</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Teléfono</label>
                                         {{ p_form.phone }}
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold small text-dark">Institución Bancaria</label>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Banco</label>
                                         {{ p_form.banco }}
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold small text-dark">CLABE (18 dígitos)</label>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">CLABE</label>
                                         {{ p_form.clabe }}
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold small text-dark">Nombre del Beneficiario</label>
-                                        {{ p_form.beneficiario }}
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold small text-dark">Dirección de Recolección</label>
-                                        {{ p_form.address }}
-                                    </div>
+                                </div>
+
+                                <div class="col-12 mb-4">
+                                    <label class="form-label small fw-bold text-muted">Dirección de Recolección</label>
+                                    {{ p_form.address }}
                                 </div>
                             </div>
 
-                            <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg py-3 shadow-sm fw-bold">
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-primary btn-lg shadow fw-bold">
                                     <i class="fas fa-save me-2"></i>GUARDAR CAMBIOS
                                 </button>
                             </div>
                         </form>
                     </div>
-                </div>
-                
-                <div class="text-center mt-4">
-                    <a href="{% url 'home' %}" class="text-muted text-decoration-none small">
-                        <i class="fas fa-arrow-left me-1"></i> Volver al inicio
-                    </a>
                 </div>
 
             </div>
@@ -86,16 +75,12 @@
 </div>
 
 <style>
-    /* Aseguramos que los inputs se vean bien en móviles y escritorio */
+    /* Estilos para que los inputs se vean uniformes */
     .form-control { 
         border-radius: 10px; 
-        padding: 12px; 
+        padding: 10px; 
         border: 1px solid #ced4da;
-        transition: all 0.2s;
     }
-    .form-control:focus { 
-        border-color: #0d6efd; 
-        box-shadow: 0 0 8px rgba(13, 110, 253, 0.15);
-    }
+    body { background-color: #f4f7f6; }
 </style>
 {% endblock %}
