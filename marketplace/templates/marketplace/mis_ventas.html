@@ -1,40 +1,55 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 900px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-        <div>
-            <h2 style="color: #003366; margin: 0; font-size: 1.6rem;">📈 Panel de Ventas</h2>
-            <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 0.9rem;">Gestiona tus pedidos y libera tus pagos.</p>
-        </div>
-        <div style="background: #27ae60; color: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(39,174,96,0.2); text-align: center;">
-            <span style="font-size: 0.7rem; display: block; text-transform: uppercase; opacity: 0.9;">Comisión Plataforma</span>
-            <strong style="font-size: 1.1rem;">5% INITRE</strong>
-        </div>
-    </div>
+<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
+    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</h2>
 
-    <div style="display: flex; flex-direction: column; gap: 20px;">
-        {% for venta in ventas %}
-        <div style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; overflow: hidden;">
-            
-            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    {% if ventas %}
+        {% for v in ventas %}
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if v.status == 'entregado' %}#27ae60{% elif v.status == 'cancelado' %}#e74c3c{% else %}#f1c40f{% endif %};">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
                 <div>
-                    <span style="display: block; color: #95a5a6; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Equipo Vendido</span>
-                    <strong style="color: #2c3e50; font-size: 1.05rem;">{{ venta.product.title }}</strong>
+                    <span style="font-size: 0.8rem; color: #95a5a6; text-transform: uppercase;">Orden #{{ v.id }} - {{ v.created_at|date:"d M Y" }}</span>
+                    <h3 style="margin: 5px 0; color: #2c3e50;">{{ v.product.title }}</h3>
+                    <p style="margin: 0; color: #7f8c8d;">Comprador: <strong>{{ v.buyer.username }}</strong></p>
                 </div>
                 <div style="text-align: right;">
-                    {% if venta.status == 'pendiente' %}
-                        <span style="background: #fff3cd; color: #856404; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ffeeba;">PENDIENTE</span>
-                    {% elif venta.status == 'enviado' %}
-                        <span style="background: #cfe2ff; color: #084298; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #b6d4fe;">ENVIADO</span>
-                    {% elif venta.status == 'entregado' %}
-                        <span style="background: #d1e7dd; color: #0f5132; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #badbcc;">ENTREGADO</span>
-                    {% else %}
-                        <span style="background: #f8d7da; color: #842029; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">CANCELADO</span>
-                    {% endif %}
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #2ecc71;">${{ v.total_price }}</div>
+                    <span style="display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; background: #fdf2e9; color: #e67e22;">
+                        {{ v.status|upper }}
+                    </span>
                 </div>
             </div>
 
-            <div style="padding: 15px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; background: #fafafa; padding: 10px; border-radius: 10px;">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+            {% if v.status == 'pendiente' or v.status == 'pagado' %}
+            <form action="{% url 'actualizar_guia' v.id %}" method="POST" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                {% csrf_token %}
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Paquetería</label>
+                    <input type="text" name="shipping_company" placeholder="Ej. FedEx" required style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Número de Guía</label>
+                    <input type="text" name="tracking_number" placeholder="12345678" required style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                </div>
+                <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    Actualizar Guía
+                </button>
+            </form>
+            {% else %}
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">
+                    <i class="fas fa-truck"></i> Envío por: <strong>{{ v.shipping_company }}</strong> | Guía: <strong>{{ v.tracking_number }}</strong>
+                </p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 50px; background: #f9f9f9; border-radius: 15px;">
+            <i class="fas fa-shopping-cart" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
+            <p style="color: #95a5a6;">Aún no has realizado ninguna venta.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
