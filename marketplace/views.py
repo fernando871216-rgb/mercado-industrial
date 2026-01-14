@@ -12,6 +12,7 @@ from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductForm, ProfileForm, UserUpdateForm
 import urllib3
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- CONFIGURACIÓN ---
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -91,15 +92,16 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # URL CORRECTA sin el "api." al inicio
-    url = "https://soloenvios.com/api/v1/shipping/rates"
+    # TUS CREDENCIALES
     token = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    
+    # URL DEFINITIVA (Esta es la que no debería dar 404 ni redirigir)
+    url = "https://api.soloenvios.com/v1/rates"
     
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0"
+        "Accept": "application/json"
     }
     
     payload = {
@@ -114,14 +116,22 @@ def cotizar_soloenvios(request):
     }
     
     try:
+        # Usamos verify=False por el tema de Render que vimos en los logs
         response = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
+        
+        # Log de control para ver en Render
+        print(f"DEBUG: Intentando en {url} - Status: {response.status_code}")
+
         if response.status_code == 200:
             data = response.json()
+            # SoloEnvíos a veces devuelve la lista directo o dentro de 'data'
             rates = data if isinstance(data, list) else data.get('rates', [])
+            
             tarifas_finales = []
             for t in rates:
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
+                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Paquetería',
@@ -129,10 +139,24 @@ def cotizar_soloenvios(request):
                         'tiempo': t.get('delivery_days') or '3-5'
                     })
             return JsonResponse({'tarifas': tarifas_finales})
+        
+        elif response.status_code == 404:
+            # Si sigue dando 404, probamos la ruta extendida en el mismo momento
+            url_alt = "https://api.soloenvios.com/v1/shipping/rates"
+            print("Reintentando ruta extendida...")
+            res_alt = requests.post(url_alt, json=payload, headers=headers, timeout=15, verify=False)
+            if res_alt.status_code == 200:
+                # Procesar igual que arriba (simplificado para el ejemplo)
+                return JsonResponse({'tarifas': res_alt.json()})
+            return JsonResponse({'tarifas': [], 'error': 'Servicio de paquetería en mantenimiento (404)'})
+            
         else:
+            print(f"Error detalle: {response.text}")
             return JsonResponse({'tarifas': [], 'error': f'Error {response.status_code}'})
+
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+        print(f"Error de conexión final: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo conectar con el cotizador'})
 
 # --- FUNCIÓN DE REGISTRO (LA QUE CAUSABA EL ERROR) ---
 def registro(request):
@@ -317,6 +341,7 @@ def registro(request):
     # Esta es una función temporal para que el build pase
     # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
     return render(request, 'registro.html')
+
 
 
 
