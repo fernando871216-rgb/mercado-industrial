@@ -144,6 +144,7 @@ def subir_producto(request):
         form = ProductForm()
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
+# VISTA PARA EDITAR (Asegura que pase el objeto 'producto')
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(IndustrialProduct, pk=pk, user=request.user)
@@ -154,7 +155,9 @@ def editar_producto(request, pk):
             return redirect('mi_inventario')
     else:
         form = ProductForm(instance=producto)
-    return render(request, 'marketplace/editar_producto.html', {'form': form})
+    
+    # Es vital que aquí diga 'producto': producto
+    return render(request, 'marketplace/editar_producto.html', {'form': form, 'producto': producto})
 
 @login_required
 def borrar_producto(request, pk):
@@ -273,8 +276,28 @@ def mercadopago_webhook(request):
 
 
 
-
-
+# VISTA DE COMPRA (Aquí es donde descontamos el stock)
+@login_required
+def crear_intencion_compra(request, product_id):
+    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    
+    if producto.stock > 0:
+        # 1. Creamos la venta (Sale)
+        nueva_venta = Sale.objects.create(
+            product=producto,
+            buyer=request.user,
+            price=producto.price,
+            status='pendiente'
+        )
+        
+        # 2. DESCONTAMOS EL STOCK
+        producto.stock -= 1
+        producto.save()
+        
+        return redirect('mis_compras')
+    else:
+        # Si no hay stock, podrías mandar un mensaje de error
+        return redirect('detalle_producto', pk=product_id)
 
 
 
