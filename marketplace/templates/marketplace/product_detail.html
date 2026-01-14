@@ -47,21 +47,26 @@
                 ${{ product.price }} <span style="font-size: 0.9rem; color: #95a5a6; font-weight: normal;">MXN</span>
             </div>
 
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e9ecef; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 10px 0; color: #003366;"><i class="fab fa-whatsapp"></i> Contacto Directo</h4>
-                {% if user.is_authenticated %}
-                    {% if product.user.profile.phone %}
-                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Acuerda con el vendedor los términos de pago y entrega.</p>
-                        <a href="https://wa.me/{{ product.user.profile.phone }}?text=Hola, me interesa el equipo: {{ product.title }}" target="_blank" style="display: block; text-align: center; background: #25D366; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                            Chatear con Vendedor
-                        </a>
-                    {% else %}
-                        <p style="font-size: 0.8rem; color: #c53030;">Vendedor sin teléfono registrado.</p>
-                    {% endif %}
-                {% else %}
-                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Inicia sesión para ver el contacto.</p>
-                    <a href="{% url 'login' %}" style="color: #003366; font-weight: bold; text-decoration: none;">Ir a Login →</a>
-                {% endif %}
+            <div style="background: #f0f7ff; padding: 20px; border-radius: 12px; border: 1px solid #d0e3ff; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 15px 0; color: #003366;"><i class="fas fa-truck-loading"></i> Calcular costo de envío real</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="envio_cp" placeholder="CP Destino" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_peso" placeholder="Peso (Kg)" value="1" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px;">
+                    <input type="number" id="envio_largo" placeholder="Largo" value="10" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_ancho" placeholder="Ancho" value="10" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="number" id="envio_alto" placeholder="Alto" value="10" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <button type="button" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    OBTENER TARIFAS
+                </button>
+
+                <div id="resultados_flete" style="margin-top: 15px; display: none;">
+                    <div id="lista_paqueterias" style="max-height: 150px; overflow-y: auto;"></div>
+                </div>
             </div>
 
             <div style="margin-bottom: 25px;">
@@ -83,21 +88,14 @@
 
                     <form action="{% url 'procesar_pago' product.id %}" method="POST">
                         {% csrf_token %}
-                        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
+                        <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">
                             <i class="fas fa-handshake"></i> CONFIRMAR INTENCIÓN DE COMPRA
                         </button>
-                        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 8px; text-align: center;">
-                            Al confirmar, el stock se apartará y podrás ver el teléfono directo del vendedor.
-                        </p>
                     </form>
 
                 {% elif not user.is_authenticated %}
                     <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 0.9rem; text-align: center;">
                         <i class="fas fa-lock"></i> Debes iniciar sesión para realizar una compra.
-                    </div>
-                {% elif product.stock <= 0 %}
-                    <div style="padding: 15px; background: #f8d7da; border-radius: 8px; color: #721c24; font-size: 0.9rem; text-align: center; font-weight: bold;">
-                        PRODUCTO AGOTADO
                     </div>
                 {% endif %}
             </div>
@@ -109,4 +107,32 @@
         </div>
     </div>
 </div>
-{% endblock %}
+
+<script>
+function consultarSoloEnvios() {
+    const cp = document.getElementById('envio_cp').value;
+    const peso = document.getElementById('envio_peso').value;
+    const largo = document.getElementById('envio_largo').value;
+    const ancho = document.getElementById('envio_ancho').value;
+    const alto = document.getElementById('envio_alto').value;
+
+    if(!cp) { alert("Ingresa tu CP"); return; }
+
+    const lista = document.getElementById('lista_paqueterias');
+    document.getElementById('resultados_flete').style.display = "block";
+    lista.innerHTML = "<p style='font-size:0.8rem;'>Calculando tarifas...</p>";
+
+    fetch(`/cotizar-soloenvios/?cp=${cp}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}&id={{ product.id }}`)
+    .then(response => response.json())
+    .then(data => {
+        lista.innerHTML = "";
+        if(data.tarifas.length === 0) {
+            lista.innerHTML = "<p style='font-size:0.8rem; color:red;'>No hay coberturas para estas medidas.</p>";
+            return;
+        }
+        data.tarifas.forEach(t => {
+            lista.innerHTML += `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px; margin-bottom: 5px; border-radius: 5px; border: 1px solid #ddd; font-size: 0.85rem;">
+                    <span><strong>${t.paqueteria}</strong></span>
+                    <span style="color: #27ae60; font-weight: bold;">$${t.precio_final} MXN</span>
+                    <button type="button" onclick="aplicarEnvio(${t.precio_final})" style="background: #f39c12; color: white; border: none; padding: 3px 7px; border-radius: 3
