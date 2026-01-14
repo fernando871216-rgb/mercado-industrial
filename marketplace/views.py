@@ -224,8 +224,14 @@ def cancelar_venta(request, venta_id):
 @staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
-    # Sumar la comisión de todas las ventas que no estén canceladas
-    tus_ganancias = sum(v.get_platform_commission() for v in ventas if v.status != 'cancelado')
+    
+    # Calculamos ganancias sumando comisiones de ventas que NO estén pendientes ni canceladas
+    # Solo sumamos lo que ya es un ingreso real o pagado
+    tus_ganancias = sum(
+        (v.get_platform_commission() for v in ventas if v.status == 'pagado' or v.status == 'enviado'), 
+        Decimal('0.00')
+    )
+    
     return render(request, 'marketplace/panel_admin.html', {
         'ventas': ventas, 
         'tus_ganancias': tus_ganancias
@@ -264,6 +270,7 @@ def mercadopago_webhook(request):
                 print(f"Pago {payment_id} aprobado con éxito.")
                 
     return JsonResponse({'status': 'ok'}, status=200)
+
 
 
 
