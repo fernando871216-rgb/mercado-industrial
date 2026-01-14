@@ -20,9 +20,16 @@ from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
 
 # --- 1. FUNCIÓN PARA COTIZAR (SOLO ENVÍOS) ---
 def cotizar_soloenvios(request):
+    if request.method == 'POST':
+        producto_id = request.POST.get('producto_id')
+        producto = IndustrialProduct.objects.get(id=producto_id)
+        
+        # El CP de origen viene del producto o del perfil del vendedor
+        cp_origen = producto.cp_origen  # O producto.user.profile.cp
+        cp_destino = request.POST.get('cp_destino')
     # IMPORTANTE: Aquí va el NOMBRE de la variable que pusiste en Render
-    client_id = os.environ.get('SOLOENVIOS_KEY')
-    client_secret = os.environ.get('SOLOENVIOS_SECRET')
+    client_id = os.environ.get('-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs')
+    client_secret = os.environ.get('MweefVUPz-__8ECmutghmvda-YTOOB7W6zFiXwJD8yw')
 
     auth_url = "https://api.soloenvios.com/v1/auth/login"
     
@@ -404,6 +411,7 @@ def actualizar_guia(request, venta_id):
             messages.success(request, f"Guía {venta.tracking_number} guardada correctamente.")
     
     return redirect('mis_ventas')
+
 
 
 
