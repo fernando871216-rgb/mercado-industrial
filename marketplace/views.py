@@ -22,14 +22,11 @@ def home(request):
 
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    return render(request, 'marketplace/product_detail.html', {'product': product})
-
-# Esta es la función que te pide el error de Render
-def procesar_pago(request, product_id):
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    # Lógica básica para generar la preferencia de Mercado Pago
+    
+    # GENERAR PREFERENCIA INICIAL PARA QUE EL BOTÓN APAREZCA AL CARGAR
     preference_data = {
         "items": [{
+            "id": str(product.id),
             "title": product.title,
             "quantity": 1,
             "unit_price": float(product.price),
@@ -40,10 +37,16 @@ def procesar_pago(request, product_id):
             "failure": request.build_absolute_uri('/pago-fallido/')
         },
         "auto_return": "approved",
+        "external_reference": str(product.id), # Importante para saber qué se vendió
     }
+    
     preference_result = SDK.preference().create(preference_data)
-    # Redirigimos al checkout de Mercado Pago
-    return redirect(preference_result["response"]["init_point"])
+    preference_id = preference_result["response"]["id"]
+    
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product,
+        'preference_id': preference_id  # <--- Esto es lo que hacía falta para el HTML
+    })
 
 def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)
@@ -55,6 +58,9 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen')
     cp_destino = request.GET.get('cp_destino')
     peso = request.GET.get('peso', 1)
+    largo = request.GET.get('largo', 10)
+    ancho = request.GET.get('ancho', 10)
+    alto = request.GET.get('alto', 10)
     
     url = "https://soloenvios.com/api/v1/rates"
     headers = {
@@ -64,13 +70,19 @@ def cotizar_soloenvios(request):
     payload = {
         "origin_zip_code": str(cp_origen),
         "destination_zip_code": str(cp_destino),
-        "package": {"weight": float(peso), "width": 10, "height": 10, "length": 10}
+        "package": {
+            "weight": float(peso), 
+            "width": float(ancho), 
+            "height": float(alto), 
+            "length": float(largo)
+        }
     }
     try:
         response = requests.post(url, json=payload, headers=headers)
         data = response.json()
         tarifas_finales = []
         for t in data:
+            # Tu comisión del 8%
             precio_con_comision = round(float(t['price']) * 1.08, 2)
             tarifas_finales.append({
                 'paqueteria': t['service_name'],
@@ -92,6 +104,29 @@ def actualizar_preferencia_pago(request):
     }
     res = SDK.preference().create(preference_data)
     return JsonResponse({'preference_id': res["response"]["id"], 'total_nuevo': total})
+
+
+def actualizar_pago(request):
+    product_id = request.GET.get('id')
+    costo_envio = float(request.GET.get('envio', 0))
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    total = float(product.price) + costo_envio
+    
+    preference_data = {
+        "items": [{
+            "id": str(product.id),
+            "title": f"{product.title} + Envío",
+            "quantity": 1, 
+            "unit_price": total, 
+            "currency_id": "MXN"
+        }],
+        "external_reference": str(product.id),
+    }
+    res = SDK.preference().create(preference_data)
+    return JsonResponse({
+        'preference_id': res["response"]["id"], 
+        'total_nuevo': f"{total:,.2f}" # Formateado con comas
+    })
 
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
 def registro(request):
@@ -255,22 +290,30 @@ def pago_fallido(request):
     return render(request, 'marketplace/pago_fallido.html')
 
 def mercadopago_webhook(request):
-    # Mercado Pago envía un ID de pago por los parámetros de la URL (query params)
     payment_id = request.GET.get('data.id') or request.GET.get('id')
     topic = request.GET.get('type') or request.GET.get('topic')
 
     if topic == 'payment' and payment_id:
-        # Consultamos a Mercado Pago los detalles de ese pago
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {"Authorization": f"Bearer {SDK.access_token}"}
         response = requests.get(url, headers=headers)
         
         if response.status_code == 200:
             payment_info = response.json()
-            # Si el pago fue aprobado, aquí es donde creas la Sale/Venta en tu DB
             if payment_info['status'] == 'approved':
-                # Lógica para guardar la venta...
-                print(f"Pago {payment_id} aprobado con éxito.")
+                # Obtenemos el ID del producto que guardamos en external_reference
+                product_id = payment_info['external_reference']
+                product = IndustrialProduct.objects.get(id=product_id)
+                
+                # Buscamos si ya existe la venta pendiente para marcarla como pagada
+                # O creamos una nueva si no existía
+                sale, created = Sale.objects.get_or_create(
+                    product=product,
+                    status='pendiente',
+                    defaults={'price': product.price}
+                )
+                sale.status = 'pagado'
+                sale.save()
                 
     return JsonResponse({'status': 'ok'}, status=200)
 
@@ -296,6 +339,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         
     return redirect('mis_compras')
+
 
 
 
