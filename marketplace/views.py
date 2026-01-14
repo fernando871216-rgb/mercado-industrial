@@ -9,7 +9,7 @@ import mercadopago
 from decimal import Decimal
 from django.shortcuts import get_object_ some_shortcut, redirect
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Venta # Asegúrate de que tu modelo se llame Venta
+from .models import Product, Venta, Profile
 from django.contrib import messages
 
 # --- CONFIGURACIÓN ---
@@ -195,21 +195,16 @@ def pago_exitoso(request):
 def pago_fallido(request):
     return render(request, 'marketplace/pago_fallido.html')
 
+@login_required
 def actualizar_guia(request, venta_id):
-    """Permite al vendedor registrar la paquetería y el número de guía"""
     if request.method == 'POST':
         venta = get_object_or_404(Venta, id=venta_id)
-        
-        # Solo el dueño del producto puede poner la guía
         if venta.product.user == request.user:
             venta.shipping_company = request.POST.get('shipping_company')
             venta.tracking_number = request.POST.get('tracking_number')
-            venta.status = 'enviado' # Cambiamos el estado automáticamente
+            venta.status = 'enviado'
             venta.save()
-            messages.success(request, f"Guía de {venta.shipping_company} registrada correctamente.")
-        else:
-            messages.error(request, "No tienes permiso para editar esta venta.")
-            
+            messages.success(request, "Guía registrada correctamente.")
     return redirect('mis_ventas')
 
 @login_required
@@ -236,46 +231,31 @@ def marcar_como_pagado(request, venta_id):
     venta.save()
     return redirect('panel_administrador')
 
+@login_required
 def confirmar_recepcion(request, venta_id):
-    """Permite al comprador confirmar que ya tiene el producto"""
     if request.method == 'POST':
         venta = get_object_or_404(Venta, id=venta_id)
-        
-        # Solo el comprador puede confirmar
         if venta.buyer == request.user:
             venta.recibido_por_comprador = True
             venta.status = 'entregado'
             venta.save()
-            messages.success(request, "¡Gracias por confirmar! La venta ha sido finalizada.")
-        else:
-            messages.error(request, "Operación no permitida.")
-            
+            messages.success(request, "¡Recepción confirmada!")
     return redirect('mis_compras')
 
 def mercadopago_webhook(request):
     # Por ahora solo para evitar error 404, retorna ok
     return JsonResponse({'status': 'ok'}, status=200)
 @login_required
+@login_required
 def cambiar_estado_venta(request, venta_id):
-    """
-    Esta función permite al vendedor confirmar que ya recibió el pago 
-    o que el producto está listo.
-    """
-    # Buscamos la venta, asegurándonos que pertenezca al usuario que tiene el producto
     venta = get_object_or_404(Venta, id=venta_id, product__user=request.user)
-    
     if venta.status == 'pendiente':
         venta.status = 'completado'
         venta.save()
-    
     return redirect('mis_ventas')
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
-    """
-    Esta función es para el Panel de Admin (INITRE).
-    Marca que ya le transferiste el dinero al vendedor.
-    """
     venta = get_object_or_404(Venta, id=venta_id)
     venta.pagado_a_vendedor = True
     venta.save()
@@ -283,21 +263,16 @@ def marcar_como_pagado(request, venta_id):
 
 @login_required
 def cancelar_venta(request, venta_id):
-    """
-    Cancela la venta y devuelve el stock al producto.
-    """
     venta = get_object_or_404(Venta, id=venta_id)
-    
-    # Solo el vendedor o un admin pueden cancelar
     if venta.product.user == request.user or request.user.is_staff:
         if venta.status != 'cancelado':
             producto = venta.product
-            producto.stock += 1 # Devolvemos el equipo al inventario
+            producto.stock += 1
             producto.save()
-            
             venta.status = 'cancelado'
             venta.save()
-            
+            messages.success(request, "Venta cancelada y stock devuelto.")
     return redirect('mis_ventas')
+
 
 
