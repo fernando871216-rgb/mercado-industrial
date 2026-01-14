@@ -1,20 +1,26 @@
 import requests
 import urllib3
 import json
+import mercadopago
+from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-# Asegúrate de que estos nombres de modelos coincidan con los tuyos
-from .models import IndustrialProduct, Category
-import mercadopago
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
 
-# Desactivar advertencias de seguridad para la conexión desde Render
+# IMPORTANTE: Asegúrate que estos modelos y formularios existan en tu proyecto
+from .models import IndustrialProduct, Category, Sale
+from .forms import ProductForm 
+
+# Desactivar advertencias de seguridad para Render
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# CONFIGURACIÓN DE MERCADO PAGO
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 # ==========================================
-# 1. API DE SOLOENVÍOS (Lógica de la Consola)
+# 1. API DE SOLOENVÍOS (Logística)
 # ==========================================
 def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
@@ -23,12 +29,10 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan datos'})
 
-    # TUS LLAVES
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
     auth_url = "https://app.soloenvios.com/api/v1/oauth/token"
-    
     auth_payload = {
         "client_id": client_id,
         "client_secret": client_secret,
@@ -37,18 +41,11 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        # Intento de Autenticación
         auth_res = requests.post(auth_url, json=auth_payload, verify=False, timeout=15)
-        
         if auth_res.status_code == 200:
             access_token = auth_res.json().get('access_token')
-            
-            # Paso de Cotización
             rates_url = "https://app.soloenvios.com/api/v1/rates"
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
-            }
+            headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
             
             paquete = {
                 "origin_zip_code": str(cp_origen),
@@ -62,56 +59,27 @@ def cotizar_soloenvios(request):
             }
             
             response = requests.post(rates_url, json=paquete, headers=headers, verify=False, timeout=15)
-            
             if response.status_code == 200:
                 data = response.json()
                 rates = data if isinstance(data, list) else data.get('rates', [])
-                
                 tarifas_finales = []
                 for t in rates:
                     precio = float(t.get('price') or t.get('cost') or 0)
                     if precio > 0:
                         tarifas_finales.append({
                             'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
-                            'precio_final': round(precio * 1.08, 2), # Tu 8%
+                            'precio_final': round(precio * 1.08, 2), # Tu 8% de comisión
                             'tiempo': t.get('delivery_days') or '3-5 días'
                         })
                 return JsonResponse({'tarifas': tarifas_finales})
-            else:
-                return JsonResponse({'tarifas': [], 'error': 'No hay cobertura para esta ruta'})
-        else:
-            print(f"ERROR AUTH: {auth_res.text}")
-            return JsonResponse({'tarifas': [], 'error': 'Error de autenticación con la paquetería'})
-
+            return JsonResponse({'tarifas': [], 'error': 'Sin cobertura'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
     except Exception as e:
-        print(f"EXCEPCION API: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+        return JsonResponse({'tarifas': [], 'error': str(e)})
 
 # ==========================================
-# 2. FUNCIONES DE VISTA (Para que el Build pase)
+# 2. VISTAS PÚBLICAS Y NAVEGACIÓN
 # ==========================================
-
-def registro(request):
-    return render(request, 'marketplace/registro.html')
-
-@login_required
-def editar_perfil(request):
-    return render(request, 'marketplace/editar_perfil.html')
-
-def detalle_producto(request, product_id):
-    producto = get_object_or_404(IndustrialProduct, id=product_id)
-    return render(request, 'marketplace/detalle_producto.html', {'producto': producto})
-
-def lista_productos(request):
-    productos = IndustrialProduct.objects.all()
-    return render(request, 'marketplace/lista_productos.html', {'productos': productos})
-
-# Si tienes más funciones como 'home', 'contacto', etc., añádelas abajo siguiendo el mismo formato.
-
-# --- CONFIGURACIÓN ---
-SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
-
-# --- VISTAS PRINCIPALES ---
 def home(request):
     products = IndustrialProduct.objects.all().order_by('-created_at')
     categories = Category.objects.all()
@@ -149,36 +117,15 @@ def category_detail(request, category_id):
     products = IndustrialProduct.objects.filter(category=category)
     return render(request, 'marketplace/home.html', {'products': products, 'category': category})
 
-# --- MERCADO PAGO Y LOGÍSTICA ---
+def registro(request):
+    return render(request, 'marketplace/registro.html')
 
-# Esta función es necesaria porque tu urls.py la menciona
-def procesar_pago(request, product_id):
-    # Por ahora redirigimos al detalle para evitar errores
-    return redirect('product_detail', product_id=product_id)
-
-def actualizar_pago(request):
-    product_id = request.GET.get('id')
-    costo_envio = float(request.GET.get('envio', 0))
-    product = get_object_or_404(IndustrialProduct, id=product_id)
-    total = float(product.price) + costo_envio
-    
-    preference_data = {
-        "items": [{
-            "id": str(product.id),
-            "title": f"{product.title} + Envío",
-            "quantity": 1, 
-            "unit_price": total, 
-            "currency_id": "MXN"
-        }],
-        "external_reference": str(product.id),
-    }
-    res = SDK.preference().create(preference_data)
-    return JsonResponse({
-        'preference_id': res["response"]["id"], 
-        'total_nuevo': f"{total:,.2f}"
-    })
-
-
+# ==========================================
+# 3. GESTIÓN DE INVENTARIO (VENDEDOR)
+# ==========================================
+@login_required
+def editar_perfil(request):
+    return render(request, 'marketplace/editar_perfil.html')
 
 @login_required
 def mi_inventario(request):
@@ -217,7 +164,31 @@ def borrar_producto(request, pk):
         producto.delete()
     return redirect('mi_inventario')
 
-# --- FLUJO DE VENTAS ---
+# ==========================================
+# 4. FLUJO DE VENTAS Y PAGOS
+# ==========================================
+def actualizar_pago(request):
+    product_id = request.GET.get('id')
+    costo_envio = float(request.GET.get('envio', 0))
+    product = get_object_or_404(IndustrialProduct, id=product_id)
+    total = float(product.price) + costo_envio
+    
+    preference_data = {
+        "items": [{
+            "id": str(product.id),
+            "title": f"{product.title} + Envío",
+            "quantity": 1, 
+            "unit_price": total, 
+            "currency_id": "MXN"
+        }],
+        "external_reference": str(product.id),
+    }
+    res = SDK.preference().create(preference_data)
+    return JsonResponse({
+        'preference_id': res["response"]["id"], 
+        'total_nuevo': f"{total:,.2f}"
+    })
+
 @login_required
 def mis_compras(request):
     compras = Sale.objects.filter(buyer=request.user).order_by('-created_at')
@@ -241,25 +212,6 @@ def actualizar_guia(request, venta_id):
     return redirect('mis_ventas')
 
 @login_required
-def confirmar_recepcion(request, venta_id):
-    if request.method == 'POST':
-        venta = get_object_or_404(Sale, id=venta_id)
-        if venta.buyer == request.user:
-            venta.recibido_por_comprador = True
-            venta.status = 'entregado'
-            venta.save()
-            messages.success(request, "¡Recepción confirmada!")
-    return redirect('mis_compras')
-
-@login_required
-def cambiar_estado_venta(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
-    if venta.status == 'pendiente':
-        venta.status = 'completado'
-        venta.save()
-    return redirect('mis_ventas')
-
-@login_required
 def cancelar_venta(request, venta_id):
     venta = get_object_or_404(Sale, id=venta_id)
     if venta.product.user == request.user or request.user.is_staff:
@@ -272,29 +224,17 @@ def cancelar_venta(request, venta_id):
             messages.success(request, "Venta cancelada.")
     return redirect('mis_ventas')
 
-# --- PANEL ADMIN ---
+# ==========================================
+# 5. PANEL ADMIN Y WEBHOOKS
+# ==========================================
 @staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
     tus_ganancias = sum(
-        (v.get_platform_commission() for v in ventas if v.status == 'pagado' or v.status == 'enviado'), 
+        (v.get_platform_commission() for v in ventas if v.status in ['pagado', 'enviado']), 
         Decimal('0.00')
     )
     return render(request, 'marketplace/panel_admin.html', {'ventas': ventas, 'tus_ganancias': tus_ganancias})
-
-@staff_member_required
-def marcar_como_pagado(request, venta_id):
-    venta = get_object_or_404(Sale, id=venta_id)
-    venta.pagado_a_vendedor = True
-    venta.save()
-    return redirect('panel_administrador')
-
-# --- OTROS ---
-def pago_exitoso(request):
-    return render(request, 'marketplace/pago_exitoso.html')
-
-def pago_fallido(request):
-    return render(request, 'marketplace/pago_fallido.html')
 
 def mercadopago_webhook(request):
     payment_id = request.GET.get('data.id') or request.GET.get('id')
@@ -320,28 +260,13 @@ def mercadopago_webhook(request):
                 sale.save()
     return JsonResponse({'status': 'ok'}, status=200)
 
-@login_required
-def crear_intencion_compra(request, product_id):
-    producto = get_object_or_404(IndustrialProduct, id=product_id)
-    if producto.stock > 0:
-        Sale.objects.create(
-            product=producto,
-            buyer=request.user,
-            price=producto.price,
-            status='pendiente'
-        )
-        producto.stock -= 1
-        producto.save()
-        messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
-    return redirect('mis_compras')
+def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
+def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 
+# Funciones extra requeridas por tus URLs
+def lista_productos(request):
+    productos = IndustrialProduct.objects.all()
+    return render(request, 'marketplace/lista_productos.html', {'productos': productos})
 
-
-
-
-
-
-
-
-
-
+def procesar_pago(request, product_id):
+    return redirect('product_detail', product_id=product_id)
