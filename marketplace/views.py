@@ -48,57 +48,61 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Preparar datos de la URL
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Credenciales de tu aplicación
     client_id = "puouHyooEp4uBo0Nnov46lUFOf-memYBLGRYhdB1eRA"
     client_secret = "vzVupeT2PMAktJp5SbXlyivRf8ajqqRD0015Pxhz-Ps"
     
-    try:
-        # --- PASO 1: OBTENER EL TOKEN ---
-        auth_url = 'https://app.soloenvios.com/api/v1/oauth/token'
-        
-        # Según tu manual: application/x-www-form-urlencoded
-        # En requests, esto se hace pasando un diccionario al parámetro 'data'
-        auth_payload = {
-            'grant_type': 'client_credentials',
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob'
-        }
-        
-        headers_auth = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
-        }
+    auth_url = 'https://app.soloenvios.com/api/v1/oauth/token'
+    token = None
 
-        auth_res = requests.post(auth_url, data=auth_payload, headers=headers_auth, verify=False, timeout=10)
+    try:
+        # --- INTENTO 1: BASIC AUTH (El más estándar para OAuth2) ---
+        keys = f"{client_id}:{client_secret}"
+        auth_base64 = base64.b64encode(keys.encode()).decode()
         
-        if auth_res.status_code != 200:
-            # Si falla, imprimimos el error exacto del manual
-            print(f"ERROR AUTH SOLOENVIOS: {auth_res.text}")
+        headers_1 = {
+            "Authorization": f"Basic {auth_base64}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        payload_1 = {"grant_type": "client_credentials"}
+        
+        res1 = requests.post(auth_url, data=payload_1, headers=headers_1, verify=False, timeout=10)
+        
+        if res1.status_code == 200:
+            token = res1.json().get('access_token')
+        else:
+            # --- INTENTO 2: CREDENCIALES EN EL CUERPO (Como decía tu manual) ---
+            payload_2 = {
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret
+            }
+            res2 = requests.post(auth_url, data=payload_2, verify=False, timeout=10)
+            if res2.status_code == 200:
+                token = res2.json().get('access_token')
+            else:
+                # --- INTENTO 3: JSON PAYLOAD ---
+                res3 = requests.post(auth_url, json=payload_2, verify=False, timeout=10)
+                if res3.status_code == 200:
+                    token = res3.json().get('access_token')
+
+        if not token:
             return JsonResponse({
                 'tarifas': [], 
-                'error': 'Error de Autenticación',
-                'detalle': auth_res.json().get('error_description', 'Credenciales inválidas')
+                'error': 'No se pudo obtener el Token',
+                'detalle': 'Las 3 formas de autenticación fallaron.'
             })
-            
-        token_data = auth_res.json()
-        token = token_data.get('access_token')
 
-        # --- PASO 2: COTIZACIÓN ---
-        # Usaremos el endpoint de quotations que vimos en tu consola de pruebas
+        # --- PASO 2: COTIZACIÓN (Ya con el Token obtenido) ---
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
-        
         headers_rates = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Construcción del paquete según el estándar de SoloEnvíos
         payload_rates = {
             "origin_zip_code": cp_origen,
             "destination_zip_code": cp_destino,
@@ -117,26 +121,21 @@ def cotizar_soloenvios(request):
         
         if res.status_code == 200:
             data = res.json()
-            # El endpoint de quotations devuelve una lista o un objeto con 'rates'
+            # Quotations puede devolver la lista directamente o dentro de 'rates'
             rates_list = data.get('rates', data) if isinstance(data, dict) else data
             
             tarifas = []
             for t in rates_list:
-                # Extraemos el costo total
                 precio = t.get('total_price') or t.get('price') or t.get('cost')
                 if precio:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
-                        'precio_final': round(float(precio) * 1.08, 2), # 8% margen
+                        'precio_final': round(float(precio) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({
-            'tarifas': [], 
-            'error': f'Error en Cotización: {res.status_code}', 
-            'detalle': res.text
-        })
+        return JsonResponse({'tarifas': [], 'error': f'Error en Cotización: {res.status_code}', 'detalle': res.text})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -278,6 +277,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
