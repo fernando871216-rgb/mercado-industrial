@@ -1,12 +1,12 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
+<div class="container" style="max-width: 1100px; margin: 30px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     
     <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div>
             <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrativo</h2>
-            <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas y comisiones</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales y comisiones</p>
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Totales (Comisión 5%)</span>
@@ -19,10 +19,12 @@
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TOTAL VENTA</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU COMISIÓN</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">VENDEDOR RECIBE</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">PRECIO VENTA</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">COMISIÓN MP</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU GANANCIA</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">AL VENDEDOR</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">ESTADO</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">PAGO VENDEDOR</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,7 +35,8 @@
                         <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: {{ venta.product.user.username }}</span>
                     </td>
                     <td style="padding: 20px; font-weight: bold;">${{ venta.price }}</td>
-                    <td style="padding: 20px; color: #3498db; font-weight: bold;">${{ venta.get_platform_commission }}</td>
+                    <td style="padding: 20px; color: #e74c3c;">-${{ venta.get_gateway_cost }}</td>
+                    <td style="padding: 20px; color: #3498db; font-weight: bold;">+${{ venta.get_platform_commission }}</td>
                     <td style="padding: 20px; color: #27ae60; font-weight: bold;">${{ venta.get_net_amount }}</td>
                     <td style="padding: 20px; text-align: center;">
                         <span style="padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; 
@@ -43,10 +46,27 @@
                             {{ venta.status|upper }}
                         </span>
                     </td>
+                    <td style="padding: 20px; text-align: center;">
+                        {% if not venta.pagado_a_vendedor %}
+                            <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">
+                                    LIQUIDAR
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: #27ae60; font-weight: bold; font-size: 0.8rem;">
+                                <i class="fas fa-check-double"></i> PAGADO
+                            </span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding: 40px; text-align: center; color: #95a5a6;">No hay transacciones registradas.</td>
+                    <td colspan="7" style="padding: 50px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        Aún no hay transacciones en el sistema.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
