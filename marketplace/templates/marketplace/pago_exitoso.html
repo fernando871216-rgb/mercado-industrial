@@ -1,59 +1,22 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 60px auto; text-align: center; font-family: 'Segoe UI', sans-serif;">
+<div style="max-width: 600px; margin: 50px auto; text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="color: #27ae60; font-size: 80px; margin-bottom: 20px;">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h1 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Confirmado!</h1>
+    <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+        Gracias por tu compra. El vendedor ha sido notificado y preparará tu envío lo antes posible.
+    </p>
     
-    <div style="background: white; padding: 50px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
-        
-        <div style="background: #2ecc71; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-            <i class="fas fa-check" style="color: white; font-size: 2rem;"></i>
-        </div>
-
-        {% if venta_creada %}
-            <h1 style="color: #2c3e50; font-size: 2.2rem; margin-bottom: 15px;">¡Venta Realizada Exitosamente!</h1>
-            <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px;">
-                El pago ha sido confirmado y la venta se ha registrado en tu panel. Contacta al vendedor para la entrega.
-            </p>
-        {% else %}
-            <h1 style="color: #2c3e50; font-size: 2.2rem; margin-bottom: 15px;">¡Intención Registrada!</h1>
-            <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px;">
-                El equipo ha sido apartado. Por favor, contacta al vendedor para acordar el pago y la entrega.
-            </p>
-        {% endif %}
-
-        {% if producto %}
-        <div style="background: #f8f9fa; border-radius: 15px; padding: 30px; margin-bottom: 30px; border: 1px solid #eef0f2;">
-            <div style="margin-bottom: 20px;">
-                <span style="display: block; color: #95a5a6; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 5px;">Teléfono de contacto del vendedor</span>
-                <strong style="font-size: 1.8rem; color: #2c3e50;">
-                    {% if producto.user.profile.phone %}
-                        {{ producto.user.profile.phone }}
-                    {% else %}
-                        <span style="color: #e74c3c;">No registrado</span>
-                    {% endif %}
-                </strong>
-            </div>
-
-            {% if producto.user.profile.phone %}
-            <a href="https://wa.me/{{ producto.user.profile.phone }}?text=Hola {{ producto.user.username }}, acabo de comprar tu equipo: {{ producto.title }}. ¿Cuándo podrías realizar la entrega?" 
-               target="_blank"
-               style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; padding: 16px 30px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);">
-                <i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i> CONTACTAR POR WHATSAPP
-            </a>
-            {% endif %}
-            
-            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
-                <p style="margin: 0; font-size: 0.9rem; color: #7f8c8d;">
-                    Vendedor: <strong style="color: #3498db;">{{ producto.user.username|upper }}</strong>
-                </p>
-            </div>
-        </div>
-        {% endif %}
-
-        <div style="display: flex; gap: 20px; justify-content: center;">
-            <a href="{% url 'mis_compras' %}" style="color: #3498db; text-decoration: none; font-weight: 600;">Ver mis compras</a>
-            <a href="{% url 'home' %}" style="color: #7f8c8d; text-decoration: none; font-weight: 600;">Volver al catálogo</a>
-        </div>
+    <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+        <a href="{% url 'mis_compras' %}" style="background: #003366; color: white; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; transition: 0.3s;">
+            <i class="fas fa-box"></i> Ver mis compras
+        </a>
+        <a href="{% url 'home' %}" style="color: #003366; text-decoration: none; font-weight: 500;">
+            Volver al catálogo
+        </a>
     </div>
 </div>
 {% endblock %}
