@@ -48,15 +48,16 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Limpieza total de CPs
+    # 1. Limpieza y validación de CPs
     cp_origen = request.GET.get('cp_origen', '').strip().zfill(5)
     cp_destino = request.GET.get('cp_destino', '').strip().zfill(5)
     
-    # Token manual (Verifica que sea el más reciente que generaste)
+    # Token manual vigente
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        url = "https://app.soloenvios.com/api/v1/quotations"
+        # Probaremos con el endpoint de rates que suele ser más flexible que quotations
+        url = "https://app.soloenvios.com/api/v1/rates"
         
         headers = {
             "Authorization": f"Bearer {token_manual}",
@@ -64,59 +65,53 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # 2. Valores numéricos forzados
-        try:
-            v_peso = float(request.GET.get('peso') or 1)
-            v_largo = int(float(request.GET.get('largo') or 20))
-            v_ancho = int(float(request.GET.get('ancho') or 20))
-            v_alto = int(float(request.GET.get('alto') or 20))
-        except:
-            v_peso, v_largo, v_ancho, v_alto = 1.0, 20, 20, 20
+        # Aseguramos que los números sean correctos
+        v_peso = float(request.GET.get('peso') or 1)
+        v_largo = int(float(request.GET.get('largo') or 20))
+        v_ancho = int(float(request.GET.get('ancho') or 20))
+        v_alto = int(float(request.GET.get('alto') or 20))
 
-        # 3. Estructura minimalista (a veces menos es más en el error 422)
+        # Payload estándar para México
         payload = {
             "origin_zip_code": cp_origen,
             "destination_zip_code": cp_destino,
-            "packages": [
-                {
-                    "weight": v_peso,
-                    "width": v_ancho,
-                    "height": v_alto,
-                    "length": v_largo,
-                    "description": "Caja de carton"
-                }
-            ]
+            "package": {
+                "weight": v_peso,
+                "width": v_ancho,
+                "height": v_alto,
+                "length": v_largo,
+                "description": "Caja de carton"
+            }
         }
         
         res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
+        # Si tiene éxito
         if res.status_code == 200:
             data = res.json()
-            # Si el panel de ellos funciona, aquí deberían llegar las tarifas
             rates_list = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas = []
             for t in rates_list:
-                # Probamos con todos los nombres de campos de precio posibles
-                costo = t.get('total_price') or t.get('price') or t.get('cost') or t.get('amount')
+                costo = t.get('price') or t.get('total_price') or t.get('cost')
                 if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
                         'precio_final': round(float(costo) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
-            
-            if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay servicios disponibles para esta ruta.'})
-                
             return JsonResponse({'tarifas': tarifas})
         
-        # 4. Captura del error real (IMPORTANTE)
-        # Si esto falla, el "detalle" nos tiene que decir qué campo es.
+        # SI DA ERROR 422: Extraemos el mensaje de SoloEnvíos
+        try:
+            detalle_real = res.json() # Esto suele traer un mensaje como {"error": "CP invalido"}
+        except:
+            detalle_real = res.text
+
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error 422: Verifique datos', 
-            'detalle': res.text # Aquí imprimiremos TODO lo que la API responda
+            'error': f'Error {res.status_code}', 
+            'detalle': str(detalle_real) 
         })
 
     except Exception as e:
@@ -258,6 +253,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
