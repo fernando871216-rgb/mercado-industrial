@@ -107,20 +107,22 @@ def registro(request):
 
 @login_required
 def editar_perfil(request):
+    # Intentamos obtener el perfil, si no existe lo creamos
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        # Asegúrate de que el nombre ProfileForm coincida con tu forms.py
-        p_form = ProfileForm(request.POST, instance=request.user.profile)
+        p_form = ProfileForm(request.POST, instance=profile)
         
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
+            # Mensaje de éxito (opcional pero recomendado)
             return redirect('editar_perfil')
     else:
         u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileForm(instance=request.user.profile)
+        p_form = ProfileForm(instance=profile)
 
-    # ESTO ES LO MÁS IMPORTANTE: pasar los formularios al HTML
     context = {
         'u_form': u_form,
         'p_form': p_form
@@ -263,6 +265,7 @@ def mercadopago_webhook(request):
                 print(f"Pago {payment_id} aprobado con éxito.")
                 
     return JsonResponse({'status': 'ok'}, status=200)
+
 
 
 
