@@ -1,12 +1,13 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from django.views.generic import TemplateView # Verifica que esta línea esté arriba
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
     # --- PÁGINAS PRINCIPALES ---
     path('', views.home, name='home'),
-    path('producto/<int:product_id>/', views.detalle_producto, name='product_detail'),
+    # Cambiado de 'product_detail' a 'detalle_producto' para que coincida con tu home.html
+    path('producto/<int:product_id>/', views.detalle_producto, name='detalle_producto'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
     
     # --- CUENTA Y PERFIL ---
@@ -41,10 +42,10 @@ urlpatterns = [
     path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     
     # --- OTROS ---
-    # CORREGIDO: TemplateView sin guion bajo
     path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
     
     # --- PANEL ADMINISTRATIVO ---
-    path('panel-control/', views.panel_administrador, name='panel_administrador'),
+    # Cambiado de 'panel_control' a 'panel_administrador' para que coincida con tu base.html
+    path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('admin/liquidar/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
