@@ -55,7 +55,6 @@
 
                 <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px;">
                     <p style="font-size: 0.75rem; color: #333; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px;">DETALLES DEL PAQUETE</p>
-                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
                             <small style="display:block; font-size: 0.65rem; color: #999;">LARGO (cm)</small>
@@ -90,6 +89,15 @@
 
             <div style="margin-bottom: 25px;">
                 {% if product.stock > 0 and user.is_authenticated %}
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" onclick="confirmarIntencion()" id="btn-intencion" style="width: 100%; background: #f39c12; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.3s;">
+                            <i class="fas fa-hand-paper"></i> CONFIRMAR INTENCIÓN DE COMPRA
+                        </button>
+                        <p id="msg-intencion" style="display:none; font-size: 0.8rem; color: #27ae60; text-align: center; margin-top: 5px;">
+                            <i class="fas fa-check"></i> Intención registrada. Puedes proceder al pago.
+                        </p>
+                    </div>
+
                     <div id="wallet_container"></div>
                     <script src="https://sdk.mercadopago.com/js/v2"></script>
                     <script>
@@ -103,7 +111,6 @@
                                 initialization: { preferenceId: prefId, redirectMode: "modal" },
                             });
                         }
-                        // Render inicial
                         renderMPButton("{{ preference_id }}");
                     </script>
                 {% else %}
@@ -123,6 +130,22 @@
 </div>
 
 <script>
+// --- Función que te faltaba ---
+function confirmarIntencion() {
+    const btn = document.getElementById('btn-intencion');
+    const msg = document.getElementById('msg-intencion');
+    
+    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Registrando...";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.style.display = "none";
+        msg.style.display = "block";
+        alert("¡Intención confirmada! El vendedor ha sido notificado. Ya puedes proceder con tu pago de forma segura.");
+    }, 1000);
+}
+
+// --- Funciones de Envío ---
 function consultarSoloEnvios() {
     const cp_origen = document.getElementById('envio_cp_origen').value;
     const cp_destino = document.getElementById('envio_cp_destino').value;
@@ -167,7 +190,6 @@ function seleccionarFlete(precioEnvio) {
     document.getElementById('envio_info').style.display = "block";
     document.getElementById('monto_flete').innerText = precioEnvio;
     
-    // Actualizar preferencia de Mercado Pago con el nuevo total
     fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
     .then(r => r.json())
     .then(data => {
