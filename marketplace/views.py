@@ -23,8 +23,8 @@ from django.http import JsonResponse
 
 def cotizar_soloenvios(request):
     # 1. Obtener claves desde las variables de entorno de Render
-    client_id = os.environ.get('SOLOENVIOS_KEY')
-    client_secret = os.environ.get('SOLOENVIOS_SECRET')
+    client_id = os.environ.get('-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs')
+    client_secret = os.environ.get('MweefVUPz-__8ECmutghmvda-YTOOB7W6zFiXwJD8yw')
 
     # 2. Paso OBLIGATORIO: Obtener el Token de Acceso
     auth_url = "https://api.soloenvios.com/v1/auth/login"
@@ -367,6 +367,7 @@ def confirmar_recepcion(request, venta_id):
     venta.save()
     messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
     return redirect('mis_compras') # O como se llame tu vista de historial
+
 
 
 
