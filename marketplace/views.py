@@ -18,6 +18,78 @@ from django.contrib import messages
 # Importa tus modelos y formularios
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import RegistroForm, ProductoForm, UserUpdateForm, ProfileUpdateForm
+import requests
+from django.http import JsonResponse
+
+def cotizar_soloenvios(request):
+    # 1. Obtener claves desde las variables de entorno de Render
+    client_id = os.environ.get('SOLOENVIOS_KEY')
+    client_secret = os.environ.get('SOLOENVIOS_SECRET')
+
+    # 2. Paso OBLIGATORIO: Obtener el Token de Acceso
+    auth_url = "https://api.soloenvios.com/v1/auth/login"
+    auth_payload = {
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    
+    try:
+        auth_response = requests.post(auth_url, json=auth_payload)
+        auth_data = auth_response.json()
+        # El token que usaremos para cotizar
+        access_token = auth_data.get('access_token')
+
+        if not access_token:
+            return JsonResponse({"error": "No se pudo autenticar con SoloEnvíos"}, status=401)
+
+        # 3. Recibir datos del formulario del cliente (HTML)
+        cp_destino = request.GET.get('cp')
+        peso = request.GET.get('peso', 1)
+        largo = request.GET.get('largo', 10)
+        ancho = request.GET.get('ancho', 10)
+        alto = request.GET.get('alto', 10)
+        
+        # CP de Origen (puedes hacerlo dinámico después, por ahora fijo)
+        cp_origen = "72000" 
+
+        # 4. Consultar las Tarifas
+        quotation_url = "https://api.soloenvios.com/v1/quotations"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "origin": {"postal_code": cp_origen, "country": "MX"},
+            "destination": {"postal_code": cp_destino, "country": "MX"},
+            "packages": [{
+                "weight": float(peso),
+                "width": int(ancho),
+                "height": int(alto),
+                "length": int(largo)
+            }]
+        }
+
+        response = requests.post(quotation_url, json=payload, headers=headers)
+        tarifas_api = response.json()
+
+        # 5. Aplicar tu GANANCIA del 8%
+        tarifas_finales = []
+        for t in tarifas_api:
+            precio_original = float(t['price'])
+            # Sumamos tu comisión
+            precio_con_comision = round(precio_original * 1.08, 2)
+            
+            tarifas_finales.append({
+                "paqueteria": t['provider'],
+                "tiempo": t['service_type'],
+                "precio_final": precio_con_comision
+            })
+
+        return JsonResponse({"tarifas": tarifas_finales})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 def home(request):
     query = request.GET.get('q')
@@ -295,6 +367,7 @@ def confirmar_recepcion(request, venta_id):
     venta.save()
     messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
     return redirect('mis_compras') # O como se llame tu vista de historial
+
 
 
 
