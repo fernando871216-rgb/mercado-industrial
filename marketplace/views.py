@@ -51,11 +51,13 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Tu token manual que generaste en la consola de SoloEnvios
+    # Aseguramos que el CP tenga 5 dígitos (rellena con ceros a la izquierda si falta)
+    cp_origen = cp_origen.zfill(5)
+    cp_destino = cp_destino.zfill(5)
+    
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
-        # Endpoint de cotizaciones
         rates_url = "https://app.soloenvios.com/api/v1/quotations"
         
         headers_rates = {
@@ -64,38 +66,37 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Formateo de datos numéricos
+        # Forzamos a que sean valores numéricos correctos
         try:
-            peso = float(request.GET.get('peso') or 1)
-            ancho = int(float(request.GET.get('ancho') or 20))
-            alto = int(float(request.GET.get('alto') or 20))
-            largo = int(float(request.GET.get('largo') or 20))
+            # SoloEnvios a veces prefiere el peso como entero si no tiene decimales reales
+            v_peso = float(request.GET.get('peso') or 1)
+            v_ancho = int(float(request.GET.get('ancho') or 20))
+            v_alto = int(float(request.GET.get('alto') or 20))
+            v_largo = int(float(request.GET.get('largo') or 20))
         except:
-            peso, ancho, alto, largo = 1.0, 20, 20, 20
+            v_peso, v_ancho, v_alto, v_largo = 1.0, 20, 20, 20
 
-        # Cuerpo de la petición (Payload)
         payload_rates = {
-            "origin_zip_code": str(cp_origen),
-            "destination_zip_code": str(cp_destino),
+            "origin_zip_code": cp_origen,
+            "destination_zip_code": cp_destino,
             "packages": [
                 {
                     "description": "Caja de carton",
-                    "weight": peso,
-                    "width": ancho,
-                    "height": alto,
-                    "length": largo,
+                    "weight": v_peso,
+                    "width": v_ancho,
+                    "height": v_alto,
+                    "length": v_largo,
                     "quantity": 1
                 }
             ]
         }
         
-        # Realizamos la petición
         res = requests.post(rates_url, json=payload_rates, headers=headers_rates, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # Buscamos la lista de tarifas
-            rates_list = data.get('rates', []) if isinstance(data, dict) else data
+            # Si la respuesta es una lista directa, la usamos; si no, buscamos 'rates'
+            rates_list = data if isinstance(data, list) else data.get('rates', [])
             
             tarifas = []
             for t in rates_list:
@@ -108,15 +109,23 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles.'})
+                return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas para esta ruta.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si sale 422, devolvemos el detalle técnico
+        # Si hay error 422, intentamos extraer el mensaje amigable de SoloEnvios
+        detalle_error = res.text
+        try:
+            error_json = res.json()
+            if 'errors' in error_json:
+                detalle_error = json.dumps(error_json['errors'], ensure_ascii=False)
+        except:
+            pass
+
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error API: {res.status_code}', 
-            'detalle': res.text
+            'error': f'Error de validación (422)', 
+            'detalle': detalle_error
         })
 
     except Exception as e:
@@ -258,6 +267,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
