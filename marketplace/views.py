@@ -317,9 +317,10 @@ def crear_intencion_compra(request, product_id):
 
 
 
-
-
-
+def registro(request):
+    # Esta es una función temporal para que el build pase
+    # Si ya tienes una lógica de registro, asegúrate de que se llame 'registro'
+    return render(request, 'registro.html')
 
 
 
