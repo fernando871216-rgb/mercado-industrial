@@ -90,46 +90,35 @@ def cotizar_soloenvios(request):
     if not cp_origen or not cp_destino:
         return JsonResponse({'tarifas': [], 'error': 'Faltan códigos postales'})
 
-    # Datos del paquete
-    try:
-        peso = float(request.GET.get('peso') or 1)
-        largo = float(request.GET.get('largo') or 10)
-        ancho = float(request.GET.get('ancho') or 10)
-        alto = float(request.GET.get('alto') or 10)
-    except:
-        return JsonResponse({'tarifas': [], 'error': 'Medidas inválidas'})
+    # Usamos las credenciales de tus capturas
+    api_key = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
+    api_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
     
+    # URL oficial de producción
     url = "https://api.soloenvios.com/v1/shipping/rates"
     
     headers = {
-        "Authorization": "Bearer -mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs",
+        "Authorization": f"Bearer {api_key}", # Probamos con Bearer primero
+        "Api-Key": api_key,                   # Algunas APIs piden este header extra
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0" # Engañamos un poco al servidor para que no crea que es un bot simple
+        "Accept": "application/json"
     }
     
     payload = {
         "origin_zip_code": str(cp_origen),
         "destination_zip_code": str(cp_destino),
         "package": {
-            "weight": peso,
-            "width": ancho,
-            "height": alto,
-            "length": largo
+            "weight": float(request.GET.get('peso') or 1),
+            "width": float(request.GET.get('ancho') or 10),
+            "height": float(request.GET.get('alto') or 10),
+            "length": float(request.GET.get('largo') or 10)
         }
     }
     
-    # Usamos una sesión para mejorar la estabilidad de la conexión
-    session = requests.Session()
-    
     try:
-        print(f"DEBUG: Intentando conectar a SoloEnvios CPs {cp_origen} -> {cp_destino}")
+        # Añadimos verify=False solo si el error persiste por certificados de Render
+        response = requests.post(url, json=payload, headers=headers, timeout=20)
         
-        # Agregamos verify=False solo como prueba extrema si falla el certificado
-        response = session.post(url, json=payload, headers=headers, timeout=20)
-        
-        print(f"DEBUG: Status de respuesta: {response.status_code}")
-
         if response.status_code == 200:
             data = response.json()
             rates = data if isinstance(data, list) else data.get('rates', [])
@@ -138,6 +127,7 @@ def cotizar_soloenvios(request):
             for t in rates:
                 precio_original = float(t.get('price') or t.get('cost') or 0)
                 if precio_original > 0:
+                    # Tu comisión del 8%
                     precio_con_comision = round(precio_original * 1.08, 2)
                     tarifas_finales.append({
                         'paqueteria': t.get('service_name') or t.get('provider') or 'Envío',
@@ -146,17 +136,13 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            print(f"DEBUG ERROR: {response.status_code} - {response.text}")
-            return JsonResponse({'tarifas': [], 'error': f'API Error {response.status_code}'})
+            # Si da error, imprimimos el detalle para verlo en Render Logs
+            print(f"Error SoloEnvios {response.status_code}: {response.text}")
+            return JsonResponse({'tarifas': [], 'error': f'Error API {response.status_code}'})
 
-    except requests.exceptions.Timeout:
-        return JsonResponse({'tarifas': [], 'error': 'El transportista tardó mucho en responder'})
-    except requests.exceptions.ConnectionError:
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo establecer conexión segura'})
     except Exception as e:
-        # ESTA LÍNEA ES CLAVE: Verás el error real en los LOGS de Render
-        print(f"ERROR CRÍTICO EN COTIZADOR: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': f'Error técnico: {str(e)[:40]}'})
+        print(f"Excepcion: {str(e)}")
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con el servidor de envíos'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -340,6 +326,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
