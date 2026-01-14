@@ -50,9 +50,20 @@ def cotizar_soloenvios(request):
     cp_origen = request.GET.get('cp_origen', '').strip()
     cp_destino = request.GET.get('cp_destino', '').strip()
     
-    # Credenciales de tu consola de SoloEnvíos
     client_id = "-mUChsOjBGG5dJMchXbLLQBdPxQJldm4wx3kLPoWWDs"
     client_secret = "MweefVUPz-_8ECmutghmvda-YTOOB7W6zFiXwJD8yw"
+    
+    try:
+        # MÉTODO DE ÚLTIMO RECURSO: Credenciales en la URL
+        auth_url = f"https://app.soloenvios.com/api/v1/oauth/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
+        
+        auth_res = requests.post(auth_url, verify=False, timeout=10)
+        
+        if auth_res.status_code != 200:
+            # Si esto falla, el problema es 100% de las llaves en el panel
+            return JsonResponse({'tarifas': [], 'error': f'Auth Error: {auth_res.status_code}', 'msg': 'Revisar llaves en el panel'})
+
+        token = auth_res.json().get('access_token')
     
     try:
         # 1. PASO DE AUTENTICACIÓN
@@ -274,6 +285,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
