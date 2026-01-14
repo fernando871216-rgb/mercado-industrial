@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from .forms import ProductForm, UserProfileForm
 
 # Importación de modelos y formularios
 from .models import IndustrialProduct, Category, Sale
@@ -266,4 +267,5 @@ def procesar_pago(request, product_id):
 def lista_productos(request):
     productos = IndustrialProduct.objects.all()
     return render(request, 'marketplace/lista_productos.html', {'productos': productos})
+
 
