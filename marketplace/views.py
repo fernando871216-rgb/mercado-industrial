@@ -198,3 +198,12 @@ def mi_inventario(request):
         productos = IndustrialProduct.objects.all().order_by('-created_at')
     else:
         productos = IndustrialProduct.objects
+
+def category_detail(request, category_id):
+    """ Muestra los productos filtrados por una categoría específica """
+    category = get_object_or_404(Category, id=category_id)
+    products = IndustrialProduct.objects.filter(category=category).order_by('-created_at')
+    return render(request, 'marketplace/home.html', {
+        'products': products, 
+        'category': category
+    })
