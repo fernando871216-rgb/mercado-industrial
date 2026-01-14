@@ -98,7 +98,6 @@ def cotizar_soloenvios(request):
     except:
         return JsonResponse({'tarifas': [], 'error': 'Medidas inválidas'})
     
-    # URL DEFINITIVA DE PRODUCCIÓN
     url = "https://api.soloenvios.com/v1/shipping/rates"
     
     headers = {
@@ -119,10 +118,8 @@ def cotizar_soloenvios(request):
     }
     
     try:
-        # Hacemos la petición ignorando errores de certificados (verify=False)
-        response = requests.post(url, json=payload, headers=headers, timeout=15, verify=True)
-        
-        print(f"DEBUG API Status: {response.status_code}")
+        # Se usa verify=True por seguridad, si falla intentaremos False después
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
         
         if response.status_code == 200:
             data = response.json()
@@ -140,12 +137,10 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas_finales})
         else:
-            return JsonResponse({'tarifas': [], 'error': f'API respondió con error {response.status_code}'})
+            return JsonResponse({'tarifas': [], 'error': f'API error {response.status_code}'})
 
-    except requests.exceptions.RequestException as e:
-        # Esto nos dirá en los logs de Render el error técnico real
-        print(f"ERROR TÉCNICO REQUESTS: {str(e)}")
-        return JsonResponse({'tarifas': [], 'error': f'Error técnico: {str(e)[:50]}'})
+    except Exception as e:
+        return JsonResponse({'tarifas': [], 'error': f'Error de conexión: {str(e)[:50]}'})
             
   
 # --- GESTIÓN DE USUARIOS Y PRODUCTOS ---
@@ -329,6 +324,7 @@ def crear_intencion_compra(request, product_id):
         producto.save()
         messages.success(request, "Intención de compra registrada. El stock ha sido apartado.")
     return redirect('mis_compras')
+
 
 
 
