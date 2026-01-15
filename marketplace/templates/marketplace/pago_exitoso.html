@@ -1,60 +1,35 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div style="background-color: #f4f7f6; min-height: 80vh; padding: 30px 15px; display: flex; align-items: center; justify-content: center;">
-    <div style="max-width: 550px; width: 100%; text-align: center; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); font-family: 'Segoe UI', system-ui, sans-serif;">
-        
-        {% if mostrar_contacto %}
-            <div style="color: #27ae60; font-size: clamp(60px, 10vw, 80px); margin-bottom: 20px;">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            
-            <h1 style="color: #003366; margin-bottom: 10px; font-size: 1.6rem; font-weight: 700;">¡Pago Confirmado!</h1>
-            
-            <p style="color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 25px;">
-                Gracias por tu compra. El dinero ha sido recibido. Ya puedes contactar al vendedor para coordinar la entrega de tu <strong>{{ producto.title }}</strong>.
-            </p>
-
-            <div style="background: #f0fff4; border: 2px solid #c6f6d5; padding: 20px; border-radius: 15px; margin: 25px 0;">
-                <h3 style="color: #22543d; margin-bottom: 15px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Contacto Directo</h3>
-                
-                <a href="https://wa.me/52{{ producto.user.profile.phone }}?text=Hola,%20acabo%20de%20comprar%20tu%20equipo:%20{{ producto.title }}" 
-                   target="_blank"
-                   style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: 0.2s;">
-                    <i class="fab fa-whatsapp" style="font-size: 1.4rem;"></i> 
-                    WHATSAPP DEL VENDEDOR
-                </a>
-                
-                <div style="margin-top: 20px; font-size: 0.9rem; color: #4a5568; text-align: left; background: white; padding: 15px; border-radius: 10px;">
-                    <p style="margin: 5px 0;"><strong>Vendedor:</strong> {{ producto.user.get_full_name|default:producto.user.username }}</p>
-                    <p style="margin: 5px 0;"><strong>Ubicación:</strong> {{ producto.user.profile.address|default:"Acordar con vendedor" }}</p>
-                </div>
-            </div>
-
-        {% else %}
-            <div style="color: #f1c40f; font-size: clamp(60px, 10vw, 80px); margin-bottom: 20px;">
-                <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <h1 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.5rem;">Validando tu pago...</h1>
-            <p style="color: #718096; font-size: 1rem; line-height: 1.5;">
-                Estamos esperando la confirmación de Mercado Pago. Esta página se actualizará automáticamente en unos segundos.
-            </p>
-            <script>
-                // Recargar la página cada 5 segundos si el pago no se ha confirmado aún
-                setTimeout(function(){
-                    window.location.reload();
-                }, 5000);
-            </script>
-        {% endif %}
-        
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 30px; border-top: 1px solid #edf2f7; padding-top: 20px;">
-            <a href="{% url 'mis_compras' %}" style="background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 0.95rem;">
-                <i class="fas fa-box"></i> Ver mi historial de compras
-            </a>
-            <a href="{% url 'home' %}" style="color: #718096; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
-                <i class="fas fa-arrow-left"></i> Volver al catálogo principal
-            </a>
+<div style="max-width: 600px; margin: 80px auto; text-align: center; font-family: 'Segoe UI', sans-serif;">
+    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <div style="color: #2ecc71; font-size: 80px; margin-bottom: 20px;">
+            <i class="fas fa-check-circle"></i>
         </div>
+        <h2 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Confirmado!</h2>
+        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+            Estamos registrando tu compra de <strong>{{ producto.title }}</strong>.<br>
+            En unos segundos serás redirigido a tus compras.
+        </p>
+        
+        <div style="margin: 30px 0;">
+            <div class="loader" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 0 auto;"></div>
+        </div>
+
+        <a href="{% url 'mis_compras' %}" style="display: inline-block; padding: 12px 25px; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s;">
+            Ir a Mis Compras ahora
+        </a>
     </div>
 </div>
+
+<style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
+<script>
+    // Redirección forzada después de 4 segundos por si acaso
+    setTimeout(function(){
+        window.location.href = "{% url 'mis_compras' %}";
+    }, 4000);
+</script>
 {% endblock %}
