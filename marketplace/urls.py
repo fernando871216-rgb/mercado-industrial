@@ -42,6 +42,7 @@ urlpatterns = [
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
+    path('pago/<int:producto_id>/', views.procesar_pago, name='procesar_pago'),
     
     # --- OTROS ---
     path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
@@ -51,6 +52,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
