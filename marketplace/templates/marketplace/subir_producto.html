@@ -1,56 +1,110 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 600px; margin: 40px auto; padding: 20px; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <h2 style="color: #003366; text-align: center; margin-bottom: 25px;">
-            <i class="fas fa-plus-circle"></i> Publicar Nuevo Producto
+<div class="container" style="max-width: 800px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
+    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        
+        <h2 style="color: #2c3e50; margin-bottom: 10px; text-align: center;">
+            <i class="fas fa-plus-circle" style="color: #3498db;"></i> Publicar Nuevo Equipo
         </h2>
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Completa los datos técnicos y de envío para tu producto.</p>
 
-        <form method="post" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            
-            <div style="margin-bottom: 20px;">
-                {{ form.as_p }}
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <h4 style="font-size: 1rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #3498db; display: inline-block;">1. Datos del Producto</h4>
+                <div style="display: grid; gap: 15px;">
+                    {% for field in form %}
+                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' %}
+                            <div>
+                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
 
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 20px;">
-                <h4 style="font-size: 0.9rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">
-                    <i class="fas fa-truck"></i> Datos para el Envío (SoloEnvíos)
-                </h4>
-                <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">
-                    Estos datos son obligatorios para que el sistema calcule el flete automáticamente.
-                </p>
+            <div style="background: #eef7ff; padding: 25px; border-radius: 12px; border: 1px solid #3498db; margin-bottom: 25px;">
+                <h4 style="font-size: 1rem; color: #003366; margin-bottom: 15px;"><i class="fas fa-money-bill-wave"></i> 2. Precio y Ganancias</h4>
                 
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #003366;">Precio de Venta (MXN)</label>
+                    <input type="number" name="price" id="id_price" step="0.01" class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 12px; border: 2px solid #3498db; border-radius: 8px; font-size: 1.1rem; font-weight: bold;">
                 </div>
 
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
-                PUBLICAR PRODUCTO
+                <div id="desglose_comisiones" style="background: white; padding: 15px; border-radius: 10px; font-size: 0.9rem; color: #555;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Comisión Mercado Pago (3.49% + $4 + IVA):</span>
+                        <span id="calc_mp" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Comisión Plataforma INITRE (5%):</span>
+                        <span id="calc_initre" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #eee;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #27ae60; font-weight: bold;">
+                        <span>Tú recibes aproximadamente:</span>
+                        <span id="calc_total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #fff9eb; padding: 20px; border-radius: 12px; border: 1px solid #f39c12; margin-bottom: 25px;">
+                <h4 style="font-size: 1rem; color: #a04000; margin-bottom: 15px;"><i class="fas fa-truck"></i> 3. Información de Envío</h4>
+                <p style="font-size: 0.8rem; color: #a04000; margin-bottom: 15px;">Estos datos se usan para que el cliente cotice el envío real por paquetería.</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="font-weight: bold; font-size: 0.8rem;">Código Postal Origen</label>
+                        <input type="text" name="cp_origen" id="id_cp_origen" class="form-control" placeholder="Ej: 72000" maxlength="5" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; font-size: 0.8rem;">Peso (Kg)</label>
+                        <input type="number" name="peso" id="id_peso" step="0.1" class="form-control" placeholder="Kg" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;">
+                    <div><label style="font-size: 0.7rem;">Largo (cm)</label><input type="number" name="largo" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.7rem;">Ancho (cm)</label><input type="number" name="ancho" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.7rem;">Alto (cm)</label><input type="number" name="alto" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                </div>
+            </div>
+
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
+                PUBLICAR PRODUCTO AHORA
             </button>
-            
-            <a href="{% url 'mi_inventario' %}" style="display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 0.9rem;">
-                Cancelar y volver
-            </a>
         </form>
     </div>
 </div>
 
-<style>
-    /* Esto hace que los campos de Django se vean bonitos y responsivos */
-    input, select, textarea {
-        width: 100%;
-        padding: 12px;
-        margin-top: 5px;
-        margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-sizing: border-box;
-        font-size: 16px; /* Evita zoom en iPhone */
-    }
-    label {
-        font-weight: bold;
-        color: #444;
-        font-size: 0.9rem;
-    }
-</style>
+<script>
+    const priceInput = document.getElementById('id_price');
+    const calcMp = document.getElementById('calc_mp');
+    const calcInitre = document.getElementById('calc_initre');
+    const calcTotal = document.getElementById('calc_total');
+
+    priceInput.addEventListener('input', function() {
+        const price = parseFloat(this.value) || 0;
+        
+        // 1. Calcular Mercado Pago (3.49% + $4 + IVA sobre la comisión)
+        const comisionMP = price * 0.0349;
+        const fijo = 4;
+        const iva = (comisionMP + fijo) * 0.16;
+        const totalMP = comisionMP + fijo + iva;
+
+        // 2. Calcular Comisión INITRE (5%)
+        const totalInitre = price * 0.05;
+
+        // 3. Calcular lo que recibe el vendedor
+        const neto = price - totalMP - totalInitre;
+
+        // Mostrar resultados
+        calcMp.innerText = `-$${totalMP.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        calcInitre.innerText = `-$${totalInitre.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        calcTotal.innerText = `$${(neto > 0 ? neto : 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    });
+</script>
 {% endblock %}
