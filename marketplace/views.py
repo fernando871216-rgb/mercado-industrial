@@ -14,10 +14,11 @@ import os
 import time
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
-
+from django.http import HttpResponse
 # IMPORTANTE: Solo importamos lo que existe en tu models.py
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
+from django.contrib.auth.models import User
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -415,30 +416,54 @@ def mercadopago_webhook(request):
     payment_id = request.GET.get('id')
     topic = request.GET.get('topic')
 
-    if topic == 'payment':
-        # 1. Consultar a Mercado Pago por el estado del pago
-        # (Aquí va tu código de consulta con el Access Token)
+    # Solo nos interesa si el aviso es sobre un pago ('payment')
+    if topic == 'payment' and payment_id:
+        # 1. Consultar a Mercado Pago usando tu Access Token
+        # REEMPLAZA 'TU_ACCESS_TOKEN' con tu clave real (la que empieza con APP_USR-...)
+        token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
+        url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
+        headers = {'Authorization': f'Bearer {token}'}
         
-        # 2. Si el pago es 'approved':
-        if status == 'approved':
-            producto = get_object_or_404(IndustrialProduct, id=id_producto_pagado)
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            status = data.get('status')
             
-            # ACTUALIZAR STOCK
-            if producto.stock > 0:
-                producto.stock -= 1
-                producto.save()
-            
-            # REGISTRAR LA VENTA
-            Venta.objects.create(
-                producto=producto,
-                vendedor=producto.user,
-                comprador=usuario_que_compro,
-                total=total_pagado
-            )
+            # 2. Si el pago está aprobado, procesamos la lógica
+            if status == 'approved':
+                # Mercado Pago nos devuelve el ID del producto si lo mandaste en 'external_reference'
+                # O podemos sacarlo de la descripción si lo configuraste así.
+                # Suponiendo que el ID viene en external_reference:
+                product_id = data.get('external_reference')
+                
+                if product_id:
+                    producto = get_object_or_404(IndustrialProduct, id=product_id)
+                    
+                    # Verificamos si esta venta YA SE REGISTRÓ (para no duplicar si MP manda varios avisos)
+                    venta_existe = Sale.objects.filter(product=producto, status='approved').exists()
+                    
+                    if not venta_existe:
+                        # ACTUALIZAR STOCK
+                        if producto.stock > 0:
+                            producto.stock -= 1
+                            producto.save()
+                        
+                        # REGISTRAR LA VENTA (Usamos Sale que es como está en tu models.py)
+                        # Nota: Necesitas identificar al comprador. 
+                        # Si no tienes el ID del comprador, podemos usar el ID del usuario de MP o dejarlo pendiente.
+                        Sale.objects.create(
+                            product=producto,
+                            buyer=producto.user, # OJO: Aquí deberías poner al usuario que compró
+                            price=producto.price,
+                            status='approved'
+                        )
             
             return HttpResponse(status=200)
-    
+
+    # Siempre responder 200 a Mercado Pago para que no siga reintentando
     return HttpResponse(status=200)
+
 
 
 
