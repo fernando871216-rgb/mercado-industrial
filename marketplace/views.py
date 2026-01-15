@@ -392,10 +392,25 @@ def crear_intencion_compra(request, product_id):
     Sale.objects.create(product=p, buyer=request.user, price=p.price, status='pendiente')
     return redirect('mis_compras')
 
-@staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
-    return render(request, 'marketplace/panel_admin.html', {'ventas': ventas})
+    
+    total_comisiones = 0
+    for v in ventas:
+        # Solo sumamos si la venta está aprobada o entregada
+        if v.status in ['approved', 'entregado', 'enviado']:
+            try:
+                # Convertimos el precio a número por si acaso se guardó como texto
+                precio_num = float(v.price)
+                # Sumamos el 5%
+                total_comisiones += (precio_num * 0.05)
+            except (ValueError, TypeError):
+                continue
+            
+    return render(request, 'marketplace/panel_admin.html', {
+        'ventas': ventas,
+        'total_comisiones': round(total_comisiones, 2)
+    })
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -488,6 +503,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
