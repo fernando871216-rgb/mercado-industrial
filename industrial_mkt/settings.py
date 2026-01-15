@@ -34,7 +34,13 @@ DATABASES = {
 
 
 # 3. SEGURIDAD PARA RENDER (HTTPS)
-CSRF_TRUSTED_ORIGINS = ['https://mercado-industrial.onrender.com']
+CSRF_TRUSTED_ORIGINS = [
+    'https://mercado-industrial.onrender.com',
+    'https://www.mercadopago.com.mx',
+    'https://mercadopago.com.mx',
+    'https://www.mercadopago.com.ar', # Esta es la que te está marcando el error
+    'https://mercadopago.com.ar',
+]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -174,6 +180,7 @@ DEFAULT_FROM_EMAIL = 'Mercado Industrial <tu-correo@gmail.com>'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 
 
