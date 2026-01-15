@@ -49,18 +49,20 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def obtener_token_soloenvios():
-    """Obtiene el token usando las variables seguras de Render"""
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
-    # Tomamos las llaves de Render (Variables de Entorno)
     client_id = os.environ.get('SOLOENVIOS_CLIENT_ID')
     client_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET')
 
+    # Validación extra para saber qué pasa
+    if not client_id or not client_secret:
+        return "ERROR_LLAVES_VACIAS"
+
     payload = {
-        "client_id": client_id,
-        "client_secret": client_secret,
+        "client_id": client_id.strip(),
+        "client_secret": client_secret.strip(),
         "grant_type": "client_credentials",
-        "scope": "default quotations.create" # Permisos para cotizar
+        "scope": "default quotations.create"
     }
     
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -69,9 +71,11 @@ def obtener_token_soloenvios():
         res = requests.post(url, json=payload, headers=headers, timeout=15)
         if res.status_code == 200:
             return res.json().get('access_token')
-        return None
+        else:
+            print(f"Error de API SoloEnvíos: {res.text}")
+            return None
     except Exception as e:
-        print(f"Error obteniendo token: {e}")
+        print(f"Error de conexión: {e}")
         return None
 
 def cotizar_soloenvios(request):
@@ -79,8 +83,12 @@ def cotizar_soloenvios(request):
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token = obtener_token_soloenvios()
+
+    if token == "ERROR_LLAVES_VACIAS":
+        return JsonResponse({'tarifas': [], 'error': 'Render no está pasando las llaves. Revisa la pestaña Environment.'})
+        
     if not token:
-        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación. Revisa las llaves en Render.'})
+        return JsonResponse({'tarifas': [], 'error': 'Las llaves son incorrectas o SoloEnvíos rechazó el acceso (Error 401).'})
 
     try:
         url = "https://app.soloenvios.com/api/v1/quotations"
@@ -263,6 +271,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
