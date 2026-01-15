@@ -52,18 +52,17 @@ def editar_perfil(request):
 def obtener_token_soloenvios():
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
-    # Obtenemos las llaves y usamos .strip() para borrar espacios accidentales
-    raw_id = os.environ.get('SOLOENVIOS_CLIENT_ID', '')
-    raw_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET', '')
+    client_id = os.environ.get('SOLOENVIOS_CLIENT_ID', '').strip()
+    client_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET', '').strip()
 
-    if not raw_id or not raw_secret:
+    if not client_id or not client_secret:
         return "ERROR_LLAVES_VACIAS"
 
+    # Hemos quitado el "scope" para que use los que tu cuenta tiene por defecto
     payload = {
-        "client_id": raw_id.strip(),
-        "client_secret": raw_secret.strip(),
-        "grant_type": "client_credentials",
-        "scope": "default quotations.create"
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials"
     }
     
     headers = {
@@ -72,13 +71,12 @@ def obtener_token_soloenvios():
     }
     
     try:
-        # Intentamos la conexión
         res = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
         
         if res.status_code == 200:
             return res.json().get('access_token')
         else:
-            # Si falla, mandamos el código de error para saber qué dice SoloEnvíos
+            # Si vuelve a fallar, nos dirá por qué
             return f"ERROR_API_{res.status_code}_{res.text}"
     except Exception as e:
         return f"ERROR_CONEXION_{str(e)}"
@@ -276,6 +274,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
