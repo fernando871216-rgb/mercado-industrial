@@ -25,32 +25,32 @@
             </div>
 
             <div style="background: #f8fbfd; padding: 20px; border-radius: 15px; border: 1px solid #d1e3f8; margin-bottom: 20px;">
-                <h5 style="color: #003366; margin-bottom: 15px; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Configuración de Envío</h5>
+                <h5 style="color: #003366; margin-bottom: 15px; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizar Envío</h5>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <div>
                         <label style="display:block; font-size: 0.7rem; font-weight: bold; color: #555;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 8px; border-radius: 8px; border: 1px solid #eee; background: #f1f1f1;">
+                        <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'72460' }}" readonly style="width:100%; padding: 8px; border-radius: 8px; border: 1px solid #eee; background: #f1f1f1;">
                     </div>
                     <div>
-                        <label style="display:block; font-size: 0.7rem; font-weight: bold; color: #003366;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" maxlength="5" style="width:100%; padding: 8px; border-radius: 8px; border: 2px solid #3498db; font-weight: bold;">
+                        <label style="display:block; font-size: 0.7rem; font-weight: bold; color: #003366;">TU CÓDIGO POSTAL</label>
+                        <input type="text" id="envio_cp_destino" placeholder="Ej. 06600" maxlength="5" style="width:100%; padding: 8px; border-radius: 8px; border: 2px solid #3498db; font-weight: bold;">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;">
-                    <div><label style="font-size: 0.6rem; color: #666;">PESO (kg)</label><input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
-                    <div><label style="font-size: 0.6rem; color: #666;">LARGO (cm)</label><input type="number" id="envio_largo" value="{{ product.largo|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
-                    <div><label style="font-size: 0.6rem; color: #666;">ANCHO (cm)</label><input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
-                    <div><label style="font-size: 0.6rem; color: #666;">ALTO (cm)</label><input type="number" id="envio_alto" value="{{ product.alto|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">PESO</label><input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">LARGO</label><input type="number" id="envio_largo" value="{{ product.largo|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">ANCHO</label><input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">ALTO</label><input type="number" id="envio_alto" value="{{ product.alto|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
                 </div>
 
                 <button type="button" onclick="consultarSoloEnvios()" id="btn_calc" style="width:100%; background:#003366; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                    CALCULAR TARIFAS REALES
+                    MOSTRAR OPCIONES DE ENVÍO
                 </button>
 
                 <div id="resultados_area" style="margin-top: 15px; display: none;">
-                    <p style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px;">Selecciona una opción de envío:</p>
+                    <p style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px;">Selecciona la paquetería:</p>
                     <div id="lista_tarifas" style="max-height: 200px; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 10px; background: #fff; display: flex; flex-direction: column; gap: 8px;">
                     </div>
                 </div>
@@ -72,30 +72,19 @@
 <script>
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
     
-    // Función Maestra para Renderizar el Botón
     function renderMPButton(prefId) {
-        // 1. Destruimos el contenedor viejo por completo para limpiar la memoria del SDK
         const magico = document.getElementById("contenedor_magico");
         magico.innerHTML = '<div id="wallet_container"></div>'; 
-        
-        // 2. Creamos el nuevo botón
         const bricksBuilder = mp.bricks();
         bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { 
-                preferenceId: prefId,
-                redirectMode: "modal" 
-            },
+            initialization: { preferenceId: prefId, redirectMode: "modal" },
             customization: {
                 texts: { valueProp: 'smart_option' },
-                visual: { 
-                    buttonHeight: '48px',
-                    borderRadius: '10px'
-                }
+                visual: { buttonHeight: '48px', borderRadius: '10px' }
             }
         });
     }
 
-    // Carga inicial
     {% if preference_id %} renderMPButton("{{ preference_id }}"); {% endif %}
 
     function consultarSoloEnvios() {
@@ -103,13 +92,12 @@
         const btn = document.getElementById('btn_calc');
         const lista = document.getElementById('lista_tarifas');
         
-        if(cp_destino.length < 5) { alert("Ingresa un CP de 5 dígitos"); return; }
+        if(cp_destino.length < 5) { alert("Por favor ingresa tu Código Postal"); return; }
         
-        btn.innerText = "Cotizando..."; btn.disabled = true;
+        btn.innerText = "Cotizando precios..."; btn.disabled = true;
 
         const params = new URLSearchParams({
-            product_id: '{{ product.id }}',
-            cp_origen: '72460',
+            product_id: '{{ product.id }}', // <--- IMPORTANTE: Usamos el ID real
             cp_destino: cp_destino,
             peso: document.getElementById('envio_peso').value,
             largo: document.getElementById('envio_largo').value,
@@ -120,7 +108,7 @@
         fetch(`/cotizar-soloenvios/?${params.toString()}`)
             .then(r => r.json())
             .then(data => {
-                btn.innerText = "CALCULAR TARIFAS REALES"; btn.disabled = false;
+                btn.innerText = "MOSTRAR OPCIONES DE ENVÍO"; btn.disabled = false;
                 lista.innerHTML = "";
                 
                 if(data.tarifas && data.tarifas.length > 0) {
@@ -129,29 +117,23 @@
                         const row = document.createElement('div');
                         row.style = "border:1px solid #ddd; padding:10px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:white;";
                         row.onclick = () => seleccionarEnvio(t.precio_final, t.paqueteria);
-                        row.innerHTML = `<div><div style="font-size:0.85rem; font-weight:bold;">${t.paqueteria}</div><small style="color:#666;">${t.tiempo}</small></div><div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
+                        row.innerHTML = `<div><div style="font-size:0.85rem; font-weight:bold;">${t.paqueteria}</div><small style="color:#666;">Llega en ${t.tiempo}</small></div><div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
                         lista.appendChild(row);
                     });
-                } else { alert("Error: " + (data.error || "No se encontraron paqueterías")); }
+                } else { alert("No hay cobertura para ese CP con este paquete."); }
             });
     }
 
     function seleccionarEnvio(precio, nombre) {
-        // Indicador visual de carga
         document.getElementById('pago_seccion').style.opacity = "0.5";
-        
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
             .then(r => r.json())
             .then(data => {
                 document.getElementById('display_price').innerText = data.total_nuevo;
-                
-                // RE-GENERACIÓN TOTAL DEL BOTÓN
                 renderMPButton(data.preference_id);
-                
                 document.getElementById('pago_seccion').style.opacity = "1";
-                alert("Total actualizado: $" + data.total_nuevo + " (Incluye envío por " + nombre + ")");
+                alert("Has elegido " + nombre + ". El total se ha actualizado.");
             });
     }
 </script>
 {% endblock %}
-
