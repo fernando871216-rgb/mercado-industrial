@@ -362,12 +362,14 @@ def actualizar_pago(request):
                     "currency_id": "MXN"
                 }
             ],
+            "external_reference": f"{producto.id}-{request.user.id}",
             "back_urls": {
                 "success": request.build_absolute_uri(f"/pago-exitoso/?id={pid}"),
                 "failure": request.build_absolute_uri('/pago-fallido/'),
                 "pending": request.build_absolute_uri('/pago-pendiente/'),
             },
             "auto_return": "approved",
+            "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
         }
 
         pref_response = SDK.preference().create(preference_data)
@@ -426,10 +428,7 @@ def mercadopago_webhook(request):
     payment_id = request.GET.get('id')
     topic = request.GET.get('topic')
 
-    # Solo nos interesa si el aviso es sobre un pago ('payment')
     if topic == 'payment' and payment_id:
-        # 1. Consultar a Mercado Pago usando tu Access Token
-        # REEMPLAZA 'TU_ACCESS_TOKEN' con tu clave real (la que empieza con APP_USR-...)
         token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {'Authorization': f'Bearer {token}'}
@@ -440,39 +439,37 @@ def mercadopago_webhook(request):
             data = response.json()
             status = data.get('status')
             
-            # 2. Si el pago está aprobado, procesamos la lógica
             if status == 'approved':
-                # Mercado Pago nos devuelve el ID del producto si lo mandaste en 'external_reference'
-                # O podemos sacarlo de la descripción si lo configuraste así.
-                # Suponiendo que el ID viene en external_reference:
-                product_id = data.get('external_reference')
+                ref_data = data.get('external_reference') # Traerá algo como "13-5"
                 
-                if product_id:
-                    producto = get_object_or_404(IndustrialProduct, id=product_id)
+                if ref_data and "-" in ref_data:
+                    # SEPARAMOS LOS IDs
+                    product_id, buyer_id = ref_data.split('-')
                     
-                    # Verificamos si esta venta YA SE REGISTRÓ (para no duplicar si MP manda varios avisos)
-                    venta_existe = Sale.objects.filter(product=producto, status='approved').exists()
+                    producto = get_object_or_404(IndustrialProduct, id=product_id)
+                    comprador = get_object_or_404(User, id=buyer_id) # El cliente real
+                    
+                    # Verificamos si ya existe para no duplicar
+                    venta_existe = Sale.objects.filter(product=producto, buyer=comprador, status='approved').exists()
                     
                     if not venta_existe:
-                        # ACTUALIZAR STOCK
+                        # 1. DESCONTAR STOCK
                         if producto.stock > 0:
                             producto.stock -= 1
                             producto.save()
                         
-                        # REGISTRAR LA VENTA (Usamos Sale que es como está en tu models.py)
-                        # Nota: Necesitas identificar al comprador. 
-                        # Si no tienes el ID del comprador, podemos usar el ID del usuario de MP o dejarlo pendiente.
+                        # 2. CREAR VENTA CON EL COMPRADOR REAL
                         Sale.objects.create(
                             product=producto,
-                            buyer=producto.user, # OJO: Aquí deberías poner al usuario que compró
+                            buyer=comprador, # <--- Corregido: Ahora sí es el que pagó
                             price=producto.price,
                             status='approved'
                         )
             
             return HttpResponse(status=200)
 
-    # Siempre responder 200 a Mercado Pago para que no siga reintentando
     return HttpResponse(status=200)
+
 
 
 
