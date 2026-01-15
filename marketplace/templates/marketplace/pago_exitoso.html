@@ -17,16 +17,17 @@
         <div style="background: #f0fff4; border: 2px solid #c6f6d5; padding: 25px; border-radius: 15px; margin: 30px 0;">
             <h3 style="color: #22543d; margin-bottom: 15px; font-size: 0.9rem; text-transform: uppercase;">Contacto Directo</h3>
             
-            <a href="https://wa.me/{{ producto.vendedor.telefono }}?text=Hola,%20acabo%20de%20comprar%20tu%20equipo:%20{{ producto.title }}" 
+            <a href="https://wa.me/{{ producto.user.profile.celular }}?text=Hola,%20acabo%20de%20comprar%20tu%20equipo:%20{{ producto.title }}" 
                target="_blank"
                style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-decoration: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); transition: 0.2s;">
                 <i class="fab fa-whatsapp" style="font-size: 1.6rem;"></i> 
                 WHATSAPP DEL VENDEDOR
             </a>
             
-            <p style="margin-top: 15px; font-size: 0.85rem; color: #4a5568;">
-                Vendedor: <strong>{{ producto.vendedor.first_name }} {{ producto.vendedor.last_name }}</strong>
-            </p>
+            <div style="margin-top: 15px; font-size: 0.9rem; color: #4a5568; text-align: left;">
+                <p style="margin: 5px 0;"><strong>Vendedor:</strong> {{ producto.user.get_full_name|default:producto.user.username }}</p>
+                <p style="margin: 5px 0;"><strong>Ubicación/Entrega:</strong> {{ producto.user.profile.address|default:"Acordar con vendedor" }}</p>
+            </div>
         </div>
 
     {% else %}
@@ -39,12 +40,12 @@
         </p>
     {% endif %}
     
-    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; border-top: 1px solid #eee; pt: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
         <a href="{% url 'mis_compras' %}" style="background: #003366; color: white; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; transition: 0.3s;">
             <i class="fas fa-box"></i> Ver mis compras
         </a>
         <a href="{% url 'home' %}" style="color: #003366; text-decoration: none; font-weight: 500;">
-            Volver al catálogo
+            <i class="fas fa-arrow-left"></i> Volver al catálogo
         </a>
     </div>
 </div>
