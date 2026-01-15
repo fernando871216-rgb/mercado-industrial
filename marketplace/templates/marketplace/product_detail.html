@@ -2,79 +2,68 @@
 
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px;">
         
         <div>
-            <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+            <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; margin-bottom: 25px;">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; height: auto; border-radius: 10px; max-height: 500px; object-fit: contain;">
-                {% else %}
-                    <div style="height: 300px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: #bdc3c7;">
-                        <i class="fas fa-image fa-5x"></i>
-                    </div>
+                    <img src="{{ product.image.url }}" style="max-width: 100%; border-radius: 15px; max-height: 450px; object-fit: contain;">
                 {% endif %}
             </div>
-
-            <div style="margin-top: 30px; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <h1 style="color: #2c3e50; margin-bottom: 10px;">{{ product.title }}</h1>
-                <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">{{ product.description }}</p>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <strong style="display: block; color: #95a5a6; font-size: 0.8rem; text-transform: uppercase;">Categoría</strong>
-                        <span>{{ product.category.name|default:"General" }}</span>
-                    </div>
-                    <div>
-                        <strong style="display: block; color: #95a5a6; font-size: 0.8rem; text-transform: uppercase;">Estado</strong>
-                        <span style="color: #27ae60;"><i class="fas fa-check-circle"></i> Disponible</span>
-                    </div>
-                </div>
+            
+            <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <h1 style="font-size: 2.5rem; color: #1a2a3a; margin-bottom: 10px;">{{ product.title }}</h1>
+                <p style="color: #7f8c8d; line-height: 1.6; font-size: 1.1rem;">{{ product.description }}</p>
             </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 20px;">
             
-            <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #3498db;">
-                <span style="color: #7f8c8d; font-size: 0.9rem;">Precio del equipo:</span>
-                <h2 style="font-size: 2.5rem; color: #2c3e50; margin: 5px 0 20px 0;">${{ product.price }} <span style="font-size: 1rem; color: #95a5a6;">MXN</span></h2>
-                
-                <div style="background: #f0f7ff; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px solid #d1e9ff;">
-                    <label style="display: block; font-weight: bold; color: #2980b9; margin-bottom: 10px;">
-                        <i class="fas fa-truck"></i> Cotizar envío a mi domicilio:
-                    </label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="cp_destino" placeholder="Tu C.P." maxlength="5" style="flex: 1; padding: 10px; border: 1px solid #3498db; border-radius: 5px;">
-                        <button onclick="cotizarEnvio()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                            CALCULAR
-                        </button>
+            <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <h2 style="color: #27ae60; font-size: 2.2rem; margin-bottom: 25px;">${{ product.price }} <span style="font-size: 1rem; color: #7f8c8d;">MXN</span></h2>
+
+                <div style="background: #f0f7ff; border: 1px solid #d1e9ff; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #003366; margin-bottom: 15px; font-size: 1rem; display: flex; align-items: center;">
+                        <i class="fas fa-truck" style="margin-right: 10px;"></i> Configuración de Envío
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: bold; color: #555;">CP ORIGEN</label>
+                            <input type="text" value="{{ product.cp_origen }}" readonly style="width: 100%; padding: 8px; background: #eee; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: bold; color: #003366;">CP DESTINO</label>
+                            <input type="text" id="cp_destino" placeholder="00000" maxlength="5" style="width: 100%; padding: 8px; border: 2px solid #3498db; border-radius: 5px;">
+                        </div>
                     </div>
-                    <div id="resultados_envio" style="margin-top: 15px; font-size: 0.85rem;"></div>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px;">
+                        <div><small style="font-size: 0.6rem;">PESO (kg)</small><input type="text" value="{{ product.peso }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
+                        <div><small style="font-size: 0.6rem;">LARGO (cm)</small><input type="text" value="{{ product.largo }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
+                        <div><small style="font-size: 0.6rem;">ANCHO (cm)</small><input type="text" value="{{ product.ancho }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
+                        <div><small style="font-size: 0.6rem;">ALTO (cm)</small><input type="text" value="{{ product.alto }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
+                    </div>
+
+                    <button onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.9rem;">
+                        CALCULAR TARIFAS REALES
+                    </button>
+
+                    <div id="lista_paqueterias" style="margin-top: 20px; max-height: 250px; overflow-y: auto;"></div>
                 </div>
 
-                <div id="wallet_container"></div>
+                <div style="border: 2px dashed #27ae60; border-radius: 15px; padding: 15px; text-align: center;">
+                    <div id="wallet_container">
+                        <p style="color: #95a5a6; font-size: 0.9rem;">Selecciona una opción de envío para habilitar el pago seguro.</p>
+                    </div>
+                    <small style="color: #27ae60; font-weight: bold; display: block; margin-top: 10px;">
+                        <i class="fas fa-lock"></i> PAGO SEGURO CON MERCADO PAGO
+                    </small>
+                </div>
             </div>
 
-            <div style="background: #fdfdfd; border-radius: 15px; padding: 20px; border: 1px dashed #bdc3c7;">
-                <h4 style="font-size: 0.9rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <i class="fas fa-info-circle"></i> Información de Origen
-                </h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <small style="color: #95a5a6; display: block;">Ubicación (Origen):</small>
-                        <strong style="color: #2c3e50;"><i class="fas fa-map-marker-alt" style="color: #e74c3c;"></i> CP {{ product.cp_origen }}</strong>
-                    </div>
-                    <div>
-                        <small style="color: #95a5a6; display: block;">Peso del equipo:</small>
-                        <strong style="color: #2c3e50;">{{ product.peso }} Kg</strong>
-                    </div>
-                    <div style="grid-column: span 2;">
-                        <small style="color: #95a5a6; display: block;">Dimensiones del paquete:</small>
-                        <strong style="color: #2c3e50;">{{ product.largo }} x {{ product.ancho }} x {{ product.alto }} cm</strong>
-                    </div>
-                </div>
-                <p style="margin-top: 15px; font-size: 0.75rem; color: #7f8c8d; font-style: italic;">
-                    * Las tarifas de envío son calculadas en tiempo real por paqueterías certificadas.
-                </p>
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 15px; font-size: 0.85rem; color: #7f8c8d;">
+                <i class="fas fa-info-circle"></i> Las tarifas son calculadas en tiempo real mediante integraciones certificadas de paquetería.
             </div>
 
         </div>
@@ -83,55 +72,49 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('TU_PUBLIC_KEY'); // Reemplaza con tu Public Key real
-    let envioSeleccionado = 0;
+    const mp = new MercadoPago('TU_PUBLIC_KEY'); // <-- PON AQUÍ TU CLAVE PÚBLICA REAL
 
     async function cotizarEnvio() {
-        const cp = document.getElementById('cp_destino').value;
-        const resDiv = document.getElementById('resultados_envio');
+        const cpDestino = document.getElementById('cp_destino').value;
+        const listaDiv = document.getElementById('lista_paqueterias');
         
-        if(cp.length < 5) {
-            alert("Por favor ingresa un código postal válido de 5 dígitos.");
+        if(cpDestino.length < 5) {
+            alert("Ingresa un CP de destino válido");
             return;
         }
 
-        resDiv.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Buscando tarifas...";
+        listaDiv.innerHTML = "<p style='text-align:center;'>Cotizando...</p>";
 
         try {
-            // Llamamos a tu función en views.py pasando el ID del producto y el CP
-            const response = await fetch(`/cotizar-envio/?product_id={{ product.id }}&cp_destino=${cp}`);
+            const response = await fetch(`/cotizar-envio/?product_id={{ product.id }}&cp_destino=${cpDestino}`);
             const data = await response.json();
 
             if (data.tarifas && data.tarifas.length > 0) {
-                let html = '<ul style="list-style: none; padding: 0;">';
+                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Selecciona una opción de envío:</p>';
                 data.tarifas.forEach(t => {
                     html += `
-                    <li style="background: white; margin-bottom: 8px; padding: 10px; border-radius: 5px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <div onclick="prepararPago(${t.precio_final})" style="background:white; border:1px solid #ddd; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'">
                         <div>
-                            <input type="radio" name="envio" onclick="actualizarTotal(${t.precio_final})" style="cursor:pointer;">
-                            <span style="font-weight:bold;">${t.paqueteria}</span><br>
-                            <small style="color: #7f8c8d;">Llega en: ${t.tiempo}</small>
+                            <strong style="display:block; color:#333;">${t.paqueteria} (${t.servicio})</strong>
+                            <small style="color:#7f8c8d;">Llega en: ${t.tiempo}</small>
                         </div>
-                        <span style="color: #27ae60; font-weight:bold;">$${t.precio_final}</span>
-                    </li>`;
+                        <span style="color:#27ae60; font-weight:bold; font-size:1.1rem;">$${t.precio_final}</span>
+                    </div>`;
                 });
-                html += '</ul>';
-                resDiv.innerHTML = html;
+                listaDiv.innerHTML = html;
             } else {
-                resDiv.innerHTML = "<p style='color:red;'>No hay envíos disponibles para este CP.</p>";
+                listaDiv.innerHTML = "<p style='color:red;'>No hay servicios disponibles para este CP.</p>";
             }
-        } catch (error) {
-            resDiv.innerHTML = "<p style='color:red;'>Error al conectar con el servidor.</p>";
+        } catch (e) {
+            listaDiv.innerHTML = "<p style='color:red;'>Error al conectar con el servidor.</p>";
         }
     }
 
-    async function actualizarTotal(costoEnvio) {
-        envioSeleccionado = costoEnvio;
-        // Llamamos a tu vista de Django que crea la preferencia de Mercado Pago
+    async function prepararPago(costoEnvio) {
+        // Al seleccionar la paquetería, generamos la preferencia de Mercado Pago
         const response = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
         const data = await response.json();
         
-        // Limpiamos y recreamos el botón de Mercado Pago con el precio nuevo (Producto + Envío)
         document.getElementById('wallet_container').innerHTML = '';
         mp.bricks().create("wallet", "wallet_container", {
             initialization: { preferenceId: data.preference_id },
