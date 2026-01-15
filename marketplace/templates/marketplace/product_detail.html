@@ -1,13 +1,12 @@
 {% extends 'marketplace/base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm border-0">
                 {% if product.imagen %}
-                    <img src="{{ product.imagen.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.nombre }}">
+                    <img src="{{ product.imagen.url }}" class="img-fluid rounded" alt="{{ product.nombre }}">
                 {% else %}
                     <img src="https://via.placeholder.com/500x500?text=Sin+Imagen" class="img-fluid rounded" alt="Sin imagen">
                 {% endif %}
@@ -17,44 +16,31 @@
         <div class="col-md-6">
             <h1 class="display-5 fw-bold text-dark">{{ product.nombre }}</h1>
             <h3 class="text-success mb-4">${{ product.precio }} MXN</h3>
-            
             <p class="text-muted">{{ product.descripcion }}</p>
-
             <hr class="my-4">
 
             <div class="card p-4 border-0 shadow-sm" style="border-radius: 20px; background-color: #f8f9fa;">
-                <h5 class="mb-3 d-flex align-items-center">
-                    <span class="me-2">🚚</span> Cotizar Envío
-                </h5>
-                
+                <h5 class="mb-3 d-flex align-items-center"><span>🚚</span> Cotizar Envío</h5>
                 <div class="input-group mb-2">
-                    <input type="text" id="cp_input" class="form-control" placeholder="Tu C.P. Destino" maxlength="5">
+                    <input type="text" id="cp_input" class="form-control" placeholder="C.P. Destino" maxlength="5">
                     <button type="button" id="btn_calcular" class="btn btn-primary px-4">Calcular</button>
-                    <button type="button" id="btn_limpiar" class="btn btn-outline-secondary" title="Limpiar">✕</button>
+                    <button type="button" id="btn_limpiar" class="btn btn-outline-secondary">✕</button>
                 </div>
-
                 <div id="loader" class="text-center mt-3" style="display: none;">
                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                     <span class="ms-2 text-primary small fw-bold">Buscando tarifas...</span>
                 </div>
-
                 <div id="div_resultados" class="mt-3" style="display: none; max-height: 200px; overflow-y: auto;">
                     <table class="table table-sm table-borderless align-middle">
-                        <tbody id="lista_tarifas">
-                            </tbody>
+                        <tbody id="lista_tarifas"></tbody>
                     </table>
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-4">
-                <button class="btn btn-warning btn-lg fw-bold text-white shadow-sm" style="background-color: #f39c12; border: none;">
-                    Confirmar Intención de Compra
-                </button>
+                <button class="btn btn-warning btn-lg fw-bold text-white shadow-sm" style="background-color: #f39c12; border: none;">Confirmar Intención</button>
                 <div id="wallet_container">
-                    <button class="btn btn-light btn-lg border shadow-sm d-flex align-items-center justify-content-center w-100">
-                        <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.22/mercadopago/logo__small.png" height="20" class="me-2">
-                        Pagar ahora
-                    </button>
+                    <button class="btn btn-light btn-lg border shadow-sm w-100">Pagar ahora</button>
                 </div>
             </div>
         </div>
@@ -82,15 +68,10 @@
 
     btnCalc.onclick = () => {
         const cp = inputCP.value.trim();
-        if (cp.length < 5) {
-            alert("Ingresa un C.P. de 5 dígitos.");
-            return;
-        }
-
+        if (cp.length < 5) { alert("Ingresa un C.P. de 5 dígitos."); return; }
         loader.style.display = 'block';
         resDiv.style.display = 'none';
         lista.innerHTML = '';
-
         const params = new URLSearchParams({
             cp_origen: '72460',
             cp_destino: cp,
@@ -99,13 +80,17 @@
             ancho: document.getElementById('val_ancho').value,
             alto: document.getElementById('val_alto').value
         });
-
         fetch(`/cotizar-soloenvios/?${params.toString()}`)
             .then(r => r.json())
             .then(data => {
                 loader.style.display = 'none';
                 if (data.tarifas && data.tarifas.length > 0) {
                     data.tarifas.forEach(t => {
-                        lista.innerHTML += `
-                            <tr class="border-bottom">
-                                <td class="
+                        lista.innerHTML += `<tr class="border-bottom"><td class="py-2"><div class="fw-bold">${t.paqueteria}</div><div class="small">${t.tiempo}</div></td><td class="text-end fw-bold text-success">$${t.precio_final}</td></tr>`;
+                    });
+                    resDiv.style.display = 'block';
+                } else { alert("No hay tarifas. Intenta de nuevo."); }
+            }).catch(e => { loader.style.display = 'none'; alert("Error de conexión."); });
+    };
+</script>
+{% endblock %}
