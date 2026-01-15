@@ -45,7 +45,7 @@
 
                 <div id="area-pago" style="border: 2px dashed #27ae60; border-radius: 15px; padding: 20px; text-align: center; background: #f9fff9;">
                     <div id="wallet_container">
-                        <p style="color: #7f8c8d; font-size: 0.9rem;">Selecciona una paquetería arriba para habilitar el pago seguro.</p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem;">Cargando opción de pago seguro...</p>
                     </div>
                 </div>
             </div>
@@ -55,27 +55,28 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // REEMPLAZA CON TU KEY REAL
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9'); 
+
+    // 1. CARGAR EL BOTÓN AUTOMÁTICAMENTE AL ENTRAR (CON ENVÍO 0)
+    window.onload = function() {
+        generarBotonPago(0, 'Pendiente de cotizar');
+    };
 
     async function cotizarEnvio() {
         const cp = document.getElementById('cp_destino').value;
         const lista = document.getElementById('lista_paqueterias');
-        const wallet = document.getElementById('wallet_container');
         
         if (cp.length < 5) return alert("Ingresa un CP válido de 5 dígitos");
 
         lista.innerHTML = "<p style='text-align:center;'>Consultando SoloEnvíos...</p>";
-        wallet.innerHTML = "<p style='color: #7f8c8d;'>Esperando selección de envío...</p>";
 
         try {
             const res = await fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`);
             const data = await res.json();
 
             if (data.tarifas && data.tarifas.length > 0) {
-                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Haz clic en una opción:</p>';
+                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Selecciona una opción para incluir el envío:</p>';
                 data.tarifas.forEach(t => {
-                    // Al hacer clic, llamamos a generarBotonPago con el precio que ya trae tu 8%
                     html += `
                     <div onclick="generarBotonPago(${t.precio_final}, '${t.paqueteria}')" 
                          style="background:white; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:0.2s;"
@@ -92,42 +93,4 @@
                 lista.innerHTML = "<p style='color:red;'>No hay rutas disponibles para este CP.</p>";
             }
         } catch (e) {
-            lista.innerHTML = "<p style='color:red;'>Error al conectar con el servidor de envíos.</p>";
-        }
-    }
-
-    async function generarBotonPago(costoEnvio, paqueteriaNombre) {
-        const walletContainer = document.getElementById('wallet_container');
-        walletContainer.innerHTML = "<p>Actualizando total y conectando con Mercado Pago...</p>";
-
-        try {
-            // Llamamos a tu función que suma el 5% de INITRE y la comisión de MP
-            const res = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
-            const data = await res.json();
-
-            if (data.preference_id) {
-                walletContainer.innerHTML = ''; // Limpiamos el texto de espera
-                
-                // Creamos el botón oficial de Mercado Pago
-                mp.bricks().create("wallet", "wallet_container", {
-                    initialization: {
-                        preferenceId: data.preference_id,
-                    },
-                    customization: {
-                        texts: { valueProp: 'smart_option' },
-                    }
-                });
-                
-                // Opcional: Mostrar el total final debajo del botón
-                const totalMsg = document.createElement("p");
-                totalMsg.style.cssText = "margin-top:10px; font-weight:bold; color:#2c3e50;";
-                totalMsg.innerHTML = `Total a pagar: $${data.total_nuevo} MXN`;
-                walletContainer.appendChild(totalMsg);
-            }
-        } catch (e) {
-            walletContainer.innerHTML = "<p style='color:red;'>Error al generar el pago. Intenta de nuevo.</p>";
-        }
-    }
-</script>
-{% endblock %}
-
+            lista.innerHTML = "<p style='color:red;'>Error al conectar con el servidor de envíos.</p
