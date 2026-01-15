@@ -48,7 +48,6 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Limpieza de CPs
     cp_origen = request.GET.get('cp_origen', '').strip().zfill(5)
     cp_destino = request.GET.get('cp_destino', '').strip().zfill(5)
     
@@ -63,47 +62,46 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Validar números (SoloEnvios los pide como números, no strings)
         v_peso = float(request.GET.get('peso') or 1)
         v_largo = int(float(request.GET.get('largo') or 20))
         v_ancho = int(float(request.GET.get('ancho') or 20))
         v_alto = int(float(request.GET.get('alto') or 20))
 
-        # ESTA ES LA ESTRUCTURA QUE PIDE EL ERROR QUE RECIBISTE:
+        # Ajuste basado en la respuesta anterior: 
+        # Combinamos la estructura de direcciones con la lista de paquetes
         payload = {
             "address_from": {
                 "country_code": "MX",
-                "postal_code": cp_origen,
-                "area_level1": "Puebla", # Requerido por la API
-                "area_level2": "Puebla", # Requerido por la API
-                "area_level3": "Puebla"  # Requerido por la API
+                "postal_code": cp_origen
             },
             "address_to": {
                 "country_code": "MX",
-                "postal_code": cp_destino,
-                "area_level1": "Ciudad de México",
-                "area_level2": "Cuauhtémoc",
-                "area_level3": "Centro"
+                "postal_code": cp_destino
             },
-            "parcel": {
-                "weight": v_peso,
-                "length": v_largo,
-                "width": v_ancho,
-                "height": v_alto
-            }
+            "packages": [
+                {
+                    "content": "Articulos Industriales",
+                    "amount": 1,
+                    "type": "box",
+                    "weight": v_peso,
+                    "width": v_ancho,
+                    "height": v_alto,
+                    "length": v_largo
+                }
+            ]
         }
         
         res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # La respuesta suele venir en una lista de opciones
-            rates_list = data if isinstance(data, list) else data.get('rates', [])
+            # Algunas versiones devuelven una lista, otras un dict con la llave 'data'
+            rates_list = data if isinstance(data, list) else data.get('data', data.get('rates', []))
             
             tarifas = []
             for t in rates_list:
-                # El campo suele ser 'total_price' en este endpoint
-                costo = t.get('total_price') or t.get('price')
+                # El campo puede venir como total_price o cost
+                costo = t.get('total_price') or t.get('price') or t.get('cost')
                 if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Paquetería',
@@ -112,13 +110,13 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay servicios para esta ruta.'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles.'})
             
             return JsonResponse({'tarifas': tarifas})
         
         return JsonResponse({
             'tarifas': [], 
-            'error': f'Error {res.status_code}', 
+            'error': 'Error de API', 
             'detalle': res.text
         })
 
@@ -261,6 +259,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
