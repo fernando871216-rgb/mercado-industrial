@@ -1,18 +1,17 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', Tahoma, sans-serif;">
-    
+<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 0.9rem; display: inline-flex; align-items: center; margin-bottom: 20px;">
         <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Volver al catálogo
     </a>
     
-    <div style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+    <div style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); align-items: flex-start;">
         
-        <div style="flex: 1; min-width: 300px; max-width: 500px;">
-            <div style="border: 1px solid #f0f0f0; border-radius: 15px; padding: 20px; text-align: center;">
+        <div style="flex: 1; min-width: 300px; max-width: 450px;">
+            <div style="border: 1px solid #f0f0f0; border-radius: 15px; padding: 20px; text-align: center; background: #fff;">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-height: 400px; object-fit: contain;">
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; height: auto; max-height: 400px; object-fit: contain;">
                 {% else %}
                     <div style="padding: 100px 0; color: #ccc;"><i class="fas fa-image fa-4x"></i><p>Sin imagen</p></div>
                 {% endif %}
@@ -20,55 +19,44 @@
         </div>
 
         <div style="flex: 1.2; min-width: 300px;">
-            <h1 style="color: #2c3e50; font-size: 2rem; margin: 0 0 10px 0;">{{ product.title }}</h1>
-            <div style="font-size: 2.2rem; font-weight: 800; color: #27ae60; margin-bottom: 25px;">
-                $<span id="display_price">{{ product.price }}</span> <small style="font-size: 1rem; color: #999;">MXN</small>
+            <h1 style="color: #2c3e50; font-size: 1.8rem; margin: 0 0 10px 0;">{{ product.title }}</h1>
+            <div style="font-size: 2rem; font-weight: 800; color: #27ae60; margin-bottom: 20px;">
+                $<span id="display_price">{{ product.price }}</span> <small style="font-size: 0.9rem; color: #666;">MXN</small>
             </div>
 
-            <div style="background: #f8fbfd; padding: 20px; border-radius: 15px; border: 1px solid #d1e3f8;">
+            <div style="background: #f8fbfd; padding: 20px; border-radius: 15px; border: 1px solid #d1e3f8; margin-bottom: 20px;">
                 <h5 style="color: #003366; margin-bottom: 15px; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Configuración de Envío</h5>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <div>
                         <label style="display:block; font-size: 0.7rem; font-weight: bold; color: #555;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #f1f1f1;">
+                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 8px; border-radius: 8px; border: 1px solid #eee; background: #f1f1f1;">
                     </div>
                     <div>
                         <label style="display:block; font-size: 0.7rem; font-weight: bold; color: #003366;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" maxlength="5" style="width:100%; padding: 10px; border-radius: 8px; border: 2px solid #3498db; font-weight: bold;">
+                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" maxlength="5" style="width:100%; padding: 8px; border-radius: 8px; border: 2px solid #3498db; font-weight: bold;">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-size: 0.6rem; color: #666;">PESO (kg)</label>
-                        <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.6rem; color: #666;">LARGO (cm)</label>
-                        <input type="number" id="envio_largo" value="{{ product.largo|default:20 }}" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.6rem; color: #666;">ANCHO (cm)</label>
-                        <input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.6rem; color: #666;">ALTO (cm)</label>
-                        <input type="number" id="envio_alto" value="{{ product.alto|default:20 }}" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    </div>
+                    <div><label style="font-size: 0.6rem; color: #666;">PESO (kg)</label><input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">LARGO (cm)</label><input type="number" id="envio_largo" value="{{ product.largo|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">ANCHO (cm)</label><input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                    <div><label style="font-size: 0.6rem; color: #666;">ALTO (cm)</label><input type="number" id="envio_alto" value="{{ product.alto|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
                 </div>
 
-                <button type="button" onclick="consultarSoloEnvios()" id="btn_calc" style="width:100%; background:#003366; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; transition: 0.3s;">
+                <button type="button" onclick="consultarSoloEnvios()" id="btn_calc" style="width:100%; background:#003366; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
                     CALCULAR TARIFAS REALES
                 </button>
 
                 <div id="resultados_area" style="margin-top: 15px; display: none;">
-                    <p style="font-size: 0.8rem; font-weight: bold; color: #2c3e50;">Selecciona una opción:</p>
-                    <div id="lista_tarifas" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <p style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px;">Selecciona una opción:</p>
+                    <div id="lista_tarifas" style="max-height: 250px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #eee; padding: 10px; border-radius: 10px; background: #fff;">
+                        </div>
                 </div>
             </div>
 
-            <div id="wallet_container" style="margin-top: 25px;"></div>
+            <div id="wallet_container" style="min-height: 50px;"></div>
         </div>
     </div>
 </div>
@@ -95,8 +83,7 @@
         
         if(cp_destino.length < 5) { alert("Ingresa un CP válido"); return; }
         
-        btn.innerText = "Cotizando...";
-        btn.disabled = true;
+        btn.innerText = "Cotizando..."; btn.disabled = true;
 
         const params = new URLSearchParams({
             cp_origen: '72460',
@@ -110,34 +97,29 @@
         fetch(`/cotizar-soloenvios/?${params.toString()}`)
             .then(r => r.json())
             .then(data => {
-                btn.innerText = "CALCULAR TARIFAS REALES";
-                btn.disabled = false;
+                btn.innerText = "CALCULAR TARIFAS REALES"; btn.disabled = false;
                 lista.innerHTML = "";
                 
                 if(data.tarifas && data.tarifas.length > 0) {
                     document.getElementById('resultados_area').style.display = "block";
                     data.tarifas.forEach(t => {
                         const row = document.createElement('div');
-                        row.style = "border:1px solid #ddd; padding:12px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:white; transition: 0.2s;";
-                        row.onclick = () => seleccionarEnvio(t.precio_final);
-                        row.onmouseover = () => row.style.borderColor = "#3498db";
-                        row.onmouseout = () => row.style.borderColor = "#ddd";
-                        row.innerHTML = `<div><b>${t.paqueteria}</b><br><small>${t.tiempo}</small></div><div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
+                        row.style = "border:1px solid #ddd; padding:10px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:white; transition: 0.2s;";
+                        row.onclick = () => seleccionarEnvio(t.precio_final, t.paqueteria);
+                        row.innerHTML = `<div><div style="font-size:0.85rem; font-weight:bold;">${t.paqueteria}</div><small style="color:#666;">${t.tiempo}</small></div><div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
                         lista.appendChild(row);
                     });
-                } else {
-                    alert("No hay tarifas: " + (data.error || "Intenta con otro CP"));
-                }
+                } else { alert("No hay tarifas: " + (data.error || "Intenta con otro CP")); }
             });
     }
 
-    function seleccionarEnvio(precio) {
+    function seleccionarEnvio(precio, nombre) {
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
             .then(r => r.json())
             .then(data => {
                 document.getElementById('display_price').innerText = data.total_nuevo;
                 renderMPButton(data.preference_id);
-                alert("Precio actualizado con envío");
+                alert("Has seleccionado " + nombre + ". El total se ha actualizado.");
             });
     }
 </script>
