@@ -393,24 +393,20 @@ def crear_intencion_compra(request, product_id):
     Sale.objects.create(product=p, buyer=request.user, price=p.price, status='pendiente')
     return redirect('mis_compras')
 
+@staff_member_required
 def panel_administrador(request):
     ventas = Sale.objects.all().order_by('-created_at')
     
-    total_comisiones = 0
+    total_comisiones = Decimal('0.00')
     for v in ventas:
-        # Solo sumamos si la venta está aprobada o entregada
-        if v.status in ['approved', 'entregado', 'enviado']:
-            try:
-                # Convertimos el precio a número por si acaso se guardó como texto
-                precio_num = float(v.price)
-                # Sumamos el 5%
-                total_comisiones += (precio_num * 0.05)
-            except (ValueError, TypeError):
-                continue
+        # Usamos los estados que definimos en el HTML y el webhook
+        if v.status in ['approved', 'entregado', 'enviado', 'completado']:
+            # Usamos la función que ya escribiste en tu modelo
+            total_comisiones += v.get_platform_commission()
             
     return render(request, 'marketplace/panel_admin.html', {
         'ventas': ventas,
-        'total_comisiones': round(total_comisiones, 2)
+        'total_comisiones': total_comisiones
     })
 
 @staff_member_required
@@ -491,6 +487,7 @@ def mercadopago_webhook(request):
             print(f"ERROR DE CONEXION: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
