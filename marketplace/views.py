@@ -464,7 +464,8 @@ def mercadopago_webhook(request):
                     if len(parts) >= 3:
                         prod_id = parts[0]
                         user_id = parts[1]
-                        tipo = parts[2]
+                        tipo_letra = parts[2]
+                        metodo = 'envio' if tipo_letra == 'E' else 'recoleccion'
                         
                         producto = IndustrialProduct.objects.get(id=prod_id)
                         comprador = User.objects.get(id=user_id)
@@ -473,7 +474,10 @@ def mercadopago_webhook(request):
                             product=producto,
                             buyer=comprador,
                             status='approved',
-                            defaults={'price': producto.price}
+                            defaults={
+                                'price': data.get('transaction_amount'), # Guardamos el total real pagado
+                                'metodo_entrega': metodo # <--- AQUÍ GUARDAMOS EL MÉTODO
+            }
                         )
                         
                         # ESTO SOLO OCURRE LA PRIMERA VEZ QUE SE REGISTRA EL PAGO
@@ -500,6 +504,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
