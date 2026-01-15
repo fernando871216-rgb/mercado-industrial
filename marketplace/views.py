@@ -385,7 +385,7 @@ def actualizar_pago(request):
             'total_nuevo': f"{total_final:,.2f}"
         })
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'error': str    (e)}, status=400)
         
 @login_required
 def crear_intencion_compra(request, product_id):
@@ -496,6 +496,7 @@ def mercadopago_webhook(request):
 
     # SIEMPRE responder 200 para que MP no siga molestando
     return HttpResponse(status=200)
+
 
 
 
