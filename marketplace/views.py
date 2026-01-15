@@ -295,45 +295,60 @@ def procesar_pago(request, product_id):
 def actualizar_pago(request):
     try:
         pid = request.GET.get('id')
-        envio_raw = request.GET.get('envio', '0')
-        
-        # Convertimos a float de forma segura
-        envio = float(envio_raw)
-        
-        # Cambia 'IndustrialProduct' por el nombre exacto de tu modelo si es necesario
+        # Obtenemos el costo base que devuelve SoloEnvíos
+        envio_base = float(request.GET.get('envio', 0))
         prod = get_object_or_404(IndustrialProduct, id=pid)
         
-        # Calculamos el total
-        total = float(prod.price) + envio
+        precio_producto = float(prod.price)
         
-        # Creamos la preferencia en Mercado Pago
+        # 1. Tu comisión sobre el PRODUCTO (5% de INITRE)
+        comision_producto = precio_producto * 0.05
+        
+        # 2. Tu comisión sobre el ENVÍO (8% de logística)
+        comision_logistica = envio_base * 0.08
+        envio_total_con_tu_comision = envio_base + comision_logistica
+        
+        # 3. Subtotal antes de Mercado Pago
+        subtotal = precio_producto + comision_producto + envio_total_con_tu_comision
+        
+        # 4. Comisión Mercado Pago (3.49% + $4 + IVA del 16% sobre eso)
+        # Calculamos cuánto debe pagar el cliente para que tú recibas el subtotal neto
+        comision_mp_porcentaje = subtotal * 0.0349
+        fijo_mp = 4.0
+        iva_sobre_comision = (comision_mp_porcentaje + fijo_mp) * 0.16
+        total_comision_mp = comision_mp_porcentaje + fijo_mp + iva_sobre_comision
+        
+        # --- TOTAL FINAL PARA EL BOTÓN ---
+        total_a_cobrar = subtotal + total_comision_mp
+
+        # Creación de la preferencia
         preference_data = {
             "items": [
                 {
-                    "title": f"{prod.title} (Incluye Envío)",
+                    "title": f"{prod.title}",
+                    "description": "Incluye costo de equipo, envío certificado y gestión de plataforma",
                     "quantity": 1,
-                    "unit_price": total,
+                    "unit_price": round(total_a_cobrar, 2), # Redondeamos a 2 decimales para evitar errores en MP
                     "currency_id": "MXN"
                 }
             ],
             "back_urls": {
                 "success": request.build_absolute_uri('/pago-exitoso/'),
                 "failure": request.build_absolute_uri('/pago-fallido/'),
-                "pending": request.build_absolute_uri('/pago-pendiente/'),
             },
             "auto_return": "approved",
         }
 
-        preference_response = SDK.preference().create(preference_data)
-        preference = preference_response["response"]
-
+        pref_response = SDK.preference().create(preference_data)
+        
         return JsonResponse({
-            'preference_id': preference["id"], 
-            'total_nuevo': f"{total:,.2f}"
+            'preference_id': pref_response["response"]["id"], 
+            'total_nuevo': f"{total_a_cobrar:,.2f}"
         })
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+        
 @login_required
 def crear_intencion_compra(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
@@ -360,6 +375,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
