@@ -135,60 +135,56 @@
     renderMPButton("{{ preference_id }}");
     {% endif %}
 
-    function consultarSoloEnvios() {
-        const cp_origen = document.getElementById('envio_cp_origen').value;
-        const cp_destino = document.getElementById('envio_cp_destino').value;
-        const peso = document.getElementById('envio_peso').value;
-        const largo = document.getElementById('envio_largo').value;
-        const ancho = document.getElementById('envio_ancho').value;
-        const alto = document.getElementById('envio_alto').value;
+    function cotizarEnvio() {
+    const btn = document.getElementById('btn-cotizar');
+    const resultDiv = document.getElementById('resultado-cotizacion');
+    const cp_origen = document.getElementById('cp_origen').value;
+    const cp_destino = document.getElementById('cp_destino').value;
+    const peso = "{{ producto.peso }}";
+    const largo = "{{ producto.largo }}";
+    const ancho = "{{ producto.ancho }}";
+    const alto = "{{ producto.alto }}";
 
-        if(!cp_origen || !cp_destino) { 
-            alert("Por favor, ingresa los Códigos Postales"); 
-            return; 
-        }
+    if (!cp_destino || cp_destino.length < 5) {
+        alert("Por favor ingresa un Código Postal de destino válido (5 dígitos).");
+        return;
+    }
 
-        const lista = document.getElementById('lista_paqueterias');
-        const btn = document.getElementById('btn_cotizar');
-        
-        document.getElementById('resultados_flete').style.display = "block";
-        lista.innerHTML = "<div style='text-align:center; padding:10px;'><i class='fas fa-circle-notch fa-spin'></i> Cotizando...</div>";
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
+    btn.disabled = true;
+    btn.innerText = "Cotizando...";
+    resultDiv.innerHTML = '<p class="text-muted">Buscando las mejores tarifas...</p>';
 
-        // URL apuntando a tu función en views.py
-        const url = `/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`;
-
-        fetch(url)
+    fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
         .then(response => response.json())
         .then(data => {
             btn.disabled = false;
-            btn.style.opacity = "1";
-            lista.innerHTML = "";
-            
-            if(data.tarifas && data.tarifas.length > 0) {
+            btn.innerText = "Cotizar Envío";
+
+            if (data.tarifas && data.tarifas.length > 0) {
+                let html = '<ul class="list-group">';
                 data.tarifas.forEach(t => {
-                    lista.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; border:1px solid #eee; margin-bottom:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <span><strong style="font-size:0.8rem; color:#003366;">${t.paqueteria}</strong><br><small style="color:#7f8c8d;">Entrega: ${t.tiempo}</small></span>
-                            <button onclick="seleccionarFlete(${t.precio_final})" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:0.9rem;">$${t.precio_final}</button>
-                        </div>`;
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>${t.paqueteria}</strong>
+                            <span class="badge bg-success rounded-pill">$${t.precio_final} MXN</span>
+                            <small class="text-muted">${t.tiempo}</small>
+                        </li>`;
                 });
+                html += '</ul>';
+                resultDiv.innerHTML = html;
             } else {
-                // Aquí ahora mostramos el error real (como el 401 si llegara a suceder)
-                lista.innerHTML = `<p style='color:#e74c3c; font-size:0.85rem; text-align:center; padding:10px; background:#fdeded; border-radius:8px;'>
-                    <i class="fas fa-exclamation-circle"></i> ${data.error || 'No hay rutas disponibles.'}
-                </p>`;
+                // AQUÍ ESTÁ EL CAMBIO: Te mostrará el error real en una ventana
+                const msgError = data.detalle || data.error || "Error desconocido";
+                alert("DETALLE DEL ERROR DE SOLOENVÍOS: " + msgError);
+                resultDiv.innerHTML = `<p class="text-danger">Error: ${msgError}</p>`;
             }
         })
         .catch(error => {
             btn.disabled = false;
-            btn.style.opacity = "1";
-            lista.innerHTML = "<p style='color:red; font-size:0.8rem;'>Error de red o servidor.</p>";
-            console.error(error);
+            btn.innerText = "Cotizar Envío";
+            alert("Error de conexión: " + error);
         });
-    }
-
+}
     function seleccionarFlete(precioEnvio) {
         document.getElementById('envio_info').style.display = "block";
         document.getElementById('monto_flete').innerText = precioEnvio;
@@ -211,3 +207,4 @@
     }
 </script>
 {% endblock %}
+
