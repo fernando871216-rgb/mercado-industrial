@@ -2,29 +2,34 @@
 
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
         
         <div>
             {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; border-radius: 15px; object-fit: cover;">
+                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; border-radius: 15px;">
             {% else %}
-                <div style="width: 100%; height: 300px; background: #eee; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: #999;">
-                    <i class="fas fa-image fa-4x"></i>
+                <div style="width: 100%; height: 300px; background: #eee; border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
                 </div>
             {% endif %}
         </div>
 
         <div>
-            <h1 style="color: #003366; margin-bottom: 10px;">{{ product.title }}</h1>
-            <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px;">Modelo/Parte: <strong>{{ product.part_number|default:"N/A" }}</strong></p>
-            
-            <div style="margin-bottom: 25px;">
-                <span style="font-size: 2rem; font-weight: bold; color: #27ae60;">${{ product.price }} MXN</span>
-            </div>
+            <h1 style="color: #003366;">{{ product.title }}</h1>
+            <p style="color: #7f8c8d;">Número de Parte: <strong>{{ product.part_number }}</strong></p>
+            <h2 style="color: #27ae60; font-size: 2rem;">${{ product.price }} MXN</h2>
 
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-                <h3 style="font-size: 1rem; color: #2c3e50; margin-bottom: 10px;">Descripción</h3>
-                <p style="color: #34495e; line-height: 1.6;">{{ product.description }}</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e9ecef;">
+                <h4 style="margin-top: 0; color: #003366;"><i class="fas fa-truck"></i> Cotizar Envío</h4>
+                <form action="{% url 'cotizar_envio' product.id %}" method="POST" style="display: flex; gap: 10px;">
+                    {% csrf_token %}
+                    <input type="text" name="cp_destino" placeholder="Tu CP" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                    <button type="submit" style="background: #003366; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                        Calcular
+                    </button>
+                </form>
             </div>
 
             <div id="wallet_container"></div>
@@ -34,16 +39,9 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('{{ public_key }}', {
-        locale: 'es-MX'
-    });
-    const bricksBuilder = mp.bricks();
-
-    bricksBuilder.create("wallet", "wallet_container", {
-        initialization: {
-            preferenceId: "{{ preference_id }}",
-            redirectMode: "modal"
-        },
+    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
+    mp.bricks().create("wallet", "wallet_container", {
+        initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
     });
 </script>
 {% endblock %}
