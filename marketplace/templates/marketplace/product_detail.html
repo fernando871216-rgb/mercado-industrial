@@ -1,96 +1,49 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px;">
+<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
         
         <div>
-            <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; margin-bottom: 25px;">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" style="max-width: 100%; border-radius: 15px; max-height: 450px; object-fit: contain;">
-                {% endif %}
-            </div>
-            <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                <h1 style="font-size: 2.2rem; color: #1a2a3a; margin-bottom: 10px;">{{ product.title }}</h1>
-                <p style="color: #7f8c8d; line-height: 1.6;">{{ product.description }}</p>
-            </div>
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; border-radius: 15px; object-fit: cover;">
+            {% else %}
+                <div style="width: 100%; height: 300px; background: #eee; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: #999;">
+                    <i class="fas fa-image fa-4x"></i>
+                </div>
+            {% endif %}
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                <h2 style="color: #2c3e50; font-size: 2.5rem; margin-bottom: 20px;">${{ product.price }} <span style="font-size: 1rem; color: #7f8c8d;">MXN</span></h2>
-
-                <div style="background: #f0f7ff; border: 1px solid #d1e9ff; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
-                    <h4 style="color: #003366; margin-bottom: 15px; font-size: 1rem;">
-                        <i class="fas fa-truck"></i> Configuración de Envío
-                    </h4>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: bold;">CP ORIGEN</label>
-                            <input type="text" value="{{ product.cp_origen }}" readonly style="width: 100%; padding: 10px; background: #e9ecef; border: 1px solid #ced4da; border-radius: 5px;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: bold; color: #003366;">CP DESTINO</label>
-                            <input type="text" id="cp_destino" placeholder="00000" maxlength="5" style="width: 100%; padding: 10px; border: 2px solid #3498db; border-radius: 5px;">
-                        </div>
-                    </div>
-
-                    <button id="btn-cotizar" onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase;">
-                        CALCULAR TARIFAS REALES
-                    </button>
-
-                    <div id="lista_paqueterias" style="margin-top: 20px; max-height: 300px; overflow-y: auto;"></div>
-                </div>
-
-                <div id="area-pago" style="border: 2px dashed #27ae60; border-radius: 15px; padding: 20px; text-align: center; background: #f9fff9;">
-                    <div id="wallet_container">
-                        <p style="color: #7f8c8d; font-size: 0.9rem;">Cargando opción de pago seguro...</p>
-                    </div>
-                </div>
+        <div>
+            <h1 style="color: #003366; margin-bottom: 10px;">{{ product.title }}</h1>
+            <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px;">Modelo/Parte: <strong>{{ product.part_number|default:"N/A" }}</strong></p>
+            
+            <div style="margin-bottom: 25px;">
+                <span style="font-size: 2rem; font-weight: bold; color: #27ae60;">${{ product.price }} MXN</span>
             </div>
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                <h3 style="font-size: 1rem; color: #2c3e50; margin-bottom: 10px;">Descripción</h3>
+                <p style="color: #34495e; line-height: 1.6;">{{ product.description }}</p>
+            </div>
+
+            <div id="wallet_container"></div>
         </div>
     </div>
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9'); 
+    const mp = new MercadoPago('{{ public_key }}', {
+        locale: 'es-MX'
+    });
+    const bricksBuilder = mp.bricks();
 
-    // 1. CARGAR EL BOTÓN AUTOMÁTICAMENTE AL ENTRAR (CON ENVÍO 0)
-    window.onload = function() {
-        generarBotonPago(0, 'Pendiente de cotizar');
-    };
-
-    async function cotizarEnvio() {
-        const cp = document.getElementById('cp_destino').value;
-        const lista = document.getElementById('lista_paqueterias');
-        
-        if (cp.length < 5) return alert("Ingresa un CP válido de 5 dígitos");
-
-        lista.innerHTML = "<p style='text-align:center;'>Consultando SoloEnvíos...</p>";
-
-        try {
-            const res = await fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`);
-            const data = await res.json();
-
-            if (data.tarifas && data.tarifas.length > 0) {
-                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Selecciona una opción para incluir el envío:</p>';
-                data.tarifas.forEach(t => {
-                    html += `
-                    <div onclick="generarBotonPago(${t.precio_final}, '${t.paqueteria}')" 
-                         style="background:white; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:0.2s;"
-                         onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
-                        <div>
-                            <strong style="display:block; color:#333;">${t.paqueteria}</strong>
-                            <small style="color:#7f8c8d;">Llega en: ${t.tiempo}</small>
-                        </div>
-                        <span style="color:#27ae60; font-weight:bold; font-size:1.1rem;">$${t.precio_final}</span>
-                    </div>`;
-                });
-                lista.innerHTML = html;
-            } else {
-                lista.innerHTML = "<p style='color:red;'>No hay rutas disponibles para este CP.</p>";
-            }
-        } catch (e) {
-            lista.innerHTML = "<p style='color:red;'>Error al conectar con el servidor de envíos.</p
+    bricksBuilder.create("wallet", "wallet_container", {
+        initialization: {
+            preferenceId: "{{ preference_id }}",
+            redirectMode: "modal"
+        },
+    });
+</script>
+{% endblock %}
