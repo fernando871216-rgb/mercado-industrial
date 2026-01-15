@@ -49,15 +49,18 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def obtener_token_soloenvios():
-    """Función para obtener un token nuevo automáticamente"""
+    """Obtiene el token usando las variables seguras de Render"""
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
-    # REEMPLAZA ESTOS DATOS CON LOS DE TU PANEL DE SOLOENVÍOS
+    # Tomamos las llaves de Render (Variables de Entorno)
+    client_id = os.environ.get('SOLOENVIOS_CLIENT_ID')
+    client_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET')
+
     payload = {
-        "client_id": "puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA",
-        "client_secret": "vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps",
+        "client_id": client_id,
+        "client_secret": client_secret,
         "grant_type": "client_credentials",
-        "scope": "default quotations.create"
+        "scope": "default quotations.create" # Permisos para cotizar
     }
     
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -67,18 +70,17 @@ def obtener_token_soloenvios():
         if res.status_code == 200:
             return res.json().get('access_token')
         return None
-    except:
+    except Exception as e:
+        print(f"Error obteniendo token: {e}")
         return None
 
 def cotizar_soloenvios(request):
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # Intentamos obtener el token dinámicamente
     token = obtener_token_soloenvios()
-    
     if not token:
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo autenticar con SoloEnvíos (Revisa tus credenciales).'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación. Revisa las llaves en Render.'})
 
     try:
         url = "https://app.soloenvios.com/api/v1/quotations"
@@ -119,7 +121,7 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas})
         else:
-            return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}: {res.text}'})
+            return JsonResponse({'tarifas': [], 'error': f'SoloEnvíos dice: {res.text}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -261,5 +263,6 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
