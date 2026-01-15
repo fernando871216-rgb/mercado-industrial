@@ -1,4 +1,4 @@
-    import requests
+import requests
 import urllib3
 import json
 import mercadopago
@@ -488,6 +488,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
