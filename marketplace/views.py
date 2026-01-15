@@ -335,10 +335,43 @@ def actualizar_guia(request, venta_id):
         v.shipping_company = request.POST.get('shipping_company')
         v.tracking_number = request.POST.get('tracking_number')
         v.status = 'enviado'; v.save()
-    return redirect('mis_ventas')
+    return redirect('mis_ventas')    
 
-def procesar_pago(request, product_id):
-    return redirect('detalle_producto', product_id=product_id)
+def procesar_pago(request, producto_id):
+    producto = get_object_or_404(IndustrialProduct, id=producto_id)
+    
+    # Configuramos el SDK con tu Token
+    sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
+
+    # Creamos la preferencia (la orden de pago)
+    preference_data = {
+        "items": [
+            {
+                "title": producto.title,
+                "quantity": 1,
+                "unit_price": float(producto.price),
+                "currency_id": "MXN", # O tu moneda
+            }
+        ],
+        "back_urls": {
+            "success": "https://mercado-industrial.onrender.com/mis-compras/",
+            "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
+            "pending": "https://mercado-industrial.onrender.com/mis-compras/", # Con su coma al final
+        },
+        "auto_return": "approved",
+        "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
+        "external_reference": f"{producto.id}-{request.user.id}",
+        "binary_mode": True, # Esto evita pagos pendientes y acelera el regreso
+    }
+
+    preference_response = sdk.preference().create(preference_data)
+    preference = preference_response["response"]
+
+    # Pasamos la preferencia al HTML para que el botón funcione
+    return render(request, 'marketplace/confirmar_pago.html', {
+        'preference': preference,
+        'producto': producto
+    })
 
 def actualizar_pago(request):
     try:
@@ -509,6 +542,7 @@ def mercadopago_webhook(request):
             print(f"Error de red: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
