@@ -11,9 +11,9 @@ from django.contrib import messages
 import base64
 import uuid
 import os
-import timefrom .models import IndustrialProduct, Category, Sale, Profile
+import time
 
-# IMPORTANTE: Usando tus nombres exactos de forms.py
+# IMPORTANTE: Solo importamos lo que existe en tu models.py
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 
@@ -89,11 +89,11 @@ def cotizar_soloenvios(request):
     try:
         # Buscamos en IndustrialProduct que es el modelo que usas
         producto = get_object_or_404(IndustrialProduct, id=product_id)
-        cp_origen = str(getattr(producto, 'cp_origen', '72460')).strip().zfill(5)
-        peso_db = getattr(producto, 'peso', 1)
-        largo_db = getattr(producto, 'largo', 20)
-        ancho_db = getattr(producto, 'ancho', 20)
-        alto_db = getattr(producto, 'alto', 20)
+        cp_origen = str(producto.cp_origen).strip().zfill(5)
+        peso_db = producto.peso
+        largo_db = producto.largo
+        ancho_db = producto.ancho
+        alto_db = producto.alto
     except Exception as e:
         print(f"Error cargando producto: {e}")
         cp_origen = "72460"
@@ -304,6 +304,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
