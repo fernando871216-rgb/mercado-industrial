@@ -32,7 +32,7 @@ urlpatterns = [
     
     # --- MERCADO PAGO Y LOGÍSTICA ---
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
-    path('actualizar-pago/', views.actualizar_pago, name='actualizar_pago'), 
+    #path('actualizar-pago/', views.actualizar_pago, name='actualizar_pago'), 
     path('cotizar-soloenvios/', views.cotizar_soloenvios, name='cotizar_soloenvios'),
     path('producto/<int:product_id>/intencion/', views.crear_intencion_compra, name='crear_intencion_compra'),
     
@@ -50,6 +50,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
