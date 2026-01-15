@@ -480,16 +480,20 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
-    payment_id = (
-        request.GET.get('id') or 
-        request.GET.get('data.id') or 
-        request.POST.get('data.id') or
-        request.POST.get('id')
-    )
+    # 1. Obtenemos el ID del pago
+    payment_id = request.GET.get('id') or request.GET.get('data.id')
     
-    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" # Pon tu APP_USR-...
+    # 2. Tu Token
+    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
 
     if payment_id:
+        # --- BLOQUE DE SEGURIDAD ANTI-DUPLICADOS ---
+        # Si ya existe una venta con este ID de pago en la base de datos, 
+        # respondemos 200 y nos salimos para no hacer nada más.
+        # (Asegúrate de tener un campo para guardar el payment_id en tu modelo Sale)
+        from .models import Sale 
+        
+        # Consultamos a la API de Mercado Pago para ver los detalles
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {'Authorization': f'Bearer {access_token.strip()}'}
         
@@ -497,51 +501,47 @@ def mercadopago_webhook(request):
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 data = response.json()
+                
                 if data.get('status') == 'approved':
                     ref_data = str(data.get('external_reference', ''))
                     parts = ref_data.strip().split('-')
                     
                     if len(parts) >= 2:
-                        try:
-                            producto = IndustrialProduct.objects.get(id=parts[0])
-                            comprador = User.objects.get(id=parts[1])
+                        producto_id = parts[0]
+                        comprador_id = parts[1]
+                        
+                        # BUSCAMOS SI YA EXISTE ESTA VENTA PARA EVITAR DUPLICAR
+                        # Usamos el payment_id para estar 100% seguros
+                        venta_existe = Sale.objects.filter(payment_id=payment_id).exists()
+                        
+                        if not venta_existe:
+                            producto = IndustrialProduct.objects.get(id=producto_id)
+                            comprador = User.objects.get(id=comprador_id)
                             monto = Decimal(str(data.get('transaction_amount')))
                             
-                            # SOLUCIÓN AL ERROR: Buscamos todas las ventas que coincidan
-                            ventas_existentes = Sale.objects.filter(
-                                product=producto, 
-                                buyer=comprador, 
-                                status='pendiente'
+                            # CREAMOS LA VENTA ÚNICA
+                            Sale.objects.create(
+                                product=producto,
+                                buyer=comprador,
+                                price=monto,
+                                status='approved',
+                                payment_id=payment_id # <--- IMPORTANTE GUARDAR ESTO
                             )
                             
-                            if ventas_existentes.exists():
-                                # Si hay varias, actualizamos la primera
-                                venta = ventas_existentes.first()
-                                venta.status = 'approved'
-                                venta.price = monto
-                                venta.save()
-                                print(f"VENTA ACTUALIZADA: {venta.id}")
-                            else:
-                                # Si no existe ninguna, la creamos
-                                venta = Sale.objects.create(
-                                    product=producto,
-                                    buyer=comprador,
-                                    price=monto,
-                                    status='approved'
-                                )
-                                if producto.stock > 0:
-                                    producto.stock -= 1
-                                    producto.save()
-                                print(f"NUEVA VENTA CREADA: {venta.id}")
+                            # Solo descontamos stock si la venta es nueva
+                            if producto.stock > 0:
+                                producto.stock -= 1
+                                producto.save()
                                 
-                        except Exception as e:
-                            print(f"Error procesando venta: {e}")
-            else:
-                print(f"MP Error {response.status_code}")
+                            print(f"VENTA REALIZADA CON ÉXITO: {payment_id}")
+                        else:
+                            print(f"VENTA YA PROCESADA ANTERIORMENTE: {payment_id}")
+            
         except Exception as e:
-            print(f"Error de red: {e}")
+            print(f"Error: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
