@@ -37,7 +37,7 @@ urlpatterns = [
     path('producto/<int:product_id>/intencion/', views.crear_intencion_compra, name='crear_intencion_compra'),
     
     # --- RESULTADOS DE PAGO ---
-    path('pago-exitoso/<int:producto_id>/', views.pago_exitoso, name='pago_exitoso')
+    path('pago-exitoso/<int:producto_id>/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('webhook/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     path('marcar-pagado/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
@@ -50,6 +50,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
