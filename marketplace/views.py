@@ -195,6 +195,8 @@ def editar_producto(request, pk):
         form = ProductForm(request.POST, request.FILES, instance=producto)
         if form.is_valid():
             form.save()
+            # ESTA LÍNEA ES LA QUE FALTA PARA EL ANUNCIO:
+            messages.success(request, f"¡El producto '{producto.title}' fue actualizado con éxito!")
             return redirect('mi_inventario')
     else:
         form = ProductForm(instance=producto)
@@ -405,3 +407,4 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
