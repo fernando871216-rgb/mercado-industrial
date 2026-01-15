@@ -27,40 +27,22 @@ SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319e
 
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    
-    # 1. Obtenemos el costo de envío que viene del JavaScript
-    try:
-        envio_val = float(request.GET.get('envio', 0))
-    except:
-        envio_val = 0
+    envio_val = float(request.GET.get('envio', 0))
 
-    # 2. Cálculos de precio (Tu fórmula del 5% + Comisión MP + Envío)
+    # Tus cálculos de comisión
     precio_base = float(producto.price)
     comision_initre = precio_base * 0.05
     subtotal = precio_base + comision_initre + envio_val
     
-    # Comisión de Mercado Pago (3.49% + $4 + IVA)
-    comision_mp = (subtotal * 0.0349) + 4.0
-    iva_comision = comision_mp * 0.16
-    total_final = round(subtotal + comision_mp + iva_comision, 2)
+    # Comisión MP (Fórmula completa)
+    total_comision_mp = (subtotal * 0.0349) + 4.0 + (((subtotal * 0.0349) + 4.0) * 0.16)
+    total_final = round(subtotal + total_comision_mp, 2)
 
-    # 3. Configurar Mercado Pago
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
     
-    user_id = request.user.id if request.user.is_authenticated else 0
-    tipo_entrega = "E" if envio_val > 0 else "R"
-    ext_ref = f"{producto.id}-{user_id}-{tipo_entrega}"
-
     preference_data = {
-        "items": [
-            {
-                "title": f"{producto.title} (Inc. Envío)",
-                "quantity": 1,
-                "unit_price": total_final,
-                "currency_id": "MXN",
-            }
-        ],
-        "external_reference": ext_ref,
+        "items": [{"title": producto.title, "quantity": 1, "unit_price": total_final, "currency_id": "MXN"}],
+        "external_reference": f"{producto.id}-{request.user.id}-{int(envio_val)}",
         "back_urls": {
             "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
             "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
@@ -71,11 +53,9 @@ def generar_preferencia_pago(request, producto_id):
         "binary_mode": True,
     }
 
-    preference_response = sdk.preference().create(preference_data)
-    
-    # Devolvemos el ID y el total para que el HTML se actualice solo
+    pref_response = sdk.preference().create(preference_data)
     return JsonResponse({
-        'preference_id': preference_response["response"]["id"],
+        'preference_id': pref_response["response"]["id"],
         'total_final': f"{total_final:,.2f}"
     })
 
@@ -393,61 +373,8 @@ def actualizar_guia(request, venta_id):
 
 def procesar_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    
-    # 1. Recuperamos el valor del envío si viene en la URL (ej: ?envio=150)
-    try:
-        envio_val = float(request.GET.get('envio', 0))
-    except:
-        envio_val = 0
-
-    # 2. Cálculos de precio REAL (Igual que tenías en actualizar_pago)
-    precio_base = float(producto.price)
-    comision_initre = precio_base * 0.05
-    subtotal = precio_base + comision_initre + envio_val
-    
-    # Cálculo de comisión de Mercado Pago
-    total_comision_mp = (subtotal * 0.0349) + 4.0 + (((subtotal * 0.0349) + 4.0) * 0.16)
-    total_final = round(subtotal + total_comision_mp, 2)
-
-    # 3. Configuramos el SDK
-    sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
-
-    # 4. Referencia externa ÚNICA (Producto-Usuario-TipoEntrega)
-    user_id = request.user.id if request.user.is_authenticated else 0
-    tipo_entrega = "E" if envio_val > 0 else "R"
-    ext_ref = f"{producto.id}-{user_id}-{tipo_entrega}"
-
-    # 5. Creamos la PREFERENCIA
-    preference_data = {
-        "items": [
-            {
-                "title": f"{producto.title} (Inc. Comisiones y Envío)",
-                "quantity": 1,
-                "unit_price": total_final,
-                "currency_id": "MXN",
-            }
-        ],
-        "external_reference": ext_ref,
-        "back_urls": {
-            "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
-            "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-            "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
-        },
-        "auto_return": "approved",
-        "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
-        "binary_mode": True,
-    }
-
-    preference_response = sdk.preference().create(preference_data)
-    preference = preference_response["response"]
-
-    # 6. Renderizamos la página de confirmación con el precio final
-    return render(request, 'marketplace/confirmar_pago.html', {
-        'preference': preference,
-        'producto': producto,
-        'total_final': total_final,
-        'envio': envio_val
-    })
+    # Solo pasamos el producto, el resto lo hace el JavaScript de arriba
+    return render(request, 'marketplace/pago.html', {'producto': producto})
 
         
 @login_required
@@ -570,6 +497,7 @@ def mercadopago_webhook(request):
             print(f"Error: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
