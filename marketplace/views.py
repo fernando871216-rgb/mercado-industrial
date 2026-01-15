@@ -49,7 +49,6 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Obtener CPs
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
@@ -64,13 +63,11 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Convertir dimensiones a enteros
-        v_peso = int(float(request.GET.get('peso') or 1))
-        v_largo = int(float(request.GET.get('largo') or 20))
-        v_ancho = int(float(request.GET.get('ancho') or 20))
-        v_alto = int(float(request.GET.get('alto') or 20))
+        v_peso = float(request.GET.get('peso') or 1)
+        v_largo = float(request.GET.get('largo') or 20)
+        v_ancho = float(request.GET.get('ancho') or 20)
+        v_alto = float(request.GET.get('alto') or 20)
 
-        # ESTRUCTURA LIMPIA (Sin order_id para evitar el error de "no existe")
         payload = {
             "quotation": {
                 "address_from": {
@@ -100,36 +97,31 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
+        res = requests.post(url, json=payload, headers=headers, verify=False, timeout=20)
         
         if res.status_code == 200:
             data = res.json()
-            # Buscamos la lista de tarifas en la respuesta
-            rates_list = data if isinstance(data, list) else data.get('rates', data.get('data', []))
+            # La lista de precios está en la llave 'rates'
+            rates_list = data.get('rates', [])
             
             tarifas = []
             for t in rates_list:
-                costo = t.get('total_price') or t.get('price') or t.get('cost')
-                # El nombre del servicio a veces viene anidado
-                nombre = t.get('service_name') or t.get('carrier_name') or 'Envío'
-                
-                if costo:
+                # SOLO AGREGAMOS LAS QUE TENGAN ÉXITO Y PRECIO
+                if t.get('success') is True and t.get('total') is not None:
+                    costo_base = float(t.get('total'))
                     tarifas.append({
-                        'paqueteria': nombre,
-                        'precio_final': round(float(costo) * 1.08, 2),
-                        'tiempo': t.get('delivery_days') or '3-5 días'
+                        'paqueteria': f"{t.get('provider_display_name')} - {t.get('provider_service_name')}",
+                        'precio_final': round(costo_base * 1.08, 2), # Tu 8% de comisión
+                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay servicios para este CP.'})
+                # Si todas salieron 'pending' o 'false', mandamos este aviso
+                return JsonResponse({'tarifas': [], 'error': 'Las paqueterías aún están calculando costos. Intenta de nuevo en un momento.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({
-            'tarifas': [], 
-            'error': f'Error {res.status_code}', 
-            'detalle': res.text
-        })
+        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}', 'detalle': res.text})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -270,6 +262,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
