@@ -22,7 +22,14 @@
                     <div>
                         <span style="font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; font-weight: bold;">Pedido #{{ c.id }}</span>
                         <h3 style="margin: 5px 0; color: #1a202c; font-size: 1.15rem; line-height: 1.2;">{{ c.product.title }}</h3>
-                        <p style="margin: 0; color: #4a5568; font-size: 0.9rem;">Vendedor: <strong>{{ c.product.user.username }}</strong></p>
+                        <p style="margin: 0; color: #4a5568; font-size: 0.9rem;">
+                            Vendedor: <strong>{{ c.product.user.username }}</strong>
+                            {% if c.metodo_entrega == 'envio' %}
+                                <span style="margin-left: 5px; color: #1565c0; font-weight: bold; font-size: 0.75rem;"><i class="fas fa-truck"></i> Envío</span>
+                            {% else %}
+                                <span style="margin-left: 5px; color: #ef6c00; font-weight: bold; font-size: 0.75rem;"><i class="fas fa-store"></i> Recogida</span>
+                            {% endif %}
+                        </p>
                         
                         <div style="margin-top: 10px;">
                             <a href="https://wa.me/52{{ c.product.user.profile.phone }}?text=Hola,%20soy%20el%20comprador%20de%20tu%20equipo:%20{{ c.product.title }}" 
@@ -49,28 +56,36 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div style="flex: 1;">
-                    {% if c.tracking_number %}
-                        <div style="background: #f7fafc; padding: 10px 15px; border-radius: 8px; display: inline-block;">
-                            <p style="margin: 0; font-size: 0.9rem; color: #2d3748;">
-                                <i class="fas fa-truck" style="color: #3498db;"></i> <strong>{{ c.shipping_company }}</strong>: 
-                                <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; margin-left: 5px;">{{ c.tracking_number }}</span>
-                            </p>
-                        </div>
-                    {% else %}
-                        <p style="margin: 0; font-size: 0.9rem; color: #dd6b20; font-weight: 500;">
-                            <i class="fas fa-clock"></i> Esperando que el vendedor asigne guía de envío...
+                    {% if c.metodo_entrega == 'recoleccion' %}
+                        <p style="margin: 0; font-size: 0.9rem; color: #4a5568;">
+                            <i class="fas fa-map-marker-alt" style="color: #e74c3c;"></i> <strong>Recoger en sucursal:</strong> Contacta al vendedor para la dirección.
                         </p>
+                    {% else %}
+                        {% if c.tracking_number %}
+                            <div style="background: #f7fafc; padding: 10px 15px; border-radius: 8px; display: inline-block;">
+                                <p style="margin: 0; font-size: 0.9rem; color: #2d3748;">
+                                    <i class="fas fa-truck" style="color: #3498db;"></i> <strong>{{ c.shipping_company }}</strong>: 
+                                    <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; margin-left: 5px;">{{ c.tracking_number }}</span>
+                                </p>
+                            </div>
+                        {% else %}
+                            <p style="margin: 0; font-size: 0.9rem; color: #dd6b20; font-weight: 500;">
+                                <i class="fas fa-clock"></i> Esperando que el vendedor asigne guía de envío...
+                            </p>
+                        {% endif %}
                     {% endif %}
                 </div>
 
-                {% if c.status == 'enviado' and not c.recibido_por_comprador %}
-                <form action="{% url 'confirmar_recepcion' c.id %}" method="POST" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: 0.3s; width: 100%;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
-                        <i class="fas fa-check-double"></i> CONFIRMAR RECEPCIÓN
-                    </button>
-                </form>
-                {% elif c.recibido_por_comprador %}
+                {% if not c.recibido_por_comprador %}
+                    {% if c.metodo_entrega == 'recoleccion' or c.status == 'enviado' %}
+                    <form action="{% url 'confirmar_recepcion' c.id %}" method="POST" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: 0.3s; width: 100%;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
+                            <i class="fas fa-check-double"></i> CONFIRMAR RECEPCIÓN
+                        </button>
+                    </form>
+                    {% endif %}
+                {% else %}
                     <div style="color: #27ae60; font-weight: bold; font-size: 0.9rem; background: #f0fff4; padding: 10px 20px; border-radius: 8px; border: 1px solid #c6f6d5;">
                         <i class="fas fa-check-circle"></i> PRODUCTO RECIBIDO
                     </div>
@@ -84,26 +99,10 @@
                 <i class="fas fa-shopping-cart" style="font-size: 3rem; color: #cbd5e0;"></i>
             </div>
             <h3 style="color: #2d3748; margin-bottom: 10px;">No hay compras aún</h3>
-            <p style="color: #718096; margin-bottom: 25px;">Cuando realices un pedido, podrás seguir su estado desde aquí.</p>
             <a href="{% url 'home' %}" style="background: #003366; color: white; text-decoration: none; padding: 15px 35px; border-radius: 10px; font-weight: bold; display: inline-block;">
                 Ir al Catálogo
             </a>
         </div>
     {% endif %}
 </div>
-
-<style>
-    /* Ajustes para móviles */
-    @media (max-width: 600px) {
-        h2 { text-align: center; font-size: 1.5rem; }
-        div[style*="text-align: right"] {
-            text-align: left !important;
-            width: 100%;
-            margin-top: 5px;
-            border-top: 1px dashed #edf2f7;
-            padding-top: 10px;
-        }
-        button { width: 100%; }
-    }
-</style>
 {% endblock %}
