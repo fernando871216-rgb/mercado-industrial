@@ -1,132 +1,112 @@
-{% extends 'base.html' %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.nombre }} - Mercado Industrial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .btn-mp { background-color: #009ee3; color: white; border: none; }
+        .btn-mp:hover { background-color: #0081ba; color: white; }
+        .shipping-box { background-color: #f8f9fa; border-radius: 15px; border: 1px solid #e9ecef; }
+        .price-tag { color: #2ecc71; font-weight: bold; font-size: 2rem; }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0">
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Mercado Industrial</a>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    <div class="product-card p-4 p-lg-5">
+        <div class="row">
+            <div class="col-md-6 mb-4 text-center">
                 {% if product.imagen %}
-                    <img src="{{ product.imagen.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.nombre }}">
+                    <img src="{{ product.imagen.url }}" class="img-fluid rounded" style="max-height: 500px;" alt="{{ product.nombre }}">
                 {% else %}
-                    <img src="https://via.placeholder.com/500" class="img-fluid rounded shadow-sm" alt="Sin imagen">
+                    <img src="https://via.placeholder.com/500x500?text=Sin+Imagen" class="img-fluid rounded" alt="Sin imagen">
                 {% endif %}
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <h1 class="display-5 fw-bold text-dark">{{ product.nombre }}</h1>
-            <h3 class="text-success mb-4">${{ product.precio }} MXN</h3>
-            
-            <p class="text-muted">{{ product.descripcion }}</p>
-
-            <hr class="my-4">
-
-            <div class="card p-4 border-0 shadow-sm" style="border-radius: 20px; background-color: #f8f9fa;">
-                <h5 class="mb-3 d-flex align-items-center">
-                    <span class="me-2">🚚</span> Cotizar Envío
-                </h5>
+            <div class="col-md-6">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+                        <li class="breadcrumb-item active">Producto</li>
+                    </ol>
+                </nav>
                 
-                <div class="input-group mb-2">
-                    <input type="text" id="cp_destino_input" class="form-control" placeholder="C.P. Destino" maxlength="5">
-                    <button type="button" id="btnCotizarRapido" class="btn btn-primary px-4">Calcular</button>
-                    <button type="button" id="btnLimpiar" class="btn btn-outline-secondary" title="Limpiar">✕</button>
+                <h1 class="fw-bold mb-2">{{ product.nombre }}</h1>
+                <div class="price-tag mb-3">${{ product.precio }} MXN</div>
+                <p class="text-muted mb-4">{{ product.descripcion }}</p>
+
+                <hr>
+
+                <div class="shipping-box p-3 mb-4">
+                    <label class="form-label fw-bold mb-2">🚚 Cotizar costo de envío</label>
+                    <div class="input-group">
+                        <input type="text" id="cp_input" class="form-control" placeholder="Tu C.P. (5 dígitos)" maxlength="5">
+                        <button class="btn btn-dark" id="btn_calcular" type="button">Calcular</button>
+                    </div>
+
+                    <div id="loader" class="text-center mt-3" style="display: none;">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ms-2 small">Buscando tarifas...</span>
+                    </div>
+
+                    <div id="div_resultados" class="mt-3" style="display: none;">
+                        <ul class="list-group list-group-flush" id="lista_tarifas" style="font-size: 0.9rem;">
+                            </ul>
+                    </div>
                 </div>
 
-                <div id="loading_envio" class="text-center mt-3" style="display: none;">
-                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                    <span class="ms-2 text-primary small fw-bold">Buscando tarifas...</span>
-                </div>
-
-                <div id="resultado_envio" class="mt-3" style="display: none; max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-borderless align-middle">
-                        <tbody id="tablaTarifasBody">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="d-grid gap-2 mt-4">
-                <button class="btn btn-warning btn-lg fw-bold text-white shadow-sm" style="background-color: #f39c12; border: none;">
-                    Confirmar Intención de Compra
-                </button>
-                
-                <div id="wallet_container">
-                    <button class="btn btn-light btn-lg border w-100 shadow-sm d-flex align-items-center justify-content-center">
-                        <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.22/mercadopago/logo__small.png" height="20" class="me-2">
-                        Pagar ahora
-                    </button>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-warning btn-lg fw-bold shadow-sm">Confirmar Intención</button>
+                    <button class="btn btn-mp btn-lg shadow-sm">Pagar con Mercado Pago</button>
+                    <button class="btn btn-outline-secondary" onclick="window.history.back()">Volver</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<input type="hidden" id="p_peso" value="{{ product.peso|default:'1' }}">
-<input type="hidden" id="p_largo" value="{{ product.largo|default:'20' }}">
-<input type="hidden" id="p_ancho" value="{{ product.ancho|default:'20' }}">
-<input type="hidden" id="p_alto" value="{{ product.alto|default:'20' }}">
+<input type="hidden" id="val_peso" value="{{ product.peso|default:1 }}">
+<input type="hidden" id="val_largo" value="{{ product.largo|default:20 }}">
+<input type="hidden" id="val_ancho" value="{{ product.ancho|default:20 }}">
+<input type="hidden" id="val_alto" value="{{ product.alto|default:20 }}">
 
 <script>
-    const btnCotizar = document.getElementById('btnCotizarRapido');
-    const btnLimpiar = document.getElementById('btnLimpiar');
-    const inputCP = document.getElementById('cp_destino_input');
-    const loading = document.getElementById('loading_envio');
-    const resultado = document.getElementById('resultado_envio');
-    const tabla = document.getElementById('tablaTarifasBody');
+    document.getElementById('btn_calcular').addEventListener('click', function() {
+        const cp = document.getElementById('cp_input').value;
+        const loader = document.getElementById('loader');
+        const resDiv = document.getElementById('div_resultados');
+        const lista = document.getElementById('lista_tarifas');
 
-    btnLimpiar.addEventListener('click', () => {
-        inputCP.value = '';
-        tabla.innerHTML = '';
-        resultado.style.display = 'none';
-    });
-
-    btnCotizar.addEventListener('click', function() {
-        const cp_destino = inputCP.value.trim();
-        if (!cp_destino || cp_destino.length < 5) {
-            alert("Ingresa un Código Postal válido.");
+        if(cp.length < 5) {
+            alert("Escribe un código postal de 5 dígitos");
             return;
         }
 
-        tabla.innerHTML = '';
-        resultado.style.display = 'none';
-        loading.style.display = 'block';
+        loader.style.display = 'block';
+        resDiv.style.display = 'none';
+        lista.innerHTML = '';
 
         const params = new URLSearchParams({
             cp_origen: '72460',
-            cp_destino: cp_destino,
-            peso: document.getElementById('p_peso').value,
-            largo: document.getElementById('p_largo').value,
-            ancho: document.getElementById('p_ancho').value,
-            alto: document.getElementById('p_alto').value
+            cp_destino: cp,
+            peso: document.getElementById('val_peso').value,
+            largo: document.getElementById('val_largo').value,
+            ancho: document.getElementById('val_ancho').value,
+            alto: document.getElementById('val_alto').value
         });
 
         fetch(`/cotizar-soloenvios/?${params.toString()}`)
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
-                loading.style.display = 'none';
-                if (data.tarifas && data.tarifas.length > 0) {
-                    data.tarifas.forEach(t => {
-                        const row = `
-                            <tr class="border-bottom">
-                                <td class="py-2">
-                                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">${t.paqueteria}</div>
-                                    <div class="text-muted small">Llega en ${t.tiempo}</div>
-                                </td>
-                                <td class="text-end py-2 fw-bold text-success" style="font-size: 1rem;">
-                                    $${t.precio_final}
-                                </td>
-                            </tr>`;
-                        tabla.innerHTML += row;
-                    });
-                    resultado.style.display = 'block';
-                } else {
-                    alert("No hay tarifas disponibles. Intenta de nuevo.");
-                }
-            })
-            .catch(error => {
-                loading.style.display = 'none';
-                alert("Error de conexión.");
-            });
-    });
-</script>
-{% endblock %}
+                loader.style.display = 'none';
+                if(data.tarifas && data.tarifas.length >
