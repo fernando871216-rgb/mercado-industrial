@@ -12,15 +12,19 @@
             </div>
             
             <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                <h1 style="font-size: 2.5rem; color: #1a2a3a; margin-bottom: 10px;">{{ product.title }}</h1>
-                <p style="color: #7f8c8d; line-height: 1.6; font-size: 1.1rem;">{{ product.description }}</p>
+                <h1 style="font-size: 2.2rem; color: #1a2a3a; margin-bottom: 10px;">{{ product.title }}</h1>
+                <p style="color: #7f8c8d; line-height: 1.6;">{{ product.description }}</p>
+                <div style="margin-top:20px; display:flex; gap:20px;">
+                    <span><strong>Categoría:</strong> {{ product.category.name }}</span>
+                    <span style="color:#27ae60;"><strong>● Disponible</strong></span>
+                </div>
             </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 20px;">
             
             <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                <h2 style="color: #27ae60; font-size: 2.2rem; margin-bottom: 25px;">${{ product.price }} <span style="font-size: 1rem; color: #7f8c8d;">MXN</span></h2>
+                <h2 style="color: #2c3e50; font-size: 2.5rem; margin-bottom: 20px;">${{ product.price }} <span style="font-size: 1rem; color: #7f8c8d;">MXN</span></h2>
 
                 <div style="background: #f0f7ff; border: 1px solid #d1e9ff; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
                     <h4 style="color: #003366; margin-bottom: 15px; font-size: 1rem; display: flex; align-items: center;">
@@ -29,96 +33,119 @@
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: bold; color: #555;">CP ORIGEN</label>
-                            <input type="text" value="{{ product.cp_origen }}" readonly style="width: 100%; padding: 8px; background: #eee; border: 1px solid #ddd; border-radius: 5px;">
+                            <label style="font-size: 0.7rem; font-weight: bold; color: #555;">CP ORIGEN</label>
+                            <input type="text" id="cp_origen" value="{{ product.cp_origen }}" readonly style="width: 100%; padding: 10px; background: #e9ecef; border: 1px solid #ced4da; border-radius: 5px;">
                         </div>
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: bold; color: #003366;">CP DESTINO</label>
-                            <input type="text" id="cp_destino" placeholder="00000" maxlength="5" style="width: 100%; padding: 8px; border: 2px solid #3498db; border-radius: 5px;">
+                            <label style="font-size: 0.7rem; font-weight: bold; color: #003366;">CP DESTINO</label>
+                            <input type="text" id="cp_destino" placeholder="Escribe tu CP" maxlength="5" style="width: 100%; padding: 10px; border: 2px solid #3498db; border-radius: 5px; font-weight: bold;">
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px;">
-                        <div><small style="font-size: 0.6rem;">PESO (kg)</small><input type="text" value="{{ product.peso }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
-                        <div><small style="font-size: 0.6rem;">LARGO (cm)</small><input type="text" value="{{ product.largo }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
-                        <div><small style="font-size: 0.6rem;">ANCHO (cm)</small><input type="text" value="{{ product.ancho }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
-                        <div><small style="font-size: 0.6rem;">ALTO (cm)</small><input type="text" value="{{ product.alto }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff;"></div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px;">
+                        <div><small style="font-size: 0.6rem;">PESO (kg)</small><input type="text" id="peso" value="{{ product.peso }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff; text-align:center;"></div>
+                        <div><small style="font-size: 0.6rem;">LARGO (cm)</small><input type="text" id="largo" value="{{ product.largo }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff; text-align:center;"></div>
+                        <div><small style="font-size: 0.6rem;">ANCHO (cm)</small><input type="text" id="ancho" value="{{ product.ancho }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff; text-align:center;"></div>
+                        <div><small style="font-size: 0.6rem;">ALTO (cm)</small><input type="text" id="alto" value="{{ product.alto }}" readonly style="width: 100%; font-size: 0.8rem; padding: 5px; border: 1px solid #ddd; background: #fff; text-align:center;"></div>
                     </div>
 
-                    <button onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.9rem;">
+                    <button id="btn-cotizar" onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s;">
                         CALCULAR TARIFAS REALES
                     </button>
 
-                    <div id="lista_paqueterias" style="margin-top: 20px; max-height: 250px; overflow-y: auto;"></div>
+                    <div id="lista_paqueterias" style="margin-top: 20px; max-height: 300px; overflow-y: auto;"></div>
                 </div>
 
-                <div style="border: 2px dashed #27ae60; border-radius: 15px; padding: 15px; text-align: center;">
+                <div style="border: 2px dashed #27ae60; border-radius: 15px; padding: 20px; text-align: center; background: #f9fff9;">
                     <div id="wallet_container">
-                        <p style="color: #95a5a6; font-size: 0.9rem;">Selecciona una opción de envío para habilitar el pago seguro.</p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem;">Selecciona una paquetería para habilitar el pago.</p>
                     </div>
-                    <small style="color: #27ae60; font-weight: bold; display: block; margin-top: 10px;">
-                        <i class="fas fa-lock"></i> PAGO SEGURO CON MERCADO PAGO
-                    </small>
+                    <div style="margin-top:15px; color: #27ae60; font-weight: bold; font-size: 0.8rem;">
+                        <i class="fas fa-lock"></i> TRANSACCIÓN PROTEGIDA POR MERCADO PAGO
+                    </div>
                 </div>
             </div>
 
-            <div style="background: #f9f9f9; padding: 20px; border-radius: 15px; font-size: 0.85rem; color: #7f8c8d;">
-                <i class="fas fa-info-circle"></i> Las tarifas son calculadas en tiempo real mediante integraciones certificadas de paquetería.
+            <div style="background: #fdfdfd; padding: 20px; border-radius: 15px; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d;">
+                <strong><i class="fas fa-info-circle"></i> Información de Origen:</strong><br>
+                Ubicación del equipo: CP {{ product.cp_origen }} | Dimensiones: {{ product.largo }}x{{ product.ancho }}x{{ product.alto }} cm
             </div>
-
         </div>
     </div>
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('TU_PUBLIC_KEY'); // <-- PON AQUÍ TU CLAVE PÚBLICA REAL
+    // 1. INICIALIZAR MERCADO PAGO (USA TU CLAVE PÚBLICA AQUÍ)
+    const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9'); 
 
     async function cotizarEnvio() {
         const cpDestino = document.getElementById('cp_destino').value;
         const listaDiv = document.getElementById('lista_paqueterias');
         
-        if(cpDestino.length < 5) {
-            alert("Ingresa un CP de destino válido");
+        if (cpDestino.length < 5) {
+            alert("Por favor, ingresa un Código Postal de 5 dígitos.");
             return;
         }
 
-        listaDiv.innerHTML = "<p style='text-align:center;'>Cotizando...</p>";
+        listaDiv.innerHTML = "<div style='text-align:center; padding:20px;'><i class='fas fa-spinner fa-spin'></i> Conectando con SoloEnvíos...</div>";
 
         try {
+            // PETICIÓN A TU VISTA DE DJANGO (Asegúrate que la URL sea esta)
             const response = await fetch(`/cotizar-envio/?product_id={{ product.id }}&cp_destino=${cpDestino}`);
+            
+            if (!response.ok) throw new Error("Error en la respuesta del servidor");
+            
             const data = await response.json();
 
             if (data.tarifas && data.tarifas.length > 0) {
-                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Selecciona una opción de envío:</p>';
+                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px; color:#003366;">Opciones disponibles:</p>';
                 data.tarifas.forEach(t => {
                     html += `
-                    <div onclick="prepararPago(${t.precio_final})" style="background:white; border:1px solid #ddd; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'">
-                        <div>
-                            <strong style="display:block; color:#333;">${t.paqueteria} (${t.servicio})</strong>
-                            <small style="color:#7f8c8d;">Llega en: ${t.tiempo}</small>
+                    <div onclick="generarBotonPago(${t.precio_final}, '${t.paqueteria}')" style="background:white; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:0.2s;" onmouseover="this.style.borderColor='#3498db'">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="radio" name="paqueteria_radio">
+                            <div>
+                                <strong style="display:block; color:#333;">${t.paqueteria}</strong>
+                                <small style="color:#7f8c8d;">Llega en: ${t.tiempo}</small>
+                            </div>
                         </div>
                         <span style="color:#27ae60; font-weight:bold; font-size:1.1rem;">$${t.precio_final}</span>
                     </div>`;
                 });
                 listaDiv.innerHTML = html;
             } else {
-                listaDiv.innerHTML = "<p style='color:red;'>No hay servicios disponibles para este CP.</p>";
+                listaDiv.innerHTML = "<p style='color:red; text-align:center;'>No hay servicios para este CP o datos de peso/dimensiones incorrectos.</p>";
             }
-        } catch (e) {
-            listaDiv.innerHTML = "<p style='color:red;'>Error al conectar con el servidor.</p>";
+        } catch (error) {
+            console.error(error);
+            listaDiv.innerHTML = "<p style='color:red; text-align:center;'>Error crítico: No se pudo conectar con la API de envíos.</p>";
         }
     }
 
-    async function prepararPago(costoEnvio) {
-        // Al seleccionar la paquetería, generamos la preferencia de Mercado Pago
-        const response = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
-        const data = await response.json();
-        
-        document.getElementById('wallet_container').innerHTML = '';
-        mp.bricks().create("wallet", "wallet_container", {
-            initialization: { preferenceId: data.preference_id },
-        });
+    async function generarBotonPago(costoEnvio, paqueteriaNombre) {
+        const walletContainer = document.getElementById('wallet_container');
+        walletContainer.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Creando orden de pago...";
+
+        try {
+            // ENVIAMOS EL COSTO DE ENVÍO PARA ACTUALIZAR EL TOTAL EN MERCADO PAGO
+            const response = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}&paqueteria=${paqueteriaNombre}`);
+            const data = await response.json();
+
+            if (data.preference_id) {
+                walletContainer.innerHTML = ''; // Limpiamos el cargando
+                mp.bricks().create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: data.preference_id,
+                    },
+                    customization: {
+                        texts: { valueProp: 'smart_option' },
+                    }
+                });
+            }
+        } catch (error) {
+            walletContainer.innerHTML = "<p style='color:red;'>Error al generar el botón de pago.</p>";
+        }
     }
 </script>
 {% endblock %}
