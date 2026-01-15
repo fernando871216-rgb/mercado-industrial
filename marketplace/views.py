@@ -451,7 +451,7 @@ def mercadopago_webhook(request):
     
     # IMPORTANTE: Pon aquí tu Access Token real si no lo tienes en una variable
     # O usa settings.MERCADOPAGO_ACCESS_TOKEN si lo tienes en settings
-    access_token = "MP_ACCESS_TOKEN" 
+    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" 
 
     if payment_id:
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
@@ -493,6 +493,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CONEXION: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
