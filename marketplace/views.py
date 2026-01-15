@@ -24,7 +24,7 @@ SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319e
 # ==========================================
 # 1. PERFIL (Corregido con tus 2 formularios)
 # ==========================================
-    @login_required
+@login_required
 def editar_perfil(request):
     # Intentamos obtener el perfil del usuario, si no existe lo creamos
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -409,6 +409,7 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
