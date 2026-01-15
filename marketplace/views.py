@@ -97,6 +97,7 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
+        # Enviamos datos más reales para asegurar respuesta
         payload = {
             "quotation": {
                 "address_from": {
@@ -119,16 +120,15 @@ def cotizar_soloenvios(request):
         }
         
         res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
+        data = res.json()
         
         if res.status_code == 200:
-            data = res.json()
-            # IMPORTANTE: Aquí filtramos solo las que tienen éxito y tienen un TOTAL
             rates_list = data.get('rates', [])
             tarifas = []
             
             for t in rates_list:
-                # Verificamos que traiga precio (total) y que no sea nulo
-                if t.get('total') and float(t.get('total')) > 0:
+                # Si la paquetería respondió con éxito y tiene un precio
+                if t.get('success') is True and t.get('total'):
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
                         'precio_final': round(float(t.get('total')) * 1.08, 2),
@@ -136,15 +136,15 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para esta ruta con ese peso/medidas.'})
+                # Si rates_list existe pero está vacío o todas fallaron
+                return JsonResponse({'tarifas': [], 'error': 'API conectada pero no devolvió tarifas. Revisa tu SALDO en SoloEnvíos.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': 'La API no devolvió resultados válidos.'})
+        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}: {data}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
-
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
     # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -282,6 +282,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
