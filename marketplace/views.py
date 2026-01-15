@@ -369,15 +369,17 @@ def actualizar_pago(request):
                     "currency_id": "MXN"
                 }
             ],
-            # CORRECCIÓN: Usamos product.id
+         
             "external_reference": f"{product.id}-{user_id}",
             "back_urls": {
                 "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
                 "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/"
             },
-            "auto_return": "approved",
+            "auto_return": "approved", # Obliga a volver a tu sitio si el pago es con tarjeta/saldo
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
+            # Esto es extra para asegurar que se vea profesional en móvil
+            "binary_mode": True,
         }
 
         pref_response = SDK.preference().create(preference_data)
@@ -485,6 +487,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
