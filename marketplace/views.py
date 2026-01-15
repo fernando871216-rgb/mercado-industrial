@@ -211,9 +211,16 @@ def borrar_producto(request, pk):
 # 4. RESTO DE FUNCIONES (Sincronizadas con URLs)
 # ==========================================
 def home(request):
-    products = IndustrialProduct.objects.all().order_by('-created_at')
-    categories = Category.objects.all()
-    return render(request, 'marketplace/home.html', {'products': products, 'categories': categories})
+    query = request.GET.get('q') # Captura lo que escribieron en la barra
+    if query:
+        # Busca por título O por número de parte (icontains ignora mayúsculas)
+        products = IndustrialProduct.objects.filter(
+            Q(title__icontains=query) | Q(part_number__icontains=query)
+        )
+    else:
+        products = IndustrialProduct.objects.all()
+    
+    return render(request, 'marketplace/home.html', {'products': products})
 
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
@@ -387,6 +394,7 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
