@@ -67,6 +67,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://mercadopago.com.mx',
     'https://www.mercadopago.com.ar',
     'https://mercadopago.com.ar',
+    'https://*.mercadopago.com',
 ]
 
 # ARCHIVOS ESTÁTICOS
@@ -103,4 +104,5 @@ TIME_ZONE = 'America/Mexico_City' # Horario de CDMX
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
