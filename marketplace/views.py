@@ -48,10 +48,11 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Limpieza estricta de CPs
+    # 1. Cargar datos desde la URL
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
+    # El token que sacaste hoy de la consola de pruebas
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
@@ -63,64 +64,64 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Forzamos conversión a números puros (float)
-        try:
-            v_peso = float(request.GET.get('peso') or 1)
-            v_largo = float(request.GET.get('largo') or 20)
-            v_ancho = float(request.GET.get('ancho') or 20)
-            v_alto = float(request.GET.get('alto') or 20)
-        except:
-            v_peso, v_largo, v_ancho, v_alto = 1.0, 20.0, 20.0, 20.0
+        # Convertir dimensiones a números (Importante: la consola muestra valores numéricos)
+        v_peso = float(request.GET.get('peso') or 1)
+        v_largo = float(request.GET.get('largo') or 20)
+        v_ancho = float(request.GET.get('ancho') or 20)
+        v_alto = float(request.GET.get('alto') or 20)
 
-        # Esta estructura cumple exactamente con los nombres que te fallaron
-        # (address_from, address_to y parcel)
+        # ESTRUCTURA EXACTA SEGÚN TU CAPTURA DE PANTALLA
+        # Todo debe ir dentro de "quotation"
         payload = {
-            "address_from": {
-                "country_code": "MX",
-                "postal_code": cp_origen,
-                "area_level1": "Puebla",
-                "area_level2": "Puebla",
-                "area_level3": "Colonia"
-            },
-            "address_to": {
-                "country_code": "MX",
-                "postal_code": cp_destino,
-                "area_level1": "Estado",
-                "area_level2": "Municipio",
-                "area_level3": "Colonia"
-            },
-            "parcel": {
-                "weight": v_peso,
-                "length": v_largo,
-                "width": v_ancho,
-                "height": v_alto
+            "quotation": {
+                "address_from": {
+                    "country_code": "MX",
+                    "postal_code": cp_origen,
+                    "area_level1": "Puebla",
+                    "area_level2": "Puebla",
+                    "area_level3": "Colonia"
+                },
+                "address_to": {
+                    "country_code": "MX",
+                    "postal_code": cp_destino,
+                    "area_level1": "Estado",
+                    "area_level2": "Municipio",
+                    "area_level3": "Colonia"
+                },
+                "parcel": {
+                    "weight": v_peso,
+                    "length": v_largo,
+                    "width": v_ancho,
+                    "height": v_alto
+                }
             }
         }
         
-        # Enviamos usando json=payload para que Python se encargue del formato correcto
+        # Realizar la petición
         res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # La respuesta suele ser una lista de opciones de paquetería
+            # En la consola de SoloEnvíos, las respuestas suelen ser una lista de proveedores
             rates_list = data if isinstance(data, list) else data.get('rates', data.get('data', []))
             
             tarifas = []
             for t in rates_list:
+                # Buscamos el precio en los campos que usa SoloEnvíos
                 costo = t.get('total_price') or t.get('price') or t.get('cost')
                 if costo:
                     tarifas.append({
                         'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
-                        'precio_final': round(float(costo) * 1.08, 2),
+                        'precio_final': round(float(costo) * 1.08, 2), # Tu comisión del 8%
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay servicios disponibles.'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Capturamos el error para leerlo en el alert del HTML
+        # Si falla, mandamos el detalle técnico para verlo en el alert
         return JsonResponse({
             'tarifas': [], 
             'error': f'Error {res.status_code}', 
@@ -266,6 +267,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
