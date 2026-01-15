@@ -434,9 +434,17 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
-    # 1. Identificar el pago
+    # Capturamos el ID de cualquier lugar (ID o DATA.ID)
     payment_id = request.GET.get('id') or request.GET.get('data.id')
     
+    # Si viene como POST (que es lo que intentó hacer y falló con 403)
+    if not payment_id and request.method == 'POST':
+        try:
+            body = json.loads(request.body)
+            payment_id = body.get('data', {}).get('id') or body.get('id')
+        except:
+            pass
+
     if payment_id:
         token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
@@ -446,56 +454,41 @@ def mercadopago_webhook(request):
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 data = response.json()
-                status = data.get('status')
-                ref_data = str(data.get('external_reference', ''))
-                
-                if status == 'approved' and ref_data:
+                if data.get('status') == 'approved':
+                    ref_data = str(data.get('external_reference', ''))
                     parts = ref_data.split('-')
                     
-                    # Verificamos que al menos tengamos ID de producto y de usuario
                     if len(parts) >= 2:
-                        prod_id = parts[0]
-                        user_id = parts[1]
-                        # El tipo es opcional, si no viene ponemos 'R' por defecto
-                        tipo_letra = parts[2] if len(parts) >= 3 else 'R'
+                        producto = IndustrialProduct.objects.get(id=parts[0])
+                        comprador = User.objects.get(id=parts[1])
                         
-                        producto = IndustrialProduct.objects.get(id=prod_id)
-                        comprador = User.objects.get(id=user_id)
-                        
-                        # GUARDADO ULTRA-SEGURO
                         venta, created = Sale.objects.get_or_create(
                             product=producto,
                             buyer=comprador,
                             status='approved',
-                            defaults={
-                                'price': data.get('transaction_amount'),
-                            }
+                            defaults={'price': data.get('transaction_amount')}
                         )
                         
                         if created:
-                            print(f"VENTA EXITOSA REGISTRADA: {venta.id}")
-                            # Reducir stock
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-
-                            # Intentar enviar correo (si falla el correo, que no arruine la venta)
+                            
+                            # Intentar enviar correo pero que no bloquee nada
                             try:
-                                tipo_txt = "ENVÍO" if tipo_letra == 'E' else "RECOLECCIÓN"
                                 send_mail(
-                                    '¡Nueva Venta!',
-                                    f'Vendiste: {producto.title}\nEntrega: {tipo_txt}',
+                                    '¡Venta Confirmada!',
+                                    f'Se ha registrado el pago del producto: {producto.title}',
                                     'fernando871216@gmail.com',
                                     [producto.user.email],
                                     fail_silently=True
                                 )
-                            except:
-                                print("Error enviando correo, pero la venta se guardó.")
-
+                            except: pass
         except Exception as e:
-            print(f"ERROR CRÍTICO WEBHOOK: {e}")
+            print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
