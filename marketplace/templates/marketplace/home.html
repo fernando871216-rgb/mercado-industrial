@@ -67,7 +67,7 @@
                             
                             {% if product.stock > 0 %}
                                 <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-                                    En Stock
+                                    En Stock: {{ product.stock }}
                                 </span>
                             {% else %}
                                 <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
