@@ -2,15 +2,19 @@
 
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
-    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-shopping-bag"></i> Mis Compras</h2>
+    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-shopping-bag" style="color: #3498db;"></i> Mis Compras</h2>
 
     {% if compras %}
         {% for c in compras %}
-        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if c.status == 'entregado' %}#27ae60{% else %}#3498db{% endif %};">
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if c.status == 'entregado' or c.recibido_por_comprador %}#27ae60{% else %}#3498db{% endif %};">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; gap: 15px;">
                     {% if c.product.image %}
-                        <img src="{{ c.product.image.url }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                        <img src="{{ c.product.image.url }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                    {% else %}
+                        <div style="width: 80px; height: 80px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                            <i class="fas fa-image" style="color: #bdc3c7;"></i>
+                        </div>
                     {% endif %}
                     <div>
                         <span style="font-size: 0.75rem; color: #95a5a6; text-transform: uppercase;">Pedido #{{ c.id }}</span>
@@ -19,8 +23,11 @@
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 1.2rem; font-weight: bold; color: #2c3e50;">${{ c.total_price }}</div>
-                    <span style="display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; background: #e8f4fd; color: #3498db; margin-top: 5px;">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #2c3e50;">${{ c.price }} MXN</div>
+                    <span style="display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; 
+                        {% if c.status == 'entregado' %} background: #e8f5e9; color: #2e7d32;
+                        {% elif c.status == 'enviado' %} background: #e3f2fd; color: #1565c0;
+                        {% else %} background: #fff3e0; color: #ef6c00; {% endif %} margin-top: 5px;">
                         {{ c.status|upper }}
                     </span>
                 </div>
@@ -32,7 +39,8 @@
                 <div>
                     {% if c.tracking_number %}
                         <p style="margin: 0; font-size: 0.9rem; color: #2c3e50;">
-                            <i class="fas fa-truck"></i> <strong>{{ c.shipping_company }}</strong>: {{ c.tracking_number }}
+                            <i class="fas fa-truck" style="color: #3498db;"></i> <strong>{{ c.shipping_company }}</strong>: 
+                            <span style="background: #f1f1f1; padding: 2px 6px; border-radius: 4px; font-family: monospace;">{{ c.tracking_number }}</span>
                         </p>
                     {% else %}
                         <p style="margin: 0; font-size: 0.9rem; color: #e67e22;">
@@ -44,23 +52,24 @@
                 {% if c.status == 'enviado' and not c.recibido_por_comprador %}
                 <form action="{% url 'confirmar_recepcion' c.id %}" method="POST">
                     {% csrf_token %}
-                    <button type="submit" style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem;">
+                    <button type="submit" style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: 0.3s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
                         <i class="fas fa-check-double"></i> CONFIRMAR QUE RECIBÍ EL PRODUCTO
                     </button>
                 </form>
                 {% elif c.recibido_por_comprador %}
-                    <span style="color: #27ae60; font-weight: bold; font-size: 0.9rem;">
-                        <i class="fas fa-check-circle"></i> Producto Recibido
+                    <span style="color: #27ae60; font-weight: bold; font-size: 0.9rem; background: #e8f5e9; padding: 8px 15px; border-radius: 6px;">
+                        <i class="fas fa-check-circle"></i> ¡Producto Recibido!
                     </span>
                 {% endif %}
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <div style="text-align: center; padding: 60px; background: #f9f9f9; border-radius: 15px;">
+        <div style="text-align: center; padding: 80px 20px; background: #fff; border-radius: 15px; border: 1px dashed #ccc;">
             <i class="fas fa-shopping-cart" style="font-size: 3.5rem; color: #eee; margin-bottom: 20px;"></i>
-            <p style="color: #95a5a6; font-size: 1.1rem;">Aún no has comprado nada.</p>
-            <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Ir a ver productos</a>
+            <h3 style="color: #95a5a6;">Aún no has realizado ninguna compra</h3>
+            <p style="color: #bdc3c7; margin-bottom: 25px;">Cuando compres un equipo industrial, aparecerá aquí.</p>
+            <a href="{% url 'home' %}" style="background: #3498db; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold;">Explorar Productos</a>
         </div>
     {% endif %}
 </div>
