@@ -476,7 +476,7 @@ def mercadopago_webhook(request):
                             status='approved',
                             defaults={
                                 'price': data.get('transaction_amount'), # Guardamos el total real pagado
-                                'metodo_entrega': metodo # <--- AQUÍ GUARDAMOS EL MÉTODO
+                                
             }
                         )
                         
@@ -504,6 +504,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
