@@ -11,8 +11,7 @@ from django.contrib import messages
 import base64
 import uuid
 import os
-import time
-from marketplace.models import Product
+import timefrom .models import IndustrialProduct, Category, Sale, Profile
 
 # IMPORTANTE: Usando tus nombres exactos de forms.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -90,13 +89,7 @@ def cotizar_soloenvios(request):
     try:
         # Buscamos en IndustrialProduct que es el modelo que usas
         producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # Leemos los datos que el vendedor guardó (usando tus campos reales)
-        # Si el campo se llama 'cp_origen', lo usamos; si no, intentamos obtenerlo
         cp_origen = str(getattr(producto, 'cp_origen', '72460')).strip().zfill(5)
-        
-        # Usamos los datos técnicos del producto directamente
-        # Si no existen, el 'limpiar_valor' usará los defaults
         peso_db = getattr(producto, 'peso', 1)
         largo_db = getattr(producto, 'largo', 20)
         ancho_db = getattr(producto, 'ancho', 20)
@@ -311,6 +304,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
