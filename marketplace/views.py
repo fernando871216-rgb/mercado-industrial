@@ -331,6 +331,7 @@ def actualizar_pago(request):
             "back_urls": {
                 "success": request.build_absolute_uri(f"/pago-exitoso/?id={pid}"),
                 "failure": request.build_absolute_uri('/pago-fallido/'),
+                "pending": request.build_absolute_uri('/pago-pendiente/'),
             },
             "auto_return": "approved",
         }
@@ -386,6 +387,7 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
