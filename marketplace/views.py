@@ -410,22 +410,27 @@ def marcar_como_pagado(request, venta_id):
     # Después de pagar, regresamos al panel
     return redirect('panel_administrador')
 
-def pago_exitoso(request):
-    product_id = request.GET.get('id')
-    # Obtenemos el estado que manda Mercado Pago
-    status = request.GET.get('status') 
+def pago_exitoso(request, producto_id):
+    # Intentamos obtener el producto por el ID que viene en la URL
+    producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
-    producto = get_object_or_404(IndustrialProduct, id=product_id)
+    # Mercado Pago manda el estado en la URL como ?status=approved
+    status_mp = request.GET.get('collection_status') or request.GET.get('status')
     
-    # Solo si el pago fue aprobado mostramos el contacto
+    # 1. Primero revisamos si el status que viene en la URL es aprobado
+    # 2. Por si acaso, también revisamos si ya existe una venta registrada en nuestra base de datos
+    venta_confirmada = Sale.objects.filter(product=producto, buyer=request.user, status='approved').exists()
+    
     mostrar_contacto = False
-    if status == 'approved':
+    if status_mp == 'approved' or venta_confirmada:
         mostrar_contacto = True
         
     return render(request, 'marketplace/pago_exitoso.html', {
         'producto': producto,
         'mostrar_contacto': mostrar_contacto
     })
+
+
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
     
 @csrf_exempt
@@ -484,6 +489,7 @@ def mercadopago_webhook(request):
             print(f"CRITICAL ERROR IN WEBHOOK: {e}")
             
     return HttpResponse(status=200)
+
 
 
 
