@@ -87,12 +87,8 @@ def cotizar_soloenvios(request):
     
     token_respuesta = obtener_token_soloenvios()
     
-    # Si la respuesta no es un token largo, es un error
     if "ERROR" in str(token_respuesta):
-        return JsonResponse({
-            'tarifas': [], 
-            'error': f'Detalle técnico: {token_respuesta}'
-        })
+        return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token_respuesta}'})
 
     try:
         url = "https://app.soloenvios.com/api/v1/quotations"
@@ -102,15 +98,34 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
+        # Obtenemos medidas
+        peso = int(float(request.GET.get('peso', 1)))
+        largo = int(float(request.GET.get('largo', 20)))
+        ancho = int(float(request.GET.get('ancho', 20)))
+        alto = int(float(request.GET.get('alto', 20)))
+
+        # Rellenamos los campos que la API exige para que no rebote
         payload = {
             "quotation": {
-                "address_from": {"country_code": "MX", "postal_code": cp_origen},
-                "address_to": {"country_code": "MX", "postal_code": cp_destino},
+                "address_from": {
+                    "country_code": "MX", 
+                    "postal_code": cp_origen,
+                    "area_level1": "Puebla",   # Estado
+                    "area_level2": "Puebla",   # Municipio
+                    "area_level3": "Centro"    # Colonia
+                },
+                "address_to": {
+                    "country_code": "MX", 
+                    "postal_code": cp_destino,
+                    "area_level1": "Destino",  # Relleno (la API lo corrige con el CP)
+                    "area_level2": "Ciudad",   # Relleno
+                    "area_level3": "Colonia"   # Relleno
+                },
                 "parcels": [{
-                    "length": int(float(request.GET.get('largo', 20))),
-                    "width": int(float(request.GET.get('ancho', 20))),
-                    "height": int(float(request.GET.get('alto', 20))),
-                    "weight": int(float(request.GET.get('peso', 1))),
+                    "length": largo,
+                    "width": ancho,
+                    "height": alto,
+                    "weight": peso,
                     "package_protected": False,
                     "declared_value": 100
                 }]
@@ -132,7 +147,8 @@ def cotizar_soloenvios(request):
                     })
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'API Cotización falló: {res.text}'})
+        # Si falla, mostramos el error para diagnosticar
+        return JsonResponse({'tarifas': [], 'error': f'Error de API: {res.text}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -274,6 +290,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
