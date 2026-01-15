@@ -461,6 +461,7 @@ def mercadopago_webhook(request):
                 
                 if status == 'approved' and ref_data:
                     parts = ref_data.split('-')
+                    tipo_txt = "ENVÍO A DOMICILIO" if parts[2] == 'E' else "RECOLECCIÓN EN PERSONA"
                     if len(parts) >= 3:
                         prod_id = parts[0]
                         user_id = parts[1]
@@ -487,8 +488,9 @@ def mercadopago_webhook(request):
                             # Envío de correo
                             send_mail(
                                 '¡Felicidades, vendiste un equipo!',
+                                f'Vendido: {producto.title}. Entrega: {tipo_txt}.',
                                 f'Hola {producto.user.username}, han comprado tu {producto.title}. Revisa tu panel de ventas para enviar el producto.',
-                                'tu-correo@gmail.com', # Cambia esto por tu correo real de settings
+                                'fernando871216@gmail.com', # Cambia esto por tu correo real de settings
                                 [producto.user.email],
                                 fail_silently=False,
                             )
@@ -504,6 +506,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
