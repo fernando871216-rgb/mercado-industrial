@@ -452,59 +452,42 @@ def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
     
     if payment_id:
-        # Usamos el SDK que ya tienes configurado arriba
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {'Authorization': f'Bearer {SDK.access_token}'}
         
         try:
             response = requests.get(url, headers=headers)
-            print(f"DEBUG: Respuesta de MP: {response.status_code}") # Veremos esto en logs
-            
             if response.status_code == 200:
                 data = response.json()
-                status = data.get('status')
-                ref_data = str(data.get('external_reference', ''))
-                
-                print(f"DEBUG: Status MP: {status} | Ref: {ref_data}")
-
-                if status == 'approved' and ref_data:
-                    parts = ref_data.split('-')
+                if data.get('status') == 'approved':
+                    ref_data = str(data.get('external_reference', ''))
+                    # Limpiamos posibles espacios o caracteres raros
+                    parts = ref_data.strip().split('-')
+                    
                     if len(parts) >= 2:
-                        prod_id, user_id = parts[0], parts[1]
-                        
                         try:
-                            producto = IndustrialProduct.objects.get(id=prod_id)
-                            comprador = User.objects.get(id=user_id)
+                            producto = IndustrialProduct.objects.get(id=parts[0])
+                            comprador = User.objects.get(id=parts[1])
                             
-                            # Guardamos con lo mínimo indispensable para que no falle
-                            venta, created = Sale.objects.get_or_create(
+                            # Usamos update_or_create para evitar duplicados pero asegurar el registro
+                            venta, created = Sale.objects.update_or_create(
                                 product=producto,
                                 buyer=comprador,
-                                status='approved',
-                                defaults={'price': data.get('transaction_amount')}
+                                price=data.get('transaction_amount'),
+                                defaults={'status': 'approved'}
                             )
                             
-                            if created:
-                                print(f"VENTA REGISTRADA EXITOSAMENTE: {venta.id}")
-                                if producto.stock > 0:
-                                    producto.stock -= 1
-                                    producto.save()
-                        except Exception as inner_e:
-                            print(f"ERROR INTERNO AL GUARDAR: {inner_e}")
-            else:
-                print(f"MP devolvió error: {response.text}")
-
+                            if created and producto.stock > 0:
+                                producto.stock -= 1
+                                producto.save()
+                                
+                        except Exception as e:
+                            print(f"ERROR AL GUARDAR VENTA: {e}")
+                    else:
+                        print(f"ERROR: external_reference mal formado: {ref_data}")
         except Exception as e:
-            print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
+            print(f"ERROR CONEXION MP: {e}")
 
     return HttpResponse(status=200)
-
-
-
-
-
-
-
-
 
 
