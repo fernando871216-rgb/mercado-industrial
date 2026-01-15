@@ -2,62 +2,116 @@
 
 {% block content %}
 <div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         
         <div style="flex: 1; min-width: 300px; text-align: center;">
             {% if product.image %}
                 <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-width: 400px; border-radius: 10px;">
             {% else %}
-                <div style="width: 100%; height: 250px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
-                    <i class="fas fa-image fa-4x"></i>
+                <div style="width: 100%; height: 250px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
                 </div>
             {% endif %}
         </div>
 
         <div style="flex: 1.2; min-width: 300px;">
-            <h1 style="color: #003366; font-size: 1.5rem; margin-bottom: 5px;">{{ product.title }}</h1>
+            <h1 style="color: #003366; font-size: 1.6rem; margin-bottom: 5px;">{{ product.title }}</h1>
             <p style="color: #7f8c8d; font-size: 0.9rem;">Parte/Modelo: <strong>{{ product.part_number }}</strong></p>
             
             <div style="margin: 15px 0;">
-                <span style="font-size: 1.8rem; font-weight: bold; color: #27ae60;">${{ product.price }} MXN</span>
+                <span style="font-size: 2rem; font-weight: bold; color: #27ae60;">${{ product.price }} MXN</span>
             </div>
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
             <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #dee2e6; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; color: #003366; font-size: 0.95rem;"><i class="fas fa-truck"></i> Cotizar Envío</h4>
-                
-                <form action="{% url 'cotizar_soloenvios' %}" method="GET" style="display: flex; gap: 8px;">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <input type="text" name="cp_destino" placeholder="Tu C.P." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem;" required>
-                    <button type="submit" style="background: #003366; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
-                        CALCULAR
+                <h4 style="margin: 0 0 10px 0; color: #003366;"><i class="fas fa-truck"></i> Cotizar Envío</h4>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="cp_destino" placeholder="Tu C.P." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        COTIZAR
                     </button>
-                </form>
+                </div>
+                
+                <div id="tarifas-container" style="margin-top: 15px; display: none;">
+                    <label style="font-size: 0.85rem; font-weight: bold; color: #555;">Selecciona una opción de envío:</label>
+                    <select id="select-tarifas" onchange="actualizarBotonPago()" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #003366;">
+                        </select>
+                </div>
             </div>
 
-            <div style="margin-bottom: 25px;">
-                <h5 style="color: #2c3e50; margin-bottom: 8px; font-size: 1rem;">Descripción:</h5>
-                <p style="color: #555; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">{{ product.description }}</p>
-            </div>
-
-            <div id="wallet_container"></div>
+            <div id="wallet_container" style="min-height: 50px;"></div>
         </div>
     </div>
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('{{ public_key }}', {
-        locale: 'es-MX'
-    });
-    const bricksBuilder = mp.bricks();
+    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
+    let walletBrickController = null;
 
-    bricksBuilder.create("wallet", "wallet_container", {
-        initialization: {
-            preferenceId: "{{ preference_id }}",
-            redirectMode: "modal"
-        },
-    });
+    // Inicializar botón de pago base
+    async function renderMP(preferenceId) {
+        const bricksBuilder = mp.bricks();
+        if (walletBrickController) walletBrickController.unmount();
+        
+        walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
+            initialization: {
+                preferenceId: preferenceId,
+                redirectMode: "modal"
+            },
+        });
+    }
+
+    // Carga inicial
+    renderMP("{{ preference_id }}");
+
+    // Función para cotizar sin recargar página
+    function cotizarFlete() {
+        const cp = document.getElementById('cp_destino').value;
+        const btn = document.getElementById('btn-cotizar');
+        if (!cp) return alert("Ingresa un código postal");
+
+        btn.disabled = true;
+        btn.innerText = "Buscando...";
+
+        fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('tarifas-container');
+                const select = document.getElementById('select-tarifas');
+                select.innerHTML = '<option value="0">-- Elige paquetería --</option>';
+
+                if (data.tarifas && data.tarifas.length > 0) {
+                    data.tarifas.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t.precio_final;
+                        option.text = `${t.paqueteria} - $${t.precio_final} (${t.tiempo})`;
+                        select.appendChild(option);
+                    });
+                    container.style.display = 'block';
+                } else {
+                    alert("No se encontraron tarifas para este CP.");
+                }
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = "COTIZAR";
+            });
+    }
+
+    // Función para actualizar el botón de pago sumando el flete
+    function actualizarBotonPago() {
+        const envio = document.getElementById('select-tarifas').value;
+        if (envio == "0") return;
+
+        fetch(`/actualizar-pago/?id={{ product.id }}&envio=${envio}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.preference_id) {
+                    renderMP(data.preference_id);
+                }
+            });
+    }
 </script>
 {% endblock %}
