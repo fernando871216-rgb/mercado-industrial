@@ -52,7 +52,6 @@ def cotizar_soloenvios(request):
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # Token (He verificado que esté bien estructurado)
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
@@ -63,17 +62,11 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Simplificamos las direcciones: la API usa el postal_code como prioridad
+        # Convertimos a números enteros para evitar errores de formato
         payload = {
             "quotation": {
-                "address_from": {
-                    "country_code": "MX", 
-                    "postal_code": cp_origen
-                },
-                "address_to": {
-                    "country_code": "MX", 
-                    "postal_code": cp_destino
-                },
+                "address_from": {"country_code": "MX", "postal_code": cp_origen},
+                "address_to": {"country_code": "MX", "postal_code": cp_destino},
                 "parcels": [{
                     "length": int(float(request.GET.get('largo', 20))),
                     "width": int(float(request.GET.get('ancho', 20))),
@@ -85,8 +78,8 @@ def cotizar_soloenvios(request):
             }
         }
         
-        import requests # Asegúrate de tenerlo arriba
-        res = requests.post(url, json=payload, headers=headers, timeout=25)
+        # verify=False ayuda si hay problemas de certificados en Render
+        res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
         if res.status_code == 200:
             data = res.json()
@@ -94,22 +87,19 @@ def cotizar_soloenvios(request):
             tarifas = []
             
             for t in rates_list:
-                # Solo tomamos las que tengan success=True
                 if t.get('success') is True and t.get('total') is not None:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        'precio_final': round(float(t.get('total')) * 1.08, 2), # Tu comisión del 8%
+                        'precio_final': round(float(t.get('total')) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
-            
             return JsonResponse({'tarifas': tarifas})
         else:
-            # Si falla, mandamos el error real de la API para saber qué pasa
-            error_msg = res.json().get('message', 'Error desconocido')
-            return JsonResponse({'tarifas': [], 'error': f'API Error: {error_msg}'})
+            # Esto nos dirá qué dijo la API exactamente (ej: Token inválido, Saldo insuficiente)
+            return JsonResponse({'tarifas': [], 'error': f'API respondio con error {res.status_code}: {res.text}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        return JsonResponse({'tarifas': [], 'error': f'Error en el servidor: {str(e)}'})
 
     # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
@@ -248,3 +238,4 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
