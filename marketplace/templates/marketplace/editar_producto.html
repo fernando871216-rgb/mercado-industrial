@@ -2,54 +2,46 @@
 
 {% block content %}
 <div class="container" style="max-width: 800px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-edit"></i> Editar Producto</h2>
         
-        <h2 style="color: #2c3e50; margin-bottom: 10px; text-align: center;">
-            <i class="fas fa-edit" style="color: #f39c12;"></i> Editar Publicación
-        </h2>
-        <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Actualiza los detalles, el precio o la información de envío de tu equipo.</p>
-
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Título del Equipo</label>
+                <input type="text" name="title" value="{{ product.title }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
+            </div>
 
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #f39c12; display: inline-block;">1. Información General</h4>
-                <div style="display: grid; gap: 15px;">
-                    {% for field in form %}
-                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' %}
-                            <div>
-                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">{{ field.label }}</label>
-                                {{ field }}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Descripción</label>
+                <textarea name="description" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>{{ product.description }}</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Precio (MXN)</label>
+                    <input type="number" step="0.01" name="price" value="{{ product.price }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">CP Origen</label>
+                    <input type="text" name="cp_origen" value="{{ product.cp_origen }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
                 </div>
             </div>
 
-            <div style="background: #fff4e5; padding: 25px; border-radius: 12px; border: 1px solid #f39c12; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #a04000; margin-bottom: 15px;"><i class="fas fa-calculator"></i> 2. Ajuste de Precio y Comisiones</h4>
-                
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #a04000;">Precio de Venta Actual (MXN)</label>
-                    <input type="number" name="price" id="id_price" step="0.01" value="{{ form.price.value }}" class="form-control" style="width: 100%; padding: 12px; border: 2px solid #f39c12; border-radius: 8px; font-size: 1.1rem; font-weight: bold;">
-                </div>
-
-                <div style="background: white; padding: 15px; border-radius: 10px; font-size: 0.9rem; color: #555;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Comisión Mercado Pago:</span>
-                        <span id="calc_mp" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Comisión Plataforma (5%):</span>
-                        <span id="calc_initre" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
-                    </div>
-                    <hr style="border: 0; border-top: 1px solid #eee;">
-                    <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #27ae60; font-weight: bold;">
-                        <span>Ganancia neta estimada:</span>
-                        <span id="calc_total">$0.00</span>
-                    </div>
-                </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                <div><small>Peso (kg)</small><input type="number" name="peso" value="{{ product.peso }}" style="width: 100%; padding: 5px;"></div>
+                <div><small>Largo (cm)</small><input type="number" name="largo" value="{{ product.largo }}" style="width: 100%; padding: 5px;"></div>
+                <div><small>Ancho (cm)</small><input type="number" name="ancho" value="{{ product.ancho }}" style="width: 100%; padding: 5px;"></div>
+                <div><small>Alto (cm)</small><input type="number" name="alto" value="{{ product.alto }}" style="width: 100%; padding: 5px;"></div>
             </div>
 
-            <div style="background: #f0f7ff; padding: 20px; border-radius: 12px; border: 1px solid #3498db; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #2c3e50; margin-bottom: 15px
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                GUARDAR CAMBIOS
+            </button>
+            
+            <a href="{% url 'mis_productos' %}" style="display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none;">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
