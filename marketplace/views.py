@@ -368,9 +368,9 @@ def actualizar_pago(request):
             ],
             "external_reference": ext_ref,
             "back_urls": {
-                "success": "https://mercado-industrial.onrender.com/mis-compras/",
+                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-                "pending": "https://mercado-industrial.onrender.com/mis-compras/",
+                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
             },
             "auto_return": "approved",
             # IMPORTANTE: Esta URL debe ser exacta
@@ -488,6 +488,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
