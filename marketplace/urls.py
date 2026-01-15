@@ -29,6 +29,7 @@ urlpatterns = [
     path('venta/cancelar/<int:venta_id>/', views.cancelar_venta, name='cancelar_venta'),
     path('confirmar-recepcion/<int:venta_id>/', views.confirmar_recepcion, name='confirmar_recepcion'),
     path('actualizar-guia/<int:venta_id>/', views.actualizar_guia, name='actualizar_guia'),
+    path('generar-preferencia/<int:producto_id>/', views.generar_preferencia_pago, name='generar_preferencia_pago'),
     
     # --- MERCADO PAGO Y LOGÍSTICA ---
     path('procesar-pago/<int:product_id>/', views.procesar_pago, name='procesar_pago'),
@@ -50,6 +51,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
