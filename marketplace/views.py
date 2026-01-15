@@ -12,6 +12,7 @@ import base64
 import uuid
 import os
 import time
+from django.db.models import Q
 
 # IMPORTANTE: Solo importamos lo que existe en tu models.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -52,7 +53,6 @@ def editar_perfil(request):
 # ==========================================
 def obtener_token_soloenvios():
     url = "https://app.soloenvios.com/api/v1/oauth/token"
-    
     client_id = os.environ.get('SOLOENVIOS_CLIENT_ID', '').strip()
     client_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET', '').strip()
 
@@ -211,9 +211,9 @@ def borrar_producto(request, pk):
 # 4. RESTO DE FUNCIONES (Sincronizadas con URLs)
 # ==========================================
 def home(request):
-    query = request.GET.get('q') # Captura lo que escribieron en la barra
+    query = request.GET.get('q') # Captura lo que escribieron en la barra de búsqueda
     if query:
-        # Busca por título O por número de parte (icontains ignora mayúsculas)
+        # Filtra por Título O por Número de Parte ignorando mayúsculas/minúsculas
         products = IndustrialProduct.objects.filter(
             Q(title__icontains=query) | Q(part_number__icontains=query)
         )
@@ -224,13 +224,24 @@ def home(request):
 
 def detalle_producto(request, product_id):
     product = get_object_or_404(IndustrialProduct, id=product_id)
+    # Generamos la preferencia inicial del producto
     pref_data = {
-        "items": [{"id": str(product.id), "title": product.title, "quantity": 1, "unit_price": float(product.price), "currency_id": "MXN"}],
+        "items": [{
+            "id": str(product.id), 
+            "title": product.title, 
+            "quantity": 1, 
+            "unit_price": float(product.price), 
+            "currency_id": "MXN"
+        }],
         "external_reference": str(product.id),
     }
     pref = SDK.preference().create(pref_data)
-    return render(request, 'marketplace/product_detail.html', {'product': product, 'preference_id': pref["response"]["id"]})
-
+    
+    return render(request, 'marketplace/product_detail.html', {
+        'product': product, 
+        'preference_id': pref["response"]["id"],
+        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9" # Asegúrate de que esta sea tu llave pública real
+    })
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
     return render(request, 'marketplace/home.html', {'products': IndustrialProduct.objects.filter(category=cat), 'category': cat})
@@ -394,6 +405,7 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
