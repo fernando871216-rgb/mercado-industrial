@@ -300,8 +300,18 @@ def cancelar_venta(request, venta_id):
 
 @login_required
 def confirmar_recepcion(request, venta_id):
-    v = get_object_or_404(Sale, id=venta_id, buyer=request.user)
-    v.status = 'entregado'; v.save()
+    if request.method == 'POST':
+        # Buscamos la venta asegurándonos que el que confirma es el comprador
+        venta = get_object_or_404(Sale, id=venta_id, buyer=request.user)
+        
+        # Actualizamos los estados
+        venta.recibido_por_comprador = True
+        venta.status = 'entregado'
+        venta.save()
+        
+        messages.success(request, "¡Gracias! Hemos registrado que recibiste tu producto.")
+        return redirect('mis_compras')
+    
     return redirect('mis_compras')
 
 @login_required
@@ -463,6 +473,7 @@ def mercadopago_webhook(request):
 
     # Siempre responder 200 a Mercado Pago para que no siga reintentando
     return HttpResponse(status=200)
+
 
 
 
