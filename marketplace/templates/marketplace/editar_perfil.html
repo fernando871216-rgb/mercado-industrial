@@ -33,8 +33,21 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; background: #fdfdfd; padding: 25px; border-radius: 12px; border: 1px solid #edf2f7;">
                         {% for field in u_form %}
                             <div class="form-group">
-                                <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 8px; font-size: 0.9rem;">{{ field.label }}</label>
-                                {{ field }}
+                                <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 8px; font-size: 0.9rem;">
+                                    {{ field.label }} 
+                                    {% if field.name == 'username' %} 
+                                        <i class="fas fa-lock" style="font-size: 0.7rem; color: #a0aec0; margin-left: 5px;" title="No se puede cambiar el nombre de usuario"></i>
+                                    {% endif %}
+                                </label>
+                                
+                                {% if field.name == 'username' %}
+                                    {# Renderizamos el username como readonly y con estilo gris #}
+                                    <input type="text" name="{{ field.name }}" value="{{ field.value|default:'' }}" readonly 
+                                           style="background-color: #edf2f7 !important; color: #718096 !important; border: 1px solid #cbd5e0 !important; cursor: not-allowed !important;">
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+
                                 {% if field.errors %}<small style="color: #e53e3e; display: block; margin-top: 5px;">{{ field.errors.0 }}</small>{% endif %}
                             </div>
                         {% endfor %}
@@ -126,7 +139,6 @@
         transform: translateY(0);
     }
 
-    /* Ajuste para textarea de dirección a pantalla completa si es necesario */
     .full-width {
         grid-column: 1 / -1;
     }
