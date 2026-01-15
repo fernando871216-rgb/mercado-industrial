@@ -108,6 +108,7 @@
         btn.innerText = "Cotizando..."; btn.disabled = true;
 
         const params = new URLSearchParams({
+            product_id: '{{ product.id }}',
             cp_origen: '72460',
             cp_destino: cp_destino,
             peso: document.getElementById('envio_peso').value,
@@ -153,3 +154,4 @@
     }
 </script>
 {% endblock %}
+
