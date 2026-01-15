@@ -20,6 +20,7 @@ from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from decimal import Decimal
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -461,7 +462,6 @@ def mercadopago_webhook(request):
                 data = response.json()
                 if data.get('status') == 'approved':
                     ref_data = str(data.get('external_reference', ''))
-                    # Limpiamos posibles espacios o caracteres raros
                     parts = ref_data.strip().split('-')
                     
                     if len(parts) >= 2:
@@ -469,25 +469,28 @@ def mercadopago_webhook(request):
                             producto = IndustrialProduct.objects.get(id=parts[0])
                             comprador = User.objects.get(id=parts[1])
                             
-                            # Usamos update_or_create para evitar duplicados pero asegurar el registro
+                            # Convertimos el monto a Decimal para que el modelo Sale lo acepte
+                            monto_real = Decimal(str(data.get('transaction_amount')))
+                            
+                            # update_or_create evita duplicados si MP manda 2 avisos
                             venta, created = Sale.objects.update_or_create(
                                 product=producto,
                                 buyer=comprador,
-                                price=data.get('transaction_amount'),
+                                price=monto_real,
                                 defaults={'status': 'approved'}
                             )
                             
                             if created and producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                                
+                            
+                            print(f"WEBHOOK EXITOSO: Venta {venta.id} registrada")
                         except Exception as e:
-                            print(f"ERROR AL GUARDAR VENTA: {e}")
-                    else:
-                        print(f"ERROR: external_reference mal formado: {ref_data}")
+                            print(f"ERROR AL PROCESAR DATOS: {e}")
         except Exception as e:
-            print(f"ERROR CONEXION MP: {e}")
+            print(f"ERROR DE CONEXION: {e}")
 
     return HttpResponse(status=200)
+
 
 
