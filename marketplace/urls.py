@@ -48,6 +48,7 @@ urlpatterns = [
     # --- PANEL ADMINISTRATIVO ---
     # Cambiado de 'panel_control' a 'panel_administrador' para que coincida con tu base.html
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
-    path('admin/liquidar/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
+    path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
