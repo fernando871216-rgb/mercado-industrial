@@ -23,7 +23,7 @@
         .navbar {
             background-color: #003366;
             color: white;
-            padding: 5px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -38,6 +38,7 @@
             align-items: center; 
             text-decoration: none; 
             color: white; 
+            min-width: fit-content;
         }
         .logo-img { 
             height: 45px;
@@ -45,7 +46,38 @@
             margin-right: 10px;
             object-fit: contain;
         }
-        .logo-text { font-weight: bold; font-size: 1.1rem; }
+        .logo-text { font-weight: bold; font-size: 1rem; }
+
+        /* BARRA DE BÚSQUEDA */
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+        .search-form {
+            display: flex;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 5px 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .search-input {
+            background: none;
+            border: none;
+            color: white;
+            padding: 5px;
+            width: 100%;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.6); }
+        .search-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0.8;
+        }
 
         .nav-links { display: flex; gap: 15px; align-items: center; }
         .nav-links a, .logout-btn { 
@@ -77,7 +109,8 @@
         .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
 
         /* Diseño para Celulares */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
+            .search-container { display: none; } /* Ocultar búsqueda en móvil para simplificar, o moverla al menú */
             .menu-toggle { display: block; }
             .nav-links {
                 display: none;
@@ -91,7 +124,7 @@
                 gap: 20px;
             }
             .nav-links.active { display: flex; }
-            .logo-img { height: 35px; }
+            .logo-text { font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -100,8 +133,17 @@
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span class="logo-text">MERCADO INDUSTRIAL INITRE</span>
+            <span class="logo-text">MERCADO INDUSTRIAL</span>
         </a>
+
+        <div class="search-container">
+            <form action="{% url 'home' %}" method="GET" class="search-form">
+                <input type="text" name="q" class="search-input" placeholder="Buscar equipo o # de parte..." value="{{ request.GET.q }}">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
 
         <div class="menu-toggle" id="mobile-menu">
             <i class="fas fa-bars"></i>
@@ -111,10 +153,10 @@
             <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
             
             {% if user.is_authenticated %}
-                <a href="{% url 'mi_inventario' %}">Mis Productos</a>
+                <a href="{% url 'mis_productos' %}">Mis Productos</a>
                 <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
                 <a href="{% url 'mis_compras' %}">Mis Compras</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Perfil / Pagos</a>
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Mi Perfil</a>
 
                 {% if user.is_staff %}
                     <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
