@@ -369,9 +369,9 @@ def actualizar_pago(request):
             ],
             "external_reference": ext_ref,
             "back_urls": {
-                "success": "https://mercado-industrial.onrender.com/mis-compras/",
+                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-                "pending": "https://mercado-industrial.onrender.com/mis-compras/"
+                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/"
             },
             "auto_return": "approved",
             # IMPORTANTE: Esta URL debe ser exacta
@@ -422,8 +422,9 @@ def marcar_como_pagado(request, venta_id):
     return redirect('panel_administrador')
 
 def pago_exitoso(request, producto_id):
-    # Intentamos obtener el producto por el ID que viene en la URL
+    # Buscamos el producto para mostrar su nombre en la felicitación
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
+    return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
     
     # Mercado Pago manda el estado en la URL como ?status=approved
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
@@ -492,6 +493,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CONEXION: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
