@@ -1,35 +1,44 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+<div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         
-        <div>
+        <div style="flex: 1; min-width: 300px; text-align: center;">
             {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; border-radius: 15px;">
+                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-width: 400px; border-radius: 10px;">
             {% else %}
-                <div style="width: 100%; height: 300px; background: #eee; border-radius: 15px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
+                <div style="width: 100%; height: 250px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
+                    <i class="fas fa-image fa-4x"></i>
                 </div>
             {% endif %}
         </div>
 
-        <div>
-            <h1 style="color: #003366;">{{ product.title }}</h1>
-            <p style="color: #7f8c8d;">Número de Parte: <strong>{{ product.part_number }}</strong></p>
-            <h2 style="color: #27ae60; font-size: 2rem;">${{ product.price }} MXN</h2>
+        <div style="flex: 1.2; min-width: 300px;">
+            <h1 style="color: #003366; font-size: 1.5rem; margin-bottom: 5px;">{{ product.title }}</h1>
+            <p style="color: #7f8c8d; font-size: 0.9rem;">Parte/Modelo: <strong>{{ product.part_number }}</strong></p>
+            
+            <div style="margin: 15px 0;">
+                <span style="font-size: 1.8rem; font-weight: bold; color: #27ae60;">${{ product.price }} MXN</span>
+            </div>
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
 
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e9ecef;">
-                <h4 style="margin-top: 0; color: #003366;"><i class="fas fa-truck"></i> Cotizar Envío</h4>
-                <form action="{% url 'cotizar_envio' product.id %}" method="POST" style="display: flex; gap: 10px;">
-                    {% csrf_token %}
-                    <input type="text" name="cp_destino" placeholder="Tu CP" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
-                    <button type="submit" style="background: #003366; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
-                        Calcular
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #dee2e6; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #003366; font-size: 0.95rem;"><i class="fas fa-truck"></i> Cotizar Envío</h4>
+                
+                <form action="{% url 'cotizar_soloenvios' %}" method="GET" style="display: flex; gap: 8px;">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="text" name="cp_destino" placeholder="Tu C.P." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem;" required>
+                    <button type="submit" style="background: #003366; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
+                        CALCULAR
                     </button>
                 </form>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h5 style="color: #2c3e50; margin-bottom: 8px; font-size: 1rem;">Descripción:</h5>
+                <p style="color: #555; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">{{ product.description }}</p>
             </div>
 
             <div id="wallet_container"></div>
@@ -39,9 +48,16 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
-    mp.bricks().create("wallet", "wallet_container", {
-        initialization: { preferenceId: "{{ preference_id }}", redirectMode: "modal" },
+    const mp = new MercadoPago('{{ public_key }}', {
+        locale: 'es-MX'
+    });
+    const bricksBuilder = mp.bricks();
+
+    bricksBuilder.create("wallet", "wallet_container", {
+        initialization: {
+            preferenceId: "{{ preference_id }}",
+            redirectMode: "modal"
+        },
     });
 </script>
 {% endblock %}
