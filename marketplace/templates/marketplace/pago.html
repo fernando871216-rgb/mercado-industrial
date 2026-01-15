@@ -1,19 +1,79 @@
-<div class="container" style="text-align: center; padding: 50px;">
-    <h2>Estás a un paso de adquirir: {{ product.title }}</h2>
-    <p>Precio total: <strong>${{ product.price }}</strong></p>
-    
-    <div id="wallet_container"></div>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm">
+                <h3>Resumen de tu compra</h3>
+                <hr>
+                <div class="d-flex align-items-center">
+                    <img src="{{ producto.image.url }}" width="100" class="img-fluid rounded" alt="{{ producto.title }}">
+                    <div class="ms-3">
+                        <h5>{{ producto.title }}</h5>
+                        <p class="text-muted">Precio base: ${{ producto.price }} MXN</p>
+                    </div>
+                </div>
+                
+                <hr>
+                <h5>Selecciona el método de entrega</h5>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="radio" name="envio" id="recoger" value="0" checked onchange="actualizarPreferencia(0)">
+                    <label class="form-check-label" for="recoger">
+                        Recoger en sucursal (Gratis)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="envio" id="soloenvios" value="150" onchange="actualizarPreferencia(150)">
+                    <label class="form-check-label" for="soloenvios">
+                        Envío a domicilio (SoloEnvios) - $150.00 MXN
+                    </label>
+                </div>
+            </div>
+        </div>
 
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <script>
-        const mp = new MercadoPago('TU_PUBLIC_KEY_AQUÍ', {
-            locale: 'es-MX'
-        });
-
-        mp.bricks().create("wallet", "wallet_container", {
-            initialization: {
-                preferenceId: "{{ preference_id }}",
-            },
-        });
-    </script>
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm border-primary">
+                <h4 class="text-center">Total a pagar</h4>
+                <h2 class="text-center text-primary fw-bold" id="total-display">${{ total_final }}</h2>
+                <p class="text-center text-muted small">(Incluye comisiones e impuestos)</p>
+                
+                <hr>
+                
+                <div id="wallet_container"></div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+    // Inicializamos Mercado Pago con tu Public Key
+    const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
+
+    // Función para actualizar el botón cada vez que el usuario cambie el envío
+    function actualizarPreferencia(costoEnvio) {
+        // Mostramos un mensaje de carga
+        document.getElementById('total-display').innerText = 'Cargando...';
+        
+        // Llamamos a la función de Django que creamos antes
+        fetch(`/generar-preferencia/{{ producto.id }}/?envio=${costoEnvio}`)
+            .then(response => response.json())
+            .then(data => {
+                // Actualizamos el precio visual
+                document.getElementById('total-display').innerText = '$' + data.total_final;
+
+                // Limpiamos el contenedor del botón viejo y creamos el nuevo
+                document.getElementById('wallet_container').innerHTML = '';
+                mp.bricks().create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: data.preference_id,
+                    },
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Cargamos el botón por primera vez (Sin envío por defecto)
+    actualizarPreferencia(0);
+</script>
+{% endblock %}
