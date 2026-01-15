@@ -448,9 +448,13 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
     
+    # IMPORTANTE: Pon aquí tu Access Token real si no lo tienes en una variable
+    # O usa settings.MERCADOPAGO_ACCESS_TOKEN si lo tienes en settings
+    access_token = "MP_ACCESS_TOKEN" 
+
     if payment_id:
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
-        headers = {'Authorization': f'Bearer {SDK.access_token}'}
+        headers = {'Authorization': f'Bearer {access_token}'}
         
         try:
             response = requests.get(url, headers=headers)
@@ -465,10 +469,9 @@ def mercadopago_webhook(request):
                             producto = IndustrialProduct.objects.get(id=parts[0])
                             comprador = User.objects.get(id=parts[1])
                             
-                            # Convertimos el monto a Decimal para que el modelo Sale lo acepte
+                            # Convertimos a Decimal para tu modelo Sale
                             monto_real = Decimal(str(data.get('transaction_amount')))
                             
-                            # update_or_create evita duplicados si MP manda 2 avisos
                             venta, created = Sale.objects.update_or_create(
                                 product=producto,
                                 buyer=comprador,
@@ -479,14 +482,17 @@ def mercadopago_webhook(request):
                             if created and producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                            
-                            print(f"WEBHOOK EXITOSO: Venta {venta.id} registrada")
+                                
+                            print("WEBHOOK: Procesado con éxito")
                         except Exception as e:
-                            print(f"ERROR AL PROCESAR DATOS: {e}")
+                            print(f"ERROR DATOS: {e}")
+            else:
+                print(f"ERROR MP: {response.status_code}")
         except Exception as e:
-            print(f"ERROR DE CONEXION: {e}")
+            print(f"ERROR CONEXION: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
