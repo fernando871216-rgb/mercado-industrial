@@ -45,7 +45,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
                     <div>
                         <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'' }}" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                        <input type="text" id="envio_cp_origen" value="{{ product.cp_origen|default:'72460' }}" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
                     </div>
                     <div>
                         <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP DESTINO</label>
@@ -84,6 +84,7 @@
                         Quitar envío
                     </button>
                 </div>
+                <div id="mensaje_error_flete" style="margin-top:10px; color:red; font-size:0.8rem;"></div>
             </div>
 
             <div style="margin-bottom: 25px;">
@@ -95,7 +96,6 @@
                             <i class="fas fa-hand-paper"></i> CONFIRMAR INTENCIÓN Y DESCONTAR STOCK
                         </a>
                     </div>
-
                     <div id="wallet_container"></div>
                 {% else %}
                     <div style="text-align: center; color: #e67e22; background: #fff3e0; padding: 15px; border-radius: 10px; border: 1px solid #ffe0b2;">
@@ -118,7 +118,6 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // Inicialización de Mercado Pago
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
     const bricksBuilder = mp.bricks();
     
@@ -135,61 +134,66 @@
     renderMPButton("{{ preference_id }}");
     {% endif %}
 
-    function cotizarEnvio() {
-    const btn = document.getElementById('btn-cotizar');
-    const resultDiv = document.getElementById('resultado-cotizacion');
-    const cp_origen = document.getElementById('cp_origen').value;
-    const cp_destino = document.getElementById('cp_destino').value;
-    const peso = "{{ producto.peso }}";
-    const largo = "{{ producto.largo }}";
-    const ancho = "{{ producto.ancho }}";
-    const alto = "{{ producto.alto }}";
+    // FUNCIÓN DE COTIZACIÓN CORREGIDA
+    function consultarSoloEnvios() {
+        const btn = document.getElementById('btn_cotizar');
+        const listaPaqueterias = document.getElementById('lista_paqueterias');
+        const resultadosDiv = document.getElementById('resultados_flete');
+        const errorDiv = document.getElementById('mensaje_error_flete');
+        
+        const cp_origen = document.getElementById('envio_cp_origen').value;
+        const cp_destino = document.getElementById('envio_cp_destino').value;
+        const peso = document.getElementById('envio_peso').value;
+        const largo = document.getElementById('envio_largo').value;
+        const ancho = document.getElementById('envio_ancho').value;
+        const alto = document.getElementById('envio_alto').value;
 
-    if (!cp_destino || cp_destino.length < 5) {
-        alert("Por favor ingresa un Código Postal de destino válido (5 dígitos).");
-        return;
+        if (!cp_destino || cp_destino.length < 5) {
+            alert("Ingresa un CP de destino de 5 dígitos.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Cotizando...";
+        errorDiv.innerText = "";
+
+        fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerText = "CALCULAR ENVÍO";
+
+                if (data.tarifas && data.tarifas.length > 0) {
+                    resultadosDiv.style.display = "block";
+                    let html = '';
+                    data.tarifas.forEach(t => {
+                        html += `
+                            <div onclick="seleccionarFlete(${t.precio_final})" style="cursor:pointer; border:1px solid #ddd; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:white; transition: 0.3s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#ddd'">
+                                <div>
+                                    <div style="font-weight:bold; color:#2c3e50;">${t.paqueteria}</div>
+                                    <small style="color:#7f8c8d;">${t.tiempo}</small>
+                                </div>
+                                <div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>
+                            </div>`;
+                    });
+                    listaPaqueterias.innerHTML = html;
+                } else {
+                    const detalle = data.detalle || data.error || "No hay servicios";
+                    alert("ERROR DE SOLOENVÍOS:\n" + detalle);
+                    errorDiv.innerText = "Error: " + detalle;
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "CALCULAR ENVÍO";
+                alert("Error de conexión");
+            });
     }
 
-    btn.disabled = true;
-    btn.innerText = "Cotizando...";
-    resultDiv.innerHTML = '<p class="text-muted">Buscando las mejores tarifas...</p>';
-
-    fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
-        .then(response => response.json())
-        .then(data => {
-            btn.disabled = false;
-            btn.innerText = "Cotizar Envío";
-
-            if (data.tarifas && data.tarifas.length > 0) {
-                let html = '<ul class="list-group">';
-                data.tarifas.forEach(t => {
-                    html += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>${t.paqueteria}</strong>
-                            <span class="badge bg-success rounded-pill">$${t.precio_final} MXN</span>
-                            <small class="text-muted">${t.tiempo}</small>
-                        </li>`;
-                });
-                html += '</ul>';
-                resultDiv.innerHTML = html;
-            } else {
-                // AQUÍ ESTÁ EL CAMBIO: Te mostrará el error real en una ventana
-                const msgError = data.detalle || data.error || "Error desconocido";
-                alert("DETALLE DEL ERROR DE SOLOENVÍOS: " + msgError);
-                resultDiv.innerHTML = `<p class="text-danger">Error: ${msgError}</p>`;
-            }
-        })
-        .catch(error => {
-            btn.disabled = false;
-            btn.innerText = "Cotizar Envío";
-            alert("Error de conexión: " + error);
-        });
-}
     function seleccionarFlete(precioEnvio) {
         document.getElementById('envio_info').style.display = "block";
         document.getElementById('monto_flete').innerText = precioEnvio;
         
-        // Llamada a tu servidor para actualizar el total con Mercado Pago
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
         .then(r => r.json())
         .then(data => {
@@ -207,4 +211,3 @@
     }
 </script>
 {% endblock %}
-
