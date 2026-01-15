@@ -293,13 +293,47 @@ def procesar_pago(request, product_id):
     return redirect('detalle_producto', product_id=product_id)
 
 def actualizar_pago(request):
-    pid = request.GET.get('id')
-    envio = float(request.GET.get('envio', 0))
-    prod = get_object_or_404(IndustrialProduct, id=pid)
-    total = float(prod.price) + envio
-    pref = SDK.preference().create({"items": [{"title": prod.title, "quantity": 1, "unit_price": total, "currency_id": "MXN"}]})
-    return JsonResponse({'preference_id': pref["response"]["id"], 'total_nuevo': f"{total:,.2f}"})
+    try:
+        pid = request.GET.get('id')
+        envio_raw = request.GET.get('envio', '0')
+        
+        # Convertimos a float de forma segura
+        envio = float(envio_raw)
+        
+        # Cambia 'IndustrialProduct' por el nombre exacto de tu modelo si es necesario
+        prod = get_object_or_404(IndustrialProduct, id=pid)
+        
+        # Calculamos el total
+        total = float(prod.price) + envio
+        
+        # Creamos la preferencia en Mercado Pago
+        preference_data = {
+            "items": [
+                {
+                    "title": f"{prod.title} (Incluye Envío)",
+                    "quantity": 1,
+                    "unit_price": total,
+                    "currency_id": "MXN"
+                }
+            ],
+            "back_urls": {
+                "success": request.build_absolute_uri('/pago-exitoso/'),
+                "failure": request.build_absolute_uri('/pago-fallido/'),
+                "pending": request.build_absolute_uri('/pago-pendiente/'),
+            },
+            "auto_return": "approved",
+        }
 
+        preference_response = SDK.preference().create(preference_data)
+        preference = preference_response["response"]
+
+        return JsonResponse({
+            'preference_id': preference["id"], 
+            'total_nuevo': f"{total:,.2f}"
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 @login_required
 def crear_intencion_compra(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
@@ -326,6 +360,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
