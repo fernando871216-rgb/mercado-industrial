@@ -443,37 +443,40 @@ def mercadopago_webhook(request):
         if response.status_code == 200:
             data = response.json()
             status = data.get('status')
+            ref_data = data.get('external_reference')
             
-            if status == 'approved':
-                ref_data = data.get('external_reference') # Traerá algo como "13-5"
-                
-                if ref_data and "-" in ref_data:
-                    # SEPARAMOS LOS IDs
+            print(f"WEBHOOK RECIBIDO: Status {status}, Ref {ref_data}") # Ver esto en Render Logs
+
+            if status == 'approved' and ref_data:
+                try:
+                    # Intentamos separar los IDs
                     product_id, buyer_id = ref_data.split('-')
                     
-                    producto = get_object_or_404(IndustrialProduct, id=product_id)
-                    comprador = get_object_or_404(User, id=buyer_id) # El cliente real
+                    producto = IndustrialProduct.objects.get(id=product_id)
+                    comprador = User.objects.get(id=buyer_id)
                     
-                    # Verificamos si ya existe para no duplicar
-                    venta_existe = Sale.objects.filter(product=producto, buyer=comprador, status='approved').exists()
+                    venta, created = Sale.objects.get_or_create(
+                        product=producto,
+                        buyer=comprador,
+                        status='approved',
+                        defaults={'price': producto.price}
+                    )
                     
-                    if not venta_existe:
-                        # 1. DESCONTAR STOCK
+                    if created:
+                        print("VENTA CREADA EXITOSAMENTE")
                         if producto.stock > 0:
                             producto.stock -= 1
                             producto.save()
+                    else:
+                        print("LA VENTA YA EXISTÍA")
                         
-                        # 2. CREAR VENTA CON EL COMPRADOR REAL
-                        Sale.objects.create(
-                            product=producto,
-                            buyer=comprador, # <--- Corregido: Ahora sí es el que pagó
-                            price=producto.price,
-                            status='approved'
-                        )
+                except Exception as e:
+                    print(f"ERROR PROCESANDO VENTA: {e}") # Esto te dirá qué falló exactamente
             
             return HttpResponse(status=200)
 
     return HttpResponse(status=200)
+
 
 
 
