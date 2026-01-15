@@ -449,81 +449,55 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
-    # Capturamos el ID de cualquier lugar (ID o DATA.ID)
     payment_id = request.GET.get('id') or request.GET.get('data.id')
     
-    # Si viene como POST (que es lo que intentó hacer y falló con 403)
-    if not payment_id and request.method == 'POST':
-        try:
-            body = json.loads(request.body)
-            payment_id = body.get('data', {}).get('id') or body.get('id')
-        except:
-            pass
-
     if payment_id:
-        token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
+        # Usamos el SDK que ya tienes configurado arriba
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
-        headers = {'Authorization': f'Bearer {token}'}
+        headers = {'Authorization': f'Bearer {SDK.access_token}'}
         
         try:
             response = requests.get(url, headers=headers)
+            print(f"DEBUG: Respuesta de MP: {response.status_code}") # Veremos esto en logs
+            
             if response.status_code == 200:
                 data = response.json()
-                if data.get('status') == 'approved':
-                    ref_data = str(data.get('external_reference', ''))
+                status = data.get('status')
+                ref_data = str(data.get('external_reference', ''))
+                
+                print(f"DEBUG: Status MP: {status} | Ref: {ref_data}")
+
+                if status == 'approved' and ref_data:
                     parts = ref_data.split('-')
-                    
                     if len(parts) >= 2:
-                        producto = IndustrialProduct.objects.get(id=parts[0])
-                        comprador = User.objects.get(id=parts[1])
+                        prod_id, user_id = parts[0], parts[1]
                         
-                        venta, created = Sale.objects.get_or_create(
-                            product=producto,
-                            buyer=comprador,
-                            status='approved',
-                            defaults={'price': data.get('transaction_amount')}
-                        )
-                        
-                        if created:
-                            if producto.stock > 0:
-                                producto.stock -= 1
-                                producto.save()
+                        try:
+                            producto = IndustrialProduct.objects.get(id=prod_id)
+                            comprador = User.objects.get(id=user_id)
                             
-                            # Intentar enviar correo pero que no bloquee nada
-                            try:
-                                send_mail(
-                                    '¡Venta Confirmada!',
-                                    f'Se ha registrado el pago del producto: {producto.title}',
-                                    'fernando871216@gmail.com',
-                                    [producto.user.email],
-                                    fail_silently=True
-                                )
-                            except: pass
+                            # Guardamos con lo mínimo indispensable para que no falle
+                            venta, created = Sale.objects.get_or_create(
+                                product=producto,
+                                buyer=comprador,
+                                status='approved',
+                                defaults={'price': data.get('transaction_amount')}
+                            )
+                            
+                            if created:
+                                print(f"VENTA REGISTRADA EXITOSAMENTE: {venta.id}")
+                                if producto.stock > 0:
+                                    producto.stock -= 1
+                                    producto.save()
+                        except Exception as inner_e:
+                            print(f"ERROR INTERNO AL GUARDAR: {inner_e}")
+            else:
+                print(f"MP devolvió error: {response.text}")
+
         except Exception as e:
-            print(f"Error en webhook: {e}")
+            print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
