@@ -12,6 +12,7 @@ import base64
 import uuid
 import os
 import time
+from marketplace.models import Product
 
 # IMPORTANTE: Usando tus nombres exactos de forms.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -83,9 +84,20 @@ def obtener_token_soloenvios():
         return f"ERROR_CONEXION_{str(e)}"
 
 def cotizar_soloenvios(request):
+    # 1. Buscamos el producto para saber quién es el vendedor
+    product_id = request.GET.get('product_id')
+    try:
+        producto = Product.objects.get(id=product_id)
+        # Suponiendo que tu modelo Producto tiene un vendedor y el vendedor tiene CP
+        # Ajusta 'vendedor.perfil.cp' según tus nombres reales de campos
+        cp_origen = str(producto.vendedor.cp).strip().zfill(5) 
+    except:
+        # Si algo falla, dejamos uno por defecto (el tuyo) para que no truene
+        cp_origen = "72460"
+
+    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
-    
     token = obtener_token_soloenvios()
     if "ERROR" in str(token):
         return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
@@ -298,6 +310,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
