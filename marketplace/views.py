@@ -279,7 +279,7 @@ def mis_ventas(request):
         venta.save()
         messages.success(request, f"Guía de envío actualizada para {venta.product.title}")
         return redirect('mis_ventas')
-
+    
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
@@ -463,6 +463,7 @@ def mercadopago_webhook(request):
 
     # Siempre responder 200 a Mercado Pago para que no siga reintentando
     return HttpResponse(status=200)
+
 
 
 
