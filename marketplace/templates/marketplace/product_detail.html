@@ -1,7 +1,7 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 15px auto; padding: 0 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<div class="container" style="max-width: 1100px; margin: 15px auto; padding: 0 10px; font-family: 'Segoe UI', sans-serif;">
     
     <a href="{% url 'home' %}" style="text-decoration: none; color: #7f8c8d; font-size: 0.95rem; display: inline-flex; align-items: center; margin-bottom: 15px;">
         <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Volver al catálogo
@@ -9,46 +9,57 @@
     
     <div style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 20px; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
         
-        <div style="flex: 1; min-width: 100%; max-width: 500px; margin: 0 auto;">
-            <div style="display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 10px; border: 1px solid #f1f1f1; padding: 10px;">
+        <div style="flex: 1; min-width: 100%; max-width: 500px;">
+            <div style="text-align: center; border: 1px solid #f1f1f1; border-radius: 10px; padding: 10px;">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; height: auto; max-height: 450px; object-fit: contain; border-radius: 10px;">
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-height: 400px; object-fit: contain;">
                 {% else %}
-                    <div style="height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ced4da;">
-                        <i class="fas fa-image" style="font-size: 4rem;"></i>
-                        <p>Sin imagen</p>
-                    </div>
+                    <p style="color: #ccc;">Sin imagen</p>
                 {% endif %}
             </div>
         </div>
 
         <div style="flex: 1.2; min-width: 280px;">
-            <h1 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 1.8rem;">{{ product.title }}</h1>
-            
-            <div style="font-size: 2rem; font-weight: 800; color: #27ae60; margin-bottom: 5px;">
-                $<span id="display_price">{{ product.price }}</span> <span style="font-size: 0.8rem; color: #95a5a6; font-weight: normal;">MXN</span>
+            <h1 style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px;">{{ product.title }}</h1>
+            <div style="font-size: 2rem; font-weight: 800; color: #27ae60; margin-bottom: 20px;">
+                $<span id="display_price">{{ product.price }}</span> MXN
             </div>
 
-            <p id="envio_info" style="color: #3498db; font-size: 0.85rem; margin-bottom: 15px; display: none; background: #e8f4fd; padding: 10px; border-radius: 8px; border-left: 5px solid #3498db;">
-                <i class="fas fa-truck"></i> Envío seleccionado: +$<span id="monto_flete">0</span>
-            </p>
-
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 15px; border: 1px solid #e0e6ed; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 12px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-calculator"></i> Cotizar Envío</h4>
+            <div style="background: #fdfdfd; padding: 20px; border-radius: 15px; border: 2px solid #3498db; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 15px 0; color: #003366; font-size: 1rem;"><i class="fas fa-truck"></i> Configurar Envío</h4>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <div>
-                        <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #eee; background: #f1f1f1;">
+                        <label style="display:block; font-size: 0.7rem; font-weight: bold;">CP ORIGEN</label>
+                        <input type="text" id="envio_cp_origen" value="72460" style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd; background: #eee;" readonly>
                     </div>
                     <div>
-                        <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Ej: 06600" maxlength="5" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                        <label style="display:block; font-size: 0.7rem; font-weight: bold;">CP DESTINO</label>
+                        <input type="text" id="envio_cp_destino" placeholder="Ej: 06600" maxlength="5" style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #3498db;">
                     </div>
                 </div>
 
-                <button type="button" id="btn_cotizar" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                    CALCULAR ENVÍO
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 0.6rem;">PESO (kg)</label>
+                        <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}" style="width:100%; padding: 5px; border: 1px solid #ccc;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.6rem;">LARGO (cm)</label>
+                        <input type="number" id="envio_largo" value="{{ product.largo|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.6rem;">ANCHO (cm)</label>
+                        <input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.6rem;">ALTO (cm)</label>
+                        <input type="number" id="envio_alto" value="{{ product.alto|default:20 }}" style="width:100%; padding: 5px; border: 1px solid #ccc;">
+                    </div>
+                </div>
+
+                <button type="button" id="btn_cotizar" onclick="consultarSoloEnvios()" style="width: 100%; background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    RE-CALCULAR TARIFAS
                 </button>
 
                 <div id="resultados_flete" style="margin-top: 15px; display: none;">
@@ -57,11 +68,6 @@
             </div>
 
             <div id="wallet_container"></div>
-            
-            <div style="margin-top: 20px;">
-                <h3 style="font-size: 1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-bottom: 12px;">Descripción</h3>
-                <p style="line-height: 1.5; color: #4a5568; white-space: pre-line; font-size: 0.9rem;">{{ product.description }}</p>
-            </div>
         </div>
     </div>
 </div>
@@ -70,7 +76,7 @@
 <script>
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
     const bricksBuilder = mp.bricks();
-    
+
     function renderMPButton(prefId) {
         const container = document.getElementById("wallet_container");
         if (!container) return;
@@ -80,74 +86,52 @@
         });
     }
 
-    {% if preference_id %}
-    renderMPButton("{{ preference_id }}");
-    {% endif %}
+    {% if preference_id %} renderMPButton("{{ preference_id }}"); {% endif %}
 
     function consultarSoloEnvios() {
         const btn = document.getElementById('btn_cotizar');
-        const listaPaqueterias = document.getElementById('lista_paqueterias');
-        const resultadosDiv = document.getElementById('resultados_flete');
         const cp_destino = document.getElementById('envio_cp_destino').value;
+        const lista = document.getElementById('lista_paqueterias');
 
-        if (cp_destino.length < 5) {
-            alert("Ingresa un CP de 5 dígitos.");
-            return;
-        }
+        if (cp_destino.length < 5) { alert("CP inválido"); return; }
 
+        btn.innerText = "Consultando API...";
         btn.disabled = true;
-        btn.innerText = "Buscando tarifas...";
 
-        // Usamos valores de respaldo por si el producto no tiene medidas en la DB
-        const peso = "{{ product.peso }}" !== "None" && "{{ product.peso }}" !== "" ? "{{ product.peso }}" : "1";
-        const largo = "{{ product.largo }}" !== "None" && "{{ product.largo }}" !== "" ? "{{ product.largo }}" : "20";
-        const ancho = "{{ product.ancho }}" !== "None" && "{{ product.ancho }}" !== "" ? "{{ product.ancho }}" : "20";
-        const alto = "{{ product.alto }}" !== "None" && "{{ product.alto }}" !== "" ? "{{ product.alto }}" : "20";
+        const p = document.getElementById('envio_peso').value;
+        const l = document.getElementById('envio_largo').value;
+        const an = document.getElementById('envio_ancho').value;
+        const al = document.getElementById('envio_alto').value;
 
-        const url = `/cotizar-soloenvios/?cp_origen=72460&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`;
-
-        fetch(url)
+        fetch(`/cotizar-soloenvios/?cp_origen=72460&cp_destino=${cp_destino}&peso=${p}&largo=${l}&ancho=${an}&alto=${al}`)
             .then(r => r.json())
             .then(data => {
+                btn.innerText = "RE-CALCULAR TARIFAS";
                 btn.disabled = false;
-                btn.innerText = "CALCULAR ENVÍO";
-                listaPaqueterias.innerHTML = "";
-
+                lista.innerHTML = "";
                 if (data.tarifas && data.tarifas.length > 0) {
-                    resultadosDiv.style.display = "block";
+                    document.getElementById('resultados_flete').style.display = "block";
                     data.tarifas.forEach(t => {
-                        const div = document.createElement('div');
-                        div.style = "cursor:pointer; border:1px solid #ddd; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px;";
-                        div.onclick = () => seleccionarFlete(t.precio_final);
-                        div.innerHTML = `
-                            <div>
-                                <div style="font-weight:bold;">${t.paqueteria}</div>
-                                <small>${t.tiempo}</small>
-                            </div>
-                            <div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
-                        listaPaqueterias.appendChild(div);
+                        const d = document.createElement('div');
+                        d.style = "border:1px solid #ddd; padding:10px; border-radius:8px; display:flex; justify-content:space-between; cursor:pointer; background:white; margin-bottom:5px;";
+                        d.onclick = () => seleccionarFlete(t.precio_final);
+                        d.innerHTML = `<div><b>${t.paqueteria}</b><br><small>${t.tiempo}</small></div><div style="color:green;">$${t.precio_final}</div>`;
+                        lista.appendChild(d);
                     });
                 } else {
-                    alert("SoloEnvíos no devolvió tarifas. Revisa que el CP sea de México y que tu cuenta tenga saldo o esté activa.");
+                    alert("Error: " + (data.detalle || "Sin respuesta de SoloEnvíos"));
                 }
-            })
-            .catch(e => {
-                btn.disabled = false;
-                btn.innerText = "CALCULAR ENVÍO";
-                alert("Error técnico al conectar con la cotización.");
             });
     }
 
-    function seleccionarFlete(precioEnvio) {
-        document.getElementById('envio_info').style.display = "block";
-        document.getElementById('monto_flete').innerText = precioEnvio;
-        
-        fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precioEnvio}`)
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('display_price').innerText = data.total_nuevo;
-            renderMPButton(data.preference_id);
-        });
+    function seleccionarFlete(precio) {
+        fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('display_price').innerText = data.total_nuevo;
+                renderMPButton(data.preference_id);
+                alert("Envío aplicado: $" + precio);
+            });
     }
 </script>
 {% endblock %}
