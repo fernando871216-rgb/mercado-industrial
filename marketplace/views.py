@@ -48,8 +48,9 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    cp_origen = request.GET.get('cp_origen', '').strip().zfill(5)
-    cp_destino = request.GET.get('cp_destino', '').strip().zfill(5)
+    # 1. Limpieza estricta de CPs
+    cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
+    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
@@ -62,75 +63,72 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Aseguramos que los valores sean números puros
-        v_peso = float(request.GET.get('peso') or 1)
-        v_largo = int(float(request.GET.get('largo') or 20))
-        v_ancho = int(float(request.GET.get('ancho') or 20))
-        v_alto = int(float(request.GET.get('alto') or 20))
+        # Forzamos conversión a números puros (float)
+        try:
+            v_peso = float(request.GET.get('peso') or 1)
+            v_largo = float(request.GET.get('largo') or 20)
+            v_ancho = float(request.GET.get('ancho') or 20)
+            v_alto = float(request.GET.get('alto') or 20)
+        except:
+            v_peso, v_largo, v_ancho, v_alto = 1.0, 20.0, 20.0, 20.0
 
-        # Esta es la estructura EXACTA que usa su panel web
+        # Esta estructura cumple exactamente con los nombres que te fallaron
+        # (address_from, address_to y parcel)
         payload = {
             "address_from": {
                 "country_code": "MX",
                 "postal_code": cp_origen,
                 "area_level1": "Puebla",
                 "area_level2": "Puebla",
-                "area_level3": "Puebla"
+                "area_level3": "Colonia"
             },
             "address_to": {
                 "country_code": "MX",
                 "postal_code": cp_destino,
-                "area_level1": "CDMX",
-                "area_level2": "CDMX",
-                "area_level3": "Delegacion"
+                "area_level1": "Estado",
+                "area_level2": "Municipio",
+                "area_level3": "Colonia"
             },
-            "packages": [
-                {
-                    "content": "Articulos Industriales",
-                    "amount": 1,
-                    "type": "box",
-                    "weight": v_peso,
-                    "width": v_ancho,
-                    "height": v_alto,
-                    "length": v_largo,
-                    "weight_unit": "kg",
-                    "dimension_unit": "cm"
-                }
-            ]
+            "parcel": {
+                "weight": v_peso,
+                "length": v_largo,
+                "width": v_ancho,
+                "height": v_alto
+            }
         }
         
+        # Enviamos usando json=payload para que Python se encargue del formato correcto
         res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # La respuesta de quotations suele venir como una lista de proveedores
+            # La respuesta suele ser una lista de opciones de paquetería
             rates_list = data if isinstance(data, list) else data.get('rates', data.get('data', []))
             
             tarifas = []
             for t in rates_list:
-                # Intentamos obtener el precio de varios campos posibles
                 costo = t.get('total_price') or t.get('price') or t.get('cost')
                 if costo:
                     tarifas.append({
-                        'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Paquetería',
+                        'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
                         'precio_final': round(float(costo) * 1.08, 2),
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas para esta ruta.'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay servicios disponibles.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si da error, mandamos el detalle para leerlo en el alert del HTML
+        # Capturamos el error para leerlo en el alert del HTML
         return JsonResponse({
             'tarifas': [], 
-            'error': 'Error de SoloEnvíos', 
+            'error': f'Error {res.status_code}', 
             'detalle': res.text
         })
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -268,6 +266,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
