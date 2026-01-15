@@ -84,37 +84,48 @@ def obtener_token_soloenvios():
         return f"ERROR_CONEXION_{str(e)}"
 
 def cotizar_soloenvios(request):
-    # 1. Buscamos el producto para saber quién es el vendedor
+    # 1. Obtenemos el ID del producto que viene del HTML
     product_id = request.GET.get('product_id')
+    
     try:
-        producto = Product.objects.get(id=product_id)
-        # Suponiendo que tu modelo Producto tiene un vendedor y el vendedor tiene CP
-        # Ajusta 'vendedor.perfil.cp' según tus nombres reales de campos
-        cp_origen = str(producto.vendedor.cp).strip().zfill(5) 
-    except:
-        # Si algo falla, dejamos uno por defecto (el tuyo) para que no truene
+        # Buscamos en IndustrialProduct que es el modelo que usas
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        # Leemos los datos que el vendedor guardó (usando tus campos reales)
+        # Si el campo se llama 'cp_origen', lo usamos; si no, intentamos obtenerlo
+        cp_origen = str(getattr(producto, 'cp_origen', '72460')).strip().zfill(5)
+        
+        # Usamos los datos técnicos del producto directamente
+        # Si no existen, el 'limpiar_valor' usará los defaults
+        peso_db = getattr(producto, 'peso', 1)
+        largo_db = getattr(producto, 'largo', 20)
+        ancho_db = getattr(producto, 'ancho', 20)
+        alto_db = getattr(producto, 'alto', 20)
+    except Exception as e:
+        print(f"Error cargando producto: {e}")
         cp_origen = "72460"
+        peso_db, largo_db, ancho_db, alto_db = 1, 20, 20, 20
 
+    # 2. Datos que vienen del formulario (por si el usuario los ajusta)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
-    cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
-    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
+    
     token = obtener_token_soloenvios()
     if "ERROR" in str(token):
         return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
 
     try:
-        # Aseguramos que los valores sean números y nunca menores a 1
-        def limpiar_valor(val, default):
+        def limpiar_valor(val, default_val):
             try:
                 num = int(float(val))
-                return num if num > 0 else default
+                return num if num > 0 else default_val
             except:
-                return default
+                return default_val
 
-        peso = limpiar_valor(request.GET.get('peso'), 1)
-        largo = limpiar_valor(request.GET.get('largo'), 20)
-        ancho = limpiar_valor(request.GET.get('ancho'), 20)
-        alto = limpiar_valor(request.GET.get('alto'), 20)
+        # Priorizamos lo que venga del request, si no, lo de la DB
+        peso = limpiar_valor(request.GET.get('peso'), peso_db)
+        largo = limpiar_valor(request.GET.get('largo'), largo_db)
+        ancho = limpiar_valor(request.GET.get('ancho'), ancho_db)
+        alto = limpiar_valor(request.GET.get('alto'), alto_db)
 
         url = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
@@ -127,7 +138,7 @@ def cotizar_soloenvios(request):
             "quotation": {
                 "address_from": {
                     "country_code": "MX", "postal_code": cp_origen,
-                    "area_level1": "Puebla", "area_level2": "Puebla", "area_level3": "Centro"
+                    "area_level1": "Origen", "area_level2": "Municipio", "area_level3": "Colonia"
                 },
                 "address_to": {
                     "country_code": "MX", "postal_code": cp_destino,
@@ -140,39 +151,29 @@ def cotizar_soloenvios(request):
             }
         }
         
-        # 1. Hacemos la petición inicial
         res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
-        if res.status_code == 201 or res.status_code == 200:
-            # --- TRUCO DE ESPERA ---
-            # Como la API dice "pending", esperamos 2.5 segundos y volvemos a consultar ese ID de cotización
+        if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
-            time.sleep(2.5) 
+            time.sleep(2.5) # Espera para que las paqueterías respondan
             
             res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
             data = res_final.json()
             
-            rates_list = data.get('rates', [])
             tarifas = []
-            
-            for t in rates_list:
-                # Ahora sí, buscamos las que ya no están pendientes y tienen total
-                if t.get('total') is not None and float(t.get('total')) > 0:
+            for t in data.get('rates', []):
+                if t.get('total') and float(t.get('total')) > 0:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
                         'precio_final': round(float(t.get('total')) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
-            
-            if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'Las paqueterías tardaron mucho en responder. Intenta de nuevo.'})
-                
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}: {res.text}'})
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.text}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': str(e)})
     # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -310,6 +311,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
