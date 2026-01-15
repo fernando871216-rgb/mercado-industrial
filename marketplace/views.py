@@ -24,36 +24,24 @@ SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319e
 # ==========================================
 # 1. PERFIL (Corregido con tus 2 formularios)
 # ==========================================
-@login_required
+    @login_required
 def editar_perfil(request):
-    # Obtenemos el perfil o lo creamos si no existe
+    # Intentamos obtener el perfil del usuario, si no existe lo creamos
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        # Pasamos instance= para que sepa que estamos EDITANDO, no creando
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileForm(request.POST, instance=profile)
         
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
-            # Guardamos el perfil explícitamente
-            perfil_editado = p_form.save(commit=False)
-            perfil_editado.user = request.user
-            perfil_editado.save()
-            
+            p_form.save()
             messages.success(request, "¡Tu perfil y datos bancarios han sido actualizados!")
             return redirect('editar_perfil')
         else:
-            messages.error(request, "Hubo un error al guardar los datos. Revisa los campos.")
+            messages.error(request, "Por favor corrige los errores abajo.")
     else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileForm(instance=profile)
-
-    return render(request, 'marketplace/editar_perfil.html', {
-        'u_form': u_form,
-        'p_form': p_form
-    })
-    else:
+        # Aquí es donde estaba el error: este 'else' debe estar alineado con el primer 'if'
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileForm(instance=profile)
 
@@ -421,5 +409,6 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
