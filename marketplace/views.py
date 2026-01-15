@@ -52,72 +52,67 @@ def editar_perfil(request):
 def obtener_token_soloenvios():
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
-    # Leemos de Render
-    client_id = os.environ.get('SOLOENVIOS_CLIENT_ID')
-    client_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET')
+    # Obtenemos las llaves y usamos .strip() para borrar espacios accidentales
+    raw_id = os.environ.get('SOLOENVIOS_CLIENT_ID', '')
+    raw_secret = os.environ.get('SOLOENVIOS_CLIENT_SECRET', '')
 
-    if not client_id or not client_secret:
+    if not raw_id or not raw_secret:
         return "ERROR_LLAVES_VACIAS"
 
     payload = {
-        "client_id": client_id.strip(),
-        "client_secret": client_secret.strip(),
+        "client_id": raw_id.strip(),
+        "client_secret": raw_secret.strip(),
         "grant_type": "client_credentials",
         "scope": "default quotations.create"
     }
     
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    headers = {
+        "Content-Type": "application/json", 
+        "Accept": "application/json"
+    }
     
     try:
-        # verify=False por si Render tiene problemas de certificados con la API
-        res = requests.post(url, json=payload, headers=headers, timeout=15, verify=False)
+        # Intentamos la conexión
+        res = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
+        
         if res.status_code == 200:
             return res.json().get('access_token')
         else:
-            return None
+            # Si falla, mandamos el código de error para saber qué dice SoloEnvíos
+            return f"ERROR_API_{res.status_code}_{res.text}"
     except Exception as e:
-        return None
+        return f"ERROR_CONEXION_{str(e)}"
 
 def cotizar_soloenvios(request):
-    # Obtener datos de la URL
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # Obtener token
-    token = obtener_token_soloenvios()
+    token_respuesta = obtener_token_soloenvios()
     
-    if token == "ERROR_LLAVES_VACIAS":
-        return JsonResponse({'tarifas': [], 'error': 'Faltan variables en Render (SOLOENVIOS_CLIENT_ID)'})
-    
-    if not token:
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo obtener el token de acceso.'})
+    # Si la respuesta no es un token largo, es un error
+    if "ERROR" in str(token_respuesta):
+        return JsonResponse({
+            'tarifas': [], 
+            'error': f'Detalle técnico: {token_respuesta}'
+        })
 
     try:
         url = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {token_respuesta}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Validamos que los números sean válidos
-        try:
-            peso = int(float(request.GET.get('peso', 1)))
-            largo = int(float(request.GET.get('largo', 20)))
-            ancho = int(float(request.GET.get('ancho', 20)))
-            alto = int(float(request.GET.get('alto', 20)))
-        except:
-            peso, largo, ancho, alto = 1, 20, 20, 20
-
         payload = {
             "quotation": {
                 "address_from": {"country_code": "MX", "postal_code": cp_origen},
                 "address_to": {"country_code": "MX", "postal_code": cp_destino},
                 "parcels": [{
-                    "length": largo,
-                    "width": ancho,
-                    "height": alto,
-                    "weight": peso,
+                    "length": int(float(request.GET.get('largo', 20))),
+                    "width": int(float(request.GET.get('ancho', 20))),
+                    "height": int(float(request.GET.get('alto', 20))),
+                    "weight": int(float(request.GET.get('peso', 1))),
                     "package_protected": False,
                     "declared_value": 100
                 }]
@@ -130,7 +125,6 @@ def cotizar_soloenvios(request):
             data = res.json()
             rates_list = data.get('rates', [])
             tarifas = []
-            
             for t in rates_list:
                 if t.get('success') is True:
                     tarifas.append({
@@ -139,8 +133,8 @@ def cotizar_soloenvios(request):
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             return JsonResponse({'tarifas': tarifas})
-        else:
-            return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+        
+        return JsonResponse({'tarifas': [], 'error': f'API Cotización falló: {res.text}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -282,6 +276,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
