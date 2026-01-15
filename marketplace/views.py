@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 import base64
+import uuid
 
 # IMPORTANTE: Usando tus nombres exactos de forms.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -48,11 +49,11 @@ def editar_perfil(request):
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
 def cotizar_soloenvios(request):
-    # 1. Cargar datos desde la URL
+    # 1. Obtener datos de la URL
     cp_origen = str(request.GET.get('cp_origen', '72460')).strip().zfill(5)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # El token que sacaste hoy de la consola de pruebas
+    # Tu token sacado hoy
     token_manual = "MDUdPe44FuoeJv2NWVt978oqowVXxp+It0dLQp000hDUdfj/p+G2WmDcfHRa4AMEdSPZqYHKRyU51cA841uQNmmATbne2sZXd+7BWo34Z4VNL79t6bCYi9Em51OSEmIevI6CMnXR2L/NtaSujHqzoHf+84DmINgQUjrMXAPMseGt2NSK5IxWOZh2qUSX9G0TrNGW1/ETSDEhGbael1xYsKaF4iSxhvb+A4bP8Hgu60o/P5LXnkbmVIUgRepjbAFUMUfM+AdHavEsxP/4t/MFX/kUU6132e6OHb9QvPuPCXBgX94yDVQNA+uhfB3tz+xCU9g9x1EbjRrNybQRDkT68Bof5Y4W10TWk/hXDOoBq1gKmNODm9YC--gGuP3qek5rpdUmeJ--3CsbYzzQS0eTUwERtjXAPA=="
 
     try:
@@ -64,64 +65,71 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Convertir dimensiones a números (Importante: la consola muestra valores numéricos)
-        v_peso = float(request.GET.get('peso') or 1)
-        v_largo = float(request.GET.get('largo') or 20)
-        v_ancho = float(request.GET.get('ancho') or 20)
-        v_alto = float(request.GET.get('alto') or 20)
+        # Convertir dimensiones a números enteros como muestra tu ejemplo
+        v_peso = int(float(request.GET.get('peso') or 1))
+        v_largo = int(float(request.GET.get('largo') or 20))
+        v_ancho = int(float(request.GET.get('ancho') or 20))
+        v_alto = int(float(request.GET.get('alto') or 20))
 
-        # ESTRUCTURA EXACTA SEGÚN TU CAPTURA DE PANTALLA
-        # Todo debe ir dentro de "quotation"
+        # ESTRUCTURA IDÉNTICA A TU MENSAJE
         payload = {
             "quotation": {
+                "order_id": str(uuid.uuid4()), # Genera un ID único como el de tu ejemplo
                 "address_from": {
                     "country_code": "MX",
                     "postal_code": cp_origen,
                     "area_level1": "Puebla",
                     "area_level2": "Puebla",
-                    "area_level3": "Colonia"
+                    "area_level3": "Centro"
                 },
                 "address_to": {
                     "country_code": "MX",
                     "postal_code": cp_destino,
-                    "area_level1": "Estado",
-                    "area_level2": "Municipio",
+                    "area_level1": "Destino",
+                    "area_level2": "Ciudad",
                     "area_level3": "Colonia"
                 },
-                "parcel": {
-                    "weight": v_peso,
-                    "length": v_largo,
-                    "width": v_ancho,
-                    "height": v_alto
-                }
+                "parcels": [
+                    {
+                        "length": v_largo,
+                        "width": v_ancho,
+                        "height": v_alto,
+                        "weight": v_peso,
+                        "package_protected": False,
+                        "declared_value": 100
+                    }
+                ]
             }
         }
         
-        # Realizar la petición
         res = requests.post(url, json=payload, headers=headers, verify=False, timeout=15)
         
         if res.status_code == 200:
             data = res.json()
-            # En la consola de SoloEnvíos, las respuestas suelen ser una lista de proveedores
+            
+            # La API de SoloEnvíos suele devolver una lista de tarifas directamente
+            # o dentro de una propiedad 'rates'
             rates_list = data if isinstance(data, list) else data.get('rates', data.get('data', []))
             
             tarifas = []
             for t in rates_list:
-                # Buscamos el precio en los campos que usa SoloEnvíos
+                # Extraemos el costo y el nombre del carrier
                 costo = t.get('total_price') or t.get('price') or t.get('cost')
+                nombre = t.get('service_name') or t.get('carrier_name') or 'Paquetería'
+                
                 if costo:
                     tarifas.append({
-                        'paqueteria': t.get('service_name') or t.get('carrier_name') or 'Envío',
-                        'precio_final': round(float(costo) * 1.08, 2), # Tu comisión del 8%
+                        'paqueteria': nombre,
+                        'precio_final': round(float(costo) * 1.08, 2), # Tu 8% de comisión
                         'tiempo': t.get('delivery_days') or 'N/A'
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay coberturas disponibles.'})
+                return JsonResponse({'tarifas': [], 'error': 'No hay transportistas disponibles para esta ruta.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        # Si falla, mandamos el detalle técnico para verlo en el alert
+        # Error detallado en caso de fallo
         return JsonResponse({
             'tarifas': [], 
             'error': f'Error {res.status_code}', 
@@ -129,7 +137,7 @@ def cotizar_soloenvios(request):
         })
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
 # ==========================================
 # 3. GESTIÓN DE PRODUCTOS
 # ==========================================
@@ -267,6 +275,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
