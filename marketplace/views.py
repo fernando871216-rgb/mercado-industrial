@@ -340,85 +340,61 @@ def actualizar_guia(request, venta_id):
 def procesar_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
-    # Configuramos el SDK con tu Token
+    # 1. Recuperamos el valor del envío si viene en la URL (ej: ?envio=150)
+    try:
+        envio_val = float(request.GET.get('envio', 0))
+    except:
+        envio_val = 0
+
+    # 2. Cálculos de precio REAL (Igual que tenías en actualizar_pago)
+    precio_base = float(producto.price)
+    comision_initre = precio_base * 0.05
+    subtotal = precio_base + comision_initre + envio_val
+    
+    # Cálculo de comisión de Mercado Pago
+    total_comision_mp = (subtotal * 0.0349) + 4.0 + (((subtotal * 0.0349) + 4.0) * 0.16)
+    total_final = round(subtotal + total_comision_mp, 2)
+
+    # 3. Configuramos el SDK
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
-    # Creamos la preferencia (la orden de pago)
+    # 4. Referencia externa ÚNICA (Producto-Usuario-TipoEntrega)
+    user_id = request.user.id if request.user.is_authenticated else 0
+    tipo_entrega = "E" if envio_val > 0 else "R"
+    ext_ref = f"{producto.id}-{user_id}-{tipo_entrega}"
+
+    # 5. Creamos la PREFERENCIA
     preference_data = {
         "items": [
             {
-                "title": producto.title,
+                "title": f"{producto.title} (Inc. Comisiones y Envío)",
                 "quantity": 1,
-                "unit_price": float(producto.price),
-                "currency_id": "MXN", # O tu moneda
+                "unit_price": total_final,
+                "currency_id": "MXN",
             }
         ],
+        "external_reference": ext_ref,
         "back_urls": {
             "success": "https://mercado-industrial.onrender.com/mis-compras/",
             "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-            "pending": "https://mercado-industrial.onrender.com/mis-compras/", # Con su coma al final
+            "pending": "https://mercado-industrial.onrender.com/mis-compras/",
         },
         "auto_return": "approved",
         "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
-        "external_reference": f"{producto.id}-{request.user.id}",
-        "binary_mode": True, # Esto evita pagos pendientes y acelera el regreso
+        "binary_mode": True,
     }
 
     preference_response = sdk.preference().create(preference_data)
     preference = preference_response["response"]
 
-    # Pasamos la preferencia al HTML para que el botón funcione
+    # 6. Renderizamos la página de confirmación con el precio final
     return render(request, 'marketplace/confirmar_pago.html', {
         'preference': preference,
-        'producto': producto
+        'producto': producto,
+        'total_final': total_final,
+        'envio': envio_val
     })
 
-def actualizar_pago(request):
-    try:
-        pid = request.GET.get('id')
-        envio_val = float(request.GET.get('envio', 0))
-        product = get_object_or_404(IndustrialProduct, id=pid)
-        
-        # Cálculos de precio
-        precio_base = float(product.price)
-        comision_initre = precio_base * 0.05
-        subtotal = precio_base + comision_initre + envio_val
-        total_comision_mp = (subtotal * 0.0349) + 4.0 + (((subtotal * 0.0349) + 4.0) * 0.16)
-        total_final = subtotal + total_comision_mp
-
-        user_id = request.user.id if request.user.is_authenticated else 0
-        tipo_entrega = "E" if envio_val > 0 else "R"
-        # Referencia: IDPRODUCTO-IDUSUARIO-TIPO
-        ext_ref = f"{product.id}-{user_id}-{tipo_entrega}"
-
-        preference_data = {
-            "items": [
-                {
-                    "title": product.title,
-                    "quantity": 1,
-                    "unit_price": round(total_final, 2),
-                    "currency_id": "MXN",
-                }
-            ],
-            "external_reference": ext_ref,
-            "back_urls": {
-                "success": "https://mercado-industrial.onrender.com/mis-compras/",
-                "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-                "pending": "https://mercado-industrial.onrender.com/mis-compras/",
-            },
-            "auto_return": "approved",
-            # IMPORTANTE: Esta URL debe ser exacta
-            "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
-            "binary_mode": True,
-        }
-
-        pref_response = SDK.preference().create(preference_data)
-        return JsonResponse({
-            'preference_id': pref_response["response"]["id"], 
-            'total_nuevo': f"{total_final:,.2f}"
-        })
-    except Exception as e:
-        return JsonResponse({'error': str    (e)}, status=400)
         
 @login_required
 def crear_intencion_compra(request, product_id):
@@ -541,6 +517,7 @@ def mercadopago_webhook(request):
             print(f"Error: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
