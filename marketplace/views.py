@@ -240,7 +240,22 @@ def registro(request):
 
 @login_required
 def mis_ventas(request):
+    # Traemos las ventas de los productos que pertenecen al usuario actual
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    
+    if request.method == 'POST':
+        venta_id = request.POST.get('venta_id')
+        guia = request.POST.get('tracking_number')
+        paqueteria = request.POST.get('shipping_company')
+        
+        venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+        venta.tracking_number = guia
+        venta.shipping_company = paqueteria
+        venta.status = 'enviado' # Cambiamos el estado automáticamente
+        venta.save()
+        messages.success(request, f"Guía de envío actualizada para {venta.product.title}")
+        return redirect('mis_ventas')
+
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
@@ -311,6 +326,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
