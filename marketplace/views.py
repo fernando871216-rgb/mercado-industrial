@@ -447,18 +447,27 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
+    # 1. Detectamos el ID y el tipo de aviso
     payment_id = request.GET.get('id') or request.GET.get('data.id')
-    
-    # IMPORTANTE: Pon aquí tu Access Token real si no lo tienes en una variable
-    # O usa settings.MERCADOPAGO_ACCESS_TOKEN si lo tienes en settings
-    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" 
+    topic = request.GET.get('topic') or request.GET.get('type')
+
+    # 2. Tu Token (Asegúrate que esté bien pegado)
+    access_token = "TU_ACCESS_TOKEN_AQUI" 
+
+    # 3. Solo procesamos si es un 'payment'. Si es 'merchant_order' lo ignoramos con un 200.
+    if topic and topic != 'payment':
+        return HttpResponse(status=200)
 
     if payment_id:
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
-        headers = {'Authorization': f'Bearer {access_token}'}
+        headers = {
+            'Authorization': f'Bearer {access_token.strip()}',
+            'Content-Type': 'application/json'
+        }
         
         try:
             response = requests.get(url, headers=headers)
+            
             if response.status_code == 200:
                 data = response.json()
                 if data.get('status') == 'approved':
@@ -469,10 +478,9 @@ def mercadopago_webhook(request):
                         try:
                             producto = IndustrialProduct.objects.get(id=parts[0])
                             comprador = User.objects.get(id=parts[1])
-                            
-                            # Convertimos a Decimal para tu modelo Sale
                             monto_real = Decimal(str(data.get('transaction_amount')))
                             
+                            # update_or_create es clave para no duplicar si MP insiste
                             venta, created = Sale.objects.update_or_create(
                                 product=producto,
                                 buyer=comprador,
@@ -484,15 +492,23 @@ def mercadopago_webhook(request):
                                 producto.stock -= 1
                                 producto.save()
                                 
-                            print("WEBHOOK: Procesado con éxito")
+                            print(f"VENTA REGISTRADA: {payment_id}")
                         except Exception as e:
-                            print(f"ERROR DATOS: {e}")
+                            print(f"Error en base de datos: {e}")
+                else:
+                    print(f"Pago no aprobado: {data.get('status')}")
+            
+            # Si sale 404 aquí, es porque el ID aún no está disponible en MP (tarda milisegundos)
+            elif response.status_code == 404:
+                print(f"Aviso: El pago {payment_id} aún no está disponible para consulta.")
             else:
-                print(f"ERROR MP: {response.status_code}")
+                print(f"Error MP {response.status_code}: {response.text}")
+
         except Exception as e:
-            print(f"ERROR CONEXION: {e}")
+            print(f"Error de red: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
