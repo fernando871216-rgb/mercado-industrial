@@ -11,6 +11,7 @@ from django.contrib import messages
 import base64
 import uuid
 import os
+import time
 
 # IMPORTANTE: Usando tus nombres exactos de forms.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -90,6 +91,19 @@ def cotizar_soloenvios(request):
         return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
 
     try:
+        # Aseguramos que los valores sean números y nunca menores a 1
+        def limpiar_valor(val, default):
+            try:
+                num = int(float(val))
+                return num if num > 0 else default
+            except:
+                return default
+
+        peso = limpiar_valor(request.GET.get('peso'), 1)
+        largo = limpiar_valor(request.GET.get('largo'), 20)
+        ancho = limpiar_valor(request.GET.get('ancho'), 20)
+        alto = limpiar_valor(request.GET.get('alto'), 20)
+
         url = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -97,7 +111,6 @@ def cotizar_soloenvios(request):
             "Accept": "application/json"
         }
         
-        # Enviamos datos más reales para asegurar respuesta
         payload = {
             "quotation": {
                 "address_from": {
@@ -106,29 +119,33 @@ def cotizar_soloenvios(request):
                 },
                 "address_to": {
                     "country_code": "MX", "postal_code": cp_destino,
-                    "area_level1": "Ciudad de Mexico", "area_level2": "Cuauhtemoc", "area_level3": "Juarez"
+                    "area_level1": "Destino", "area_level2": "Ciudad", "area_level3": "Colonia"
                 },
                 "parcels": [{
-                    "length": int(float(request.GET.get('largo', 20))),
-                    "width": int(float(request.GET.get('ancho', 20))),
-                    "height": int(float(request.GET.get('alto', 20))),
-                    "weight": int(float(request.GET.get('peso', 1))),
-                    "package_protected": False,
-                    "declared_value": 100
+                    "length": largo, "width": ancho, "height": alto, "weight": peso,
+                    "package_protected": False, "declared_value": 100
                 }]
             }
         }
         
+        # 1. Hacemos la petición inicial
         res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
-        data = res.json()
         
-        if res.status_code == 200:
+        if res.status_code == 201 or res.status_code == 200:
+            # --- TRUCO DE ESPERA ---
+            # Como la API dice "pending", esperamos 2.5 segundos y volvemos a consultar ese ID de cotización
+            cotizacion_id = res.json().get('id')
+            time.sleep(2.5) 
+            
+            res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
+            data = res_final.json()
+            
             rates_list = data.get('rates', [])
             tarifas = []
             
             for t in rates_list:
-                # Si la paquetería respondió con éxito y tiene un precio
-                if t.get('success') is True and t.get('total'):
+                # Ahora sí, buscamos las que ya no están pendientes y tienen total
+                if t.get('total') is not None and float(t.get('total')) > 0:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
                         'precio_final': round(float(t.get('total')) * 1.08, 2),
@@ -136,12 +153,11 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                # Si rates_list existe pero está vacío o todas fallaron
-                return JsonResponse({'tarifas': [], 'error': 'API conectada pero no devolvió tarifas. Revisa tu SALDO en SoloEnvíos.'})
+                return JsonResponse({'tarifas': [], 'error': 'Las paqueterías tardaron mucho en responder. Intenta de nuevo.'})
                 
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}: {data}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}: {res.text}'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
@@ -282,6 +298,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
