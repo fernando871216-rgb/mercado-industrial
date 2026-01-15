@@ -6,8 +6,8 @@
     <div class="row">
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm border-0">
-                {% if producto.imagen %}
-                    <img src="{{ producto.imagen.url }}" class="img-fluid rounded shadow-sm" alt="{{ producto.nombre }}">
+                {% if product.imagen %}
+                    <img src="{{ product.imagen.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.nombre }}">
                 {% else %}
                     <img src="https://via.placeholder.com/500" class="img-fluid rounded shadow-sm" alt="Sin imagen">
                 {% endif %}
@@ -15,10 +15,10 @@
         </div>
 
         <div class="col-md-6">
-            <h1 class="display-5 fw-bold text-dark">{{ producto.nombre }}</h1>
-            <h3 class="text-success mb-4">${{ producto.precio }} MXN</h3>
+            <h1 class="display-5 fw-bold text-dark">{{ product.nombre }}</h1>
+            <h3 class="text-success mb-4">${{ product.precio }} MXN</h3>
             
-            <p class="text-muted">{{ producto.descripcion }}</p>
+            <p class="text-muted">{{ product.descripcion }}</p>
 
             <hr class="my-4">
 
@@ -28,9 +28,9 @@
                 </h5>
                 
                 <div class="input-group mb-2">
-                    <input type="text" id="cp_destino_input" class="form-control border-end-0" placeholder="Código Postal Destino" maxlength="5">
+                    <input type="text" id="cp_destino_input" class="form-control" placeholder="C.P. Destino" maxlength="5">
                     <button type="button" id="btnCotizarRapido" class="btn btn-primary px-4">Calcular</button>
-                    <button type="button" id="btnLimpiar" class="btn btn-outline-secondary border-start-0" title="Limpiar">✕</button>
+                    <button type="button" id="btnLimpiar" class="btn btn-outline-secondary" title="Limpiar">✕</button>
                 </div>
 
                 <div id="loading_envio" class="text-center mt-3" style="display: none;">
@@ -49,19 +49,22 @@
                 <button class="btn btn-warning btn-lg fw-bold text-white shadow-sm" style="background-color: #f39c12; border: none;">
                     Confirmar Intención de Compra
                 </button>
-                <button class="btn btn-light btn-lg border shadow-sm d-flex align-items-center justify-content-center">
-                    <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.22/mercadopago/logo__small.png" height="20" class="me-2">
-                    Pagar ahora
-                </button>
+                
+                <div id="wallet_container">
+                    <button class="btn btn-light btn-lg border w-100 shadow-sm d-flex align-items-center justify-content-center">
+                        <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.21.22/mercadopago/logo__small.png" height="20" class="me-2">
+                        Pagar ahora
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<input type="hidden" id="p_peso" value="{{ producto.peso|default:'1' }}">
-<input type="hidden" id="p_largo" value="{{ producto.largo|default:'20' }}">
-<input type="hidden" id="p_ancho" value="{{ producto.ancho|default:'20' }}">
-<input type="hidden" id="p_alto" value="{{ producto.alto|default:'20' }}">
+<input type="hidden" id="p_peso" value="{{ product.peso|default:'1' }}">
+<input type="hidden" id="p_largo" value="{{ product.largo|default:'20' }}">
+<input type="hidden" id="p_ancho" value="{{ product.ancho|default:'20' }}">
+<input type="hidden" id="p_alto" value="{{ product.alto|default:'20' }}">
 
 <script>
     const btnCotizar = document.getElementById('btnCotizarRapido');
@@ -79,7 +82,6 @@
 
     btnCotizar.addEventListener('click', function() {
         const cp_destino = inputCP.value.trim();
-
         if (!cp_destino || cp_destino.length < 5) {
             alert("Ingresa un Código Postal válido.");
             return;
@@ -123,4 +125,8 @@
             })
             .catch(error => {
                 loading.style.display = 'none';
-                alert
+                alert("Error de conexión.");
+            });
+    });
+</script>
+{% endblock %}
