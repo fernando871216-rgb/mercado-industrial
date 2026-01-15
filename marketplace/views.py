@@ -229,8 +229,12 @@ def home(request):
     return render(request, 'marketplace/home.html', {'products': products})
 
 def detalle_producto(request, product_id):
+    # Aquí definimos 'product'
     product = get_object_or_404(IndustrialProduct, id=product_id)
-    # Generamos la preferencia inicial del producto
+    
+    # ID del usuario para el external_reference
+    user_id = request.user.id if request.user.is_authenticated else 0
+    
     pref_data = {
         "items": [{
             "id": str(product.id), 
@@ -239,15 +243,23 @@ def detalle_producto(request, product_id):
             "unit_price": float(product.price), 
             "currency_id": "MXN"
         }],
-        "external_reference": f"{producto.id}-{request.user.id}",
+        # CORRECCIÓN: Usamos product.id (antes decía producto.id)
+        "external_reference": f"{product.id}-{user_id}",
     }
-    pref = SDK.preference().create(pref_data)
     
+    try:
+        pref = SDK.preference().create(pref_data)
+        preference_id = pref["response"]["id"]
+    except Exception as e:
+        print(f"Error Mercado Pago: {e}")
+        preference_id = None
+
     return render(request, 'marketplace/product_detail.html', {
         'product': product, 
-        'preference_id': pref["response"]["id"],
-        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9" # Asegúrate de que esta sea tu llave pública real
+        'preference_id': preference_id,
+        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9"
     })
+    
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
     return render(request, 'marketplace/home.html', {'products': IndustrialProduct.objects.filter(category=cat), 'category': cat})
@@ -329,45 +341,40 @@ def procesar_pago(request, product_id):
 def actualizar_pago(request):
     try:
         pid = request.GET.get('id')
-        envio_con_comision_logistica = float(request.GET.get('envio', 0))
+        envio_val = float(request.GET.get('envio', 0))
         
-        # Aquí definiste 'prod' (con d)
-        prod = get_object_or_404(IndustrialProduct, id=pid)
+        # Consistencia: siempre usamos 'product'
+        product = get_object_or_404(IndustrialProduct, id=pid)
         
-        precio_producto = float(prod.price)
-        comision_initre = precio_producto * 0.05
-        subtotal = precio_producto + comision_initre + envio_con_comision_logistica
+        precio_base = float(product.price)
+        comision_initre = precio_base * 0.05
+        subtotal = precio_base + comision_initre + envio_val
         
+        # Comisiones MP
         porcentaje_mp = subtotal * 0.0349
         fijo_mp = 4.0
-        # Corregido error de dedo: era fijo_mp, no fjo_mp
-        iva_mp = (porcentaje_mp + fijo_mp) * 0.16 
+        iva_mp = (porcentaje_mp + fijo_mp) * 0.16
         total_comision_mp = porcentaje_mp + fijo_mp + iva_mp
         
         total_final = subtotal + total_comision_mp
-
-        # Preparamos los datos para el Webhook
         user_id = request.user.id if request.user.is_authenticated else 0
-        
-        # IMPORTANTE: Usamos 'prod' que es la variable real
-        ext_ref = f"{prod.id}-{user_id}"
 
         preference_data = {
             "items": [
                 {
-                    "title": f"{prod.title}",
-                    "description": "Equipo industrial + Envío certificado + Gestión de plataforma",
+                    "title": f"{product.title}",
+                    "description": "Pago seguro Mercado Industrial",
                     "quantity": 1,
                     "unit_price": round(total_final, 2),
                     "currency_id": "MXN"
                 }
             ],
-            # CORRECCIÓN: Cambié 'producto.id' por 'prod.id'
-            "external_reference": ext_ref, 
+            # CORRECCIÓN: Usamos product.id
+            "external_reference": f"{product.id}-{user_id}",
             "back_urls": {
-                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{prod.id}/",
+                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{prod.id}/"
+                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/"
             },
             "auto_return": "approved",
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
@@ -478,6 +485,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
