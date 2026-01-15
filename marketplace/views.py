@@ -344,7 +344,6 @@ def actualizar_pago(request):
         pid = request.GET.get('id')
         envio_val = float(request.GET.get('envio', 0))
         
-        # Consistencia: siempre usamos 'product'
         product = get_object_or_404(IndustrialProduct, id=pid)
         
         precio_base = float(product.price)
@@ -360,6 +359,8 @@ def actualizar_pago(request):
         total_final = subtotal + total_comision_mp
         user_id = request.user.id if request.user.is_authenticated else 0
         tipo_entrega = "E" if envio_val > 0 else "R"
+        
+        # Esta es la cadena clave que leerá el Webhook
         ext_ref = f"{product.id}-{user_id}-{tipo_entrega}"
 
         preference_data = {
@@ -370,19 +371,17 @@ def actualizar_pago(request):
                     "quantity": 1,
                     "unit_price": round(total_final, 2),
                     "currency_id": "MXN",
-                    "external_reference": ext_ref,
                 }
             ],
-         
-            "external_reference": f"{product.id}-{user_id}",
+            # CORRECCIÓN: Usamos la misma referencia completa aquí afuera también
+            "external_reference": ext_ref, 
             "back_urls": {
                 "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
                 "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{product.id}/"
             },
-            "auto_return": "approved", # Obliga a volver a tu sitio si el pago es con tarjeta/saldo
+            "auto_return": "approved",
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
-            # Esto es extra para asegurar que se vea profesional en móvil
             "binary_mode": True,
         }
 
@@ -461,51 +460,40 @@ def mercadopago_webhook(request):
                 
                 if status == 'approved' and ref_data:
                     parts = ref_data.split('-')
-                    tipo_txt = "ENVÍO A DOMICILIO" if parts[2] == 'E' else "RECOLECCIÓN EN PERSONA"
+                    # Verificamos que vengan las 3 partes (ID_PROD, ID_USER, TIPO)
                     if len(parts) >= 3:
-                        prod_id = parts[0]
-                        user_id = parts[1]
-                        tipo_letra = parts[2]
-                        metodo = 'envio' if tipo_letra == 'E' else 'recoleccion'
+                        producto = IndustrialProduct.objects.get(id=parts[0])
+                        comprador = User.objects.get(id=parts[1])
+                        tipo_txt = "ENVÍO A DOMICILIO" if parts[2] == 'E' else "RECOLECCIÓN EN PERSONA"
                         
-                        producto = IndustrialProduct.objects.get(id=prod_id)
-                        comprador = User.objects.get(id=user_id)
-                        
+                        # Guardamos la venta SIN el campo metodo_entrega
                         venta, created = Sale.objects.get_or_create(
                             product=producto,
                             buyer=comprador,
                             status='approved',
                             defaults={
-                                'price': data.get('transaction_amount'), # Guardamos el total real pagado
-                                
-            }
+                                'price': data.get('transaction_amount'),
+                            }
                         )
                         
-                        # ESTO SOLO OCURRE LA PRIMERA VEZ QUE SE REGISTRA EL PAGO
                         if created:
-                            print("VENTA REGISTRADA CON ÉXITO")
-                            
-                            # Envío de correo
+                            # El correo SÍ te avisará el método de entrega
                             send_mail(
                                 '¡Felicidades, vendiste un equipo!',
-                                f'Vendido: {producto.title}. Entrega: {tipo_txt}.',
-                                f'Hola {producto.user.username}, han comprado tu {producto.title}. Revisa tu panel de ventas para enviar el producto.',
-                                'fernando871216@gmail.com', # Cambia esto por tu correo real de settings
+                                f'Vendido: {producto.title}.\nMétodo: {tipo_txt}.\nFavor de revisar tu panel.',
+                                'fernando871216@gmail.com',
                                 [producto.user.email],
                                 fail_silently=False,
                             )
                             
-                            # Descuento de stock (solo una vez)
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                    else:
-                        print(f"ERROR: ExternalRef incompleto ({ref_data})")
-            
         except Exception as e:
-            print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
+            print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
