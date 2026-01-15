@@ -1,35 +1,49 @@
-{% extends 'marketplace/base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Pago Exitoso! - Mercado Industrial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 40px; text-align: center; max-width: 500px; }
+        .checkmark { font-size: 80px; color: #28a745; margin-bottom: 20px; }
+        .btn-primary { background-color: #009ee3; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; }
+        .timer { font-size: 0.9em; color: #6c757d; margin-top: 20px; }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<div style="max-width: 600px; margin: 80px auto; text-align: center; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-        <div style="color: #2ecc71; font-size: 80px; margin-bottom: 20px;">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <h2 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Confirmado!</h2>
-        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
-            Estamos registrando tu compra de <strong>{{ producto.title }}</strong>.<br>
-            En unos segundos serás redirigido a tus compras.
-        </p>
+    <div class="card">
+        <div class="checkmark">✔</div>
+        <h1 class="fw-bold">¡Gracias por tu compra!</h1>
+        <p class="text-muted">Hemos recibido tu pago correctamente por el producto:<br>
+        <strong class="text-dark">{{ producto.title }}</strong></p>
         
-        <div style="margin: 30px 0;">
-            <div class="loader" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 0 auto;"></div>
-        </div>
-
-        <a href="{% url 'mis_compras' %}" style="display: inline-block; padding: 12px 25px; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s;">
-            Ir a Mis Compras ahora
-        </a>
+        <hr>
+        
+        <p>Tu pedido está siendo procesado. Puedes ver los detalles en tu sección de compras.</p>
+        
+        <a href="/mis-compras/" class="btn btn-primary mt-3">Ir a Mis Compras Ahora</a>
+        
+        <p class="timer">Serás redirigido automáticamente en <span id="count">5</span> segundos...</p>
     </div>
-</div>
 
-<style>
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
+    <script>
+        // Lógica para el contador y la redirección automática
+        let seconds = 5;
+        const display = document.getElementById('count');
+        
+        const countdown = setInterval(() => {
+            seconds--;
+            display.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                window.location.href = "/mis-compras/";
+            }
+        }, 1000);
+    </script>
 
-<script>
-    // Redirección forzada después de 4 segundos por si acaso
-    setTimeout(function(){
-        window.location.href = "{% url 'mis_compras' %}";
-    }, 4000);
-</script>
-{% endblock %}
+</body>
+</html>
