@@ -2,33 +2,44 @@
 
 {% block content %}
 <div style="max-width: 600px; margin: 50px auto; text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
-    <div style="color: #27ae60; font-size: 80px; margin-bottom: 20px;">
-        <i class="fas fa-check-circle"></i>
-    </div>
     
-    <h1 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Confirmado!</h1>
-    
-    <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
-        Gracias por tu compra. El dinero ha sido recibido en la plataforma. Ya puedes contactar al vendedor para coordinar los detalles.
-    </p>
-
-    <div style="background: #f0fff4; border: 2px solid #c6f6d5; padding: 25px; border-radius: 15px; margin: 30px 0;">
-        <h3 style="color: #22543d; margin-bottom: 15px; font-size: 1rem;">CONTACTO DIRECTO CON EL VENDEDOR</h3>
+    {% if mostrar_contacto %}
+        <div style="color: #27ae60; font-size: 80px; margin-bottom: 20px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
         
-        <a href="https://wa.me/{{ producto.vendedor.telefono }}?text=Hola,%20acabo%20de%20comprar%20tu%20equipo:%20{{ producto.title }}" 
-           target="_blank"
-           style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-decoration: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); transition: transform 0.2s;"
-           onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <i class="fab fa-whatsapp" style="font-size: 1.6rem;"></i> 
-            WHATSAPP DEL VENDEDOR
-        </a>
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">¡Pago Confirmado!</h1>
         
-        <p style="margin-top: 15px; font-size: 0.85rem; color: #4a5568;">
-            Nombre: <strong>{{ producto.vendedor.first_name }} {{ producto.vendedor.last_name }}</strong>
+        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+            Gracias por tu compra. El dinero ha sido recibido. Ya puedes contactar al vendedor para coordinar los detalles de la entrega de tu <strong>{{ producto.title }}</strong>.
         </p>
-    </div>
+
+        <div style="background: #f0fff4; border: 2px solid #c6f6d5; padding: 25px; border-radius: 15px; margin: 30px 0;">
+            <h3 style="color: #22543d; margin-bottom: 15px; font-size: 0.9rem; text-transform: uppercase;">Contacto Directo</h3>
+            
+            <a href="https://wa.me/{{ producto.vendedor.telefono }}?text=Hola,%20acabo%20de%20comprar%20tu%20equipo:%20{{ producto.title }}" 
+               target="_blank"
+               style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; text-decoration: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); transition: 0.2s;">
+                <i class="fab fa-whatsapp" style="font-size: 1.6rem;"></i> 
+                WHATSAPP DEL VENDEDOR
+            </a>
+            
+            <p style="margin-top: 15px; font-size: 0.85rem; color: #4a5568;">
+                Vendedor: <strong>{{ producto.vendedor.first_name }} {{ producto.vendedor.last_name }}</strong>
+            </p>
+        </div>
+
+    {% else %}
+        <div style="color: #f1c40f; font-size: 80px; margin-bottom: 20px;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">Pago en proceso</h1>
+        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+            Tu pago está siendo procesado por Mercado Pago. En cuanto se apruebe, podrás ver los datos de contacto del vendedor aquí.
+        </p>
+    {% endif %}
     
-    <div style="display: flex; flex-direction: column; gap: 15px;">
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; border-top: 1px solid #eee; pt: 20px;">
         <a href="{% url 'mis_compras' %}" style="background: #003366; color: white; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; transition: 0.3s;">
             <i class="fas fa-box"></i> Ver mis compras
         </a>
