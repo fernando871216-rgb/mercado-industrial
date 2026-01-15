@@ -6,121 +6,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
-        /* Estilos Generales */
-        html, body { height: 100%; margin: 0; }
-        body { 
-            display: flex; 
-            flex-direction: column; 
-            font-family: 'Segoe UI', sans-serif; 
-            background-color: #f4f7f6; 
-        }
-        
-        .main-content { flex: 1; }
-
-        /* Barra de Navegación */
-        .navbar {
-            background-color: #003366;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .logo-container { 
-            display: flex; 
-            align-items: center; 
-            text-decoration: none; 
-            color: white; 
-            min-width: fit-content;
-        }
-        .logo-img { 
-            height: 45px;
-            width: auto;
-            margin-right: 10px;
-            object-fit: contain;
-        }
-        .logo-text { font-weight: bold; font-size: 1rem; }
-
-        /* BARRA DE BÚSQUEDA */
-        .search-container {
-            flex: 1;
-            max-width: 400px;
-            margin: 0 20px;
-        }
-        .search-form {
-            display: flex;
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 5px 15px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .search-input {
-            background: none;
-            border: none;
-            color: white;
-            padding: 5px;
-            width: 100%;
-            outline: none;
-            font-size: 0.9rem;
-        }
-        .search-input::placeholder { color: rgba(255,255,255,0.6); }
-        .search-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            opacity: 0.8;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; display: flex; flex-direction: column; min-height: 100vh; }
+        .navbar { background-color: #003366; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
+        .logo-img { height: 40px; margin-right: 10px; }
+        .search-container { flex: 1; max-width: 400px; margin: 0 20px; }
+        .search-form { display: flex; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 15px; }
+        .search-input { background: none; border: none; color: white; width: 100%; outline: none; }
+        .search-input::placeholder { color: #ccc; }
         .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a, .logout-btn { 
-            color: white; 
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 500; 
-            transition: 0.3s; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 0; 
-            font-family: inherit; 
-        }
-        .nav-links a:hover, .logout-btn:hover { color: #f39c12; }
-        .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
-        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; }
+        .main-content { flex: 1; padding: 20px; }
+        footer { background: #002244; color: white; text-align: center; padding: 20px; margin-top: 20px; }
+        @media (max-width: 768px) { .search-container { display: none; } }
+    </style>
+</head>
+<body>
 
-        /* Footer */
-        footer {
-            background-color: #002244;
-            color: #bdc3c7;
-            padding: 30px 20px;
-            text-align: center;
-            margin-top: 40px;
-        }
-        .footer-links { margin-bottom: 15px; }
-        .footer-links a { color: #ffffff; text-decoration: none; margin: 0 10px; font-size: 0.85rem; opacity: 0.8; }
-        .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="logo-container">
+            <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo" class="logo-img">
+            <span style="font-weight: bold;">MERCADO INDUSTRIAL</span>
+        </a>
 
-        /* Diseño para Celulares */
-        @media (max-width: 992px) {
-            .search-container { display: none; }
-            .menu-toggle { display: block; }
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: #003366;
-                padding: 20px 0;
-                gap: 20px;
-            }
-            .nav-links.active {
+        <div class="search-container">
+            <form action="{% url 'home' %}" method="GET" class="search-form">
+                <input type="text" name="q" class="search-input" placeholder="Buscar equipo..." value="{{ request.GET.q }}">
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+
+        <div class="nav-links">
+            <a href="{% url 'home' %}">Catálogo</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'mi_inventario' %}">Mis Productos</a>
+                <a href="{% url 'editar_perfil' %}" style="background:#f39c12; padding: 5px 10px; border-radius: 5px;">Perfil</a>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-size:0.9rem;">Salir</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Ingresar</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Mercado Industrial INITRE</p>
+    </footer>
+
+</body>
+</html>
