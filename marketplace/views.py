@@ -56,72 +56,46 @@ def cotizar_soloenvios(request):
 
     try:
         url = "https://app.soloenvios.com/api/v1/quotations"
-        
         headers = {
             "Authorization": f"Bearer {token_manual}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        v_peso = float(request.GET.get('peso') or 1)
-        v_largo = float(request.GET.get('largo') or 20)
-        v_ancho = float(request.GET.get('ancho') or 20)
-        v_alto = float(request.GET.get('alto') or 20)
-
         payload = {
             "quotation": {
-                "address_from": {
-                    "country_code": "MX",
-                    "postal_code": cp_origen,
-                    "area_level1": "Puebla",
-                    "area_level2": "Puebla",
-                    "area_level3": "Centro"
-                },
-                "address_to": {
-                    "country_code": "MX",
-                    "postal_code": cp_destino,
-                    "area_level1": "Destino",
-                    "area_level2": "Ciudad",
-                    "area_level3": "Colonia"
-                },
-                "parcels": [
-                    {
-                        "length": v_largo,
-                        "width": v_ancho,
-                        "height": v_alto,
-                        "weight": v_peso,
-                        "package_protected": False,
-                        "declared_value": 100
-                    }
-                ]
+                "address_from": {"country_code": "MX", "postal_code": cp_origen, "area_level1": "Puebla", "area_level2": "Puebla", "area_level3": "Centro"},
+                "address_to": {"country_code": "MX", "postal_code": cp_destino, "area_level1": "Destino", "area_level2": "Ciudad", "area_level3": "Colonia"},
+                "parcels": [{
+                    "length": int(float(request.GET.get('largo', 20))),
+                    "width": int(float(request.GET.get('ancho', 20))),
+                    "height": int(float(request.GET.get('alto', 20))),
+                    "weight": int(float(request.GET.get('peso', 1))),
+                    "package_protected": False,
+                    "declared_value": 100
+                }]
             }
         }
         
-        res = requests.post(url, json=payload, headers=headers, verify=False, timeout=20)
+        res = requests.post(url, json=payload, headers=headers, verify=False, timeout=25)
         
         if res.status_code == 200:
             data = res.json()
-            # La lista de precios está en la llave 'rates'
             rates_list = data.get('rates', [])
-            
             tarifas = []
+            
             for t in rates_list:
-                # SOLO AGREGAMOS LAS QUE TENGAN ÉXITO Y PRECIO
+                # Solo tomamos las que tengan success=True y tengan un total (precio)
                 if t.get('success') is True and t.get('total') is not None:
-                    costo_base = float(t.get('total'))
                     tarifas.append({
-                        'paqueteria': f"{t.get('provider_display_name')} - {t.get('provider_service_name')}",
-                        'precio_final': round(costo_base * 1.08, 2), # Tu 8% de comisión
+                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                        'precio_final': round(float(t.get('total')) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             
-            if not tarifas:
-                # Si todas salieron 'pending' o 'false', mandamos este aviso
-                return JsonResponse({'tarifas': [], 'error': 'Las paqueterías aún están calculando costos. Intenta de nuevo en un momento.'})
-                
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}', 'detalle': res.text})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión con la API.'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': str(e)})
@@ -262,6 +236,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
