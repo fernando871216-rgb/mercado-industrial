@@ -30,15 +30,6 @@
                             <h4 style="margin: 0; color: #1a202c; font-size: 1.15rem;">{{ v.product.title }}</h4>
                             <p style="margin: 4px 0 0 0; font-size: 0.9rem; color: #718096;">
                                 <i class="fas fa-user"></i> Comprador: <strong>{{ v.buyer.username }}</strong>
-                                {% if v.metodo_entrega == 'envio' %}
-                                    <span style="margin-left: 8px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; vertical-align: middle;">
-                                        <i class="fas fa-truck"></i> ENVÍO
-                                    </span>
-                                {% else %}
-                                    <span style="margin-left: 8px; background: #f7fafc; color: #4a5568; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; vertical-align: middle; border: 1px solid #e2e8f0;">
-                                        <i class="fas fa-store"></i> RECOLECCIÓN
-                                    </span>
-                                {% endif %}
                             </p>
                             
                             <div style="margin-top: 8px;">
@@ -65,75 +56,55 @@
                 <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 20px 0;">
 
                 <div style="background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">
-                    {% if v.metodo_entrega == 'recoleccion' %}
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="background: #fef3c7; color: #92400e; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-handshake"></i>
-                            </div>
-                            <div>
-                                <p style="margin: 0; font-size: 0.95rem; color: #1e293b; font-weight: 600;">ENTREGA ACORDADA: RECOLECCIÓN</p>
-                                <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Ponte en contacto con el comprador para que pase por el equipo.</p>
-                            </div>
+                    {% if not v.tracking_number %}
+                        <div style="display: flex; align-items: center; gap: 10px; color: #e67e22; margin-bottom: 15px; font-weight: 700; font-size: 0.95rem;">
+                            <i class="fas fa-truck"></i> GESTIÓN DE ENTREGA
                         </div>
+                        <form method="POST" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            {% csrf_token %}
+                            <input type="hidden" name="venta_id" value="{{ v.id }}">
+                            <div style="flex: 1; min-width: 200px;">
+                                <input type="text" name="shipping_company" placeholder="Empresa (ej. FedEx, DHL o Personal)" required 
+                                       style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <input type="text" name="tracking_number" placeholder="Guía o 'Entregado en mano'" required 
+                                       style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            </div>
+                            <button type="submit" style="background: #003366; color: white; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; height: 45px;">
+                                ACTUALIZAR ESTADO
+                            </button>
+                        </form>
                     {% else %}
-                        {% if not v.tracking_number %}
-                            <div style="display: flex; align-items: center; gap: 10px; color: #e67e22; margin-bottom: 15px; font-weight: 700; font-size: 0.95rem;">
-                                <i class="fas fa-clock fa-spin"></i> ACCIÓN REQUERIDA: REGISTRAR ENVÍO
-                            </div>
-                            <form method="POST" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                {% csrf_token %}
-                                <input type="hidden" name="venta_id" value="{{ v.id }}">
-                                <div style="flex: 1; min-width: 200px;">
-                                    <input type="text" name="shipping_company" placeholder="Empresa (ej. FedEx, DHL)" required 
-                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.3s;"
-                                           onfocus="this.style.borderColor='#003366'">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #dcfce7; color: #166534; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-truck"></i>
                                 </div>
-                                <div style="flex: 1; min-width: 200px;">
-                                    <input type="text" name="tracking_number" placeholder="Número de Guía / Tracking" required 
-                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.3s;"
-                                           onfocus="this.style.borderColor='#003366'">
-                                </div>
-                                <button type="submit" style="background: #003366; color: white; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; height: 45px;">
-                                    ACTUALIZAR GUÍA
-                                </button>
-                            </form>
-                        {% else %}
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="background: #dcfce7; color: #166534; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                    <div>
-                                        <p style="margin: 0; font-size: 0.95rem; color: #1e293b; font-weight: 600;">Enviado por {{ v.shipping_company }}</p>
-                                        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Guía: <span style="font-family: monospace; font-weight: bold; background: #f1f5f9; padding: 2px 5px;">{{ v.tracking_number }}</span></p>
-                                    </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 0.95rem; color: #1e293b; font-weight: 600;">Referencia: {{ v.shipping_company }}</p>
+                                    <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Info: <span style="font-family: monospace; font-weight: bold;">{{ v.tracking_number }}</span></p>
                                 </div>
                             </div>
-                        {% endif %}
+                            {% if v.pagado_a_vendedor %}
+                                <div style="background: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold;">
+                                    <i class="fas fa-check-double"></i> PAGO LIBERADO
+                                </div>
+                            {% else %}
+                                <div style="background: #fef3c7; color: #92400e; padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold;">
+                                    <i class="fas fa-hourglass-half"></i> EN RETENCIÓN
+                                </div>
+                            {% endif %}
+                        </div>
                     {% endif %}
-                    
-                    <div style="margin-top: 15px; text-align: right;">
-                        {% if v.pagado_a_vendedor %}
-                            <div style="display: inline-block; background: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold; border: 1px solid #bbf7d0;">
-                                <i class="fas fa-check-double"></i> DINERO DISPONIBLE
-                            </div>
-                        {% else %}
-                            <div style="display: inline-block; background: #fef3c7; color: #92400e; padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold; border: 1px solid #fde68a;">
-                                <i class="fas fa-hourglass-half"></i> PAGO EN RETENCIÓN
-                            </div>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     {% else %}
         <div style="text-align: center; padding: 80px 20px; background: white; border-radius: 20px; border: 2px dashed #cbd5e0;">
-            <div style="color: #cbd5e0; margin-bottom: 20px;">
-                <i class="fas fa-store-slash fa-5x"></i>
-            </div>
-            <h3 style="color: #4a5568; margin-bottom: 10px;">Aún no tienes ventas</h3>
-            <p style="color: #718096; max-width: 400px; margin: 0 auto;">En cuanto un comprador adquiera uno de tus productos industriales, aparecerá aquí.</p>
+            <i class="fas fa-store-slash fa-5x" style="color: #cbd5e0; margin-bottom: 20px;"></i>
+            <h3 style="color: #4a5568;">No hay ventas registradas</h3>
         </div>
     {% endif %}
 </div>
