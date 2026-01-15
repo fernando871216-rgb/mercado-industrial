@@ -4,48 +4,62 @@
 <div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         
-        <div style="flex: 1; min-width: 300px; text-align: center;">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-width: 400px; border-radius: 10px;">
-            {% else %}
-                <div style="width: 100%; height: 250px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
-                </div>
-            {% endif %}
+        <div style="flex: 1; min-width: 300px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-width: 400px; border-radius: 10px; border: 1px solid #eee;">
+                {% else %}
+                    <div style="width: 100%; height: 250px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
+                    </div>
+                {% endif %}
+            </div>
             
-            <div style="margin-top: 20px; padding: 15px; background: #f1f4f8; border-radius: 10px; text-align: left; border: 1px solid #d1d9e6;">
-                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-box-open"></i> Detalles de Envío</h5>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem; color: #444;">
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #f39c12; margin-bottom: 15px;">
+                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-microchip"></i> Especificaciones de Envío</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; color: #444;">
                     <span><strong>Peso:</strong> {{ product.peso }} kg</span>
                     <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
                     <span><strong>Alto:</strong> {{ product.alto }} cm</span>
                     <span><strong>Largo:</strong> {{ product.largo }} cm</span>
-                    <span style="grid-column: span 2;"><strong>CP Origen:</strong> {{ product.cp_origen }}</span>
+                    <span style="grid-column: span 2;"><strong>Origen (CP):</strong> {{ product.cp_origen }}</span>
                 </div>
+            </div>
+
+            <div style="padding: 15px; background: #ffffff; border: 1px solid #eee; border-radius: 10px;">
+                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Descripción del Equipo</h5>
+                <p style="font-size: 0.88rem; color: #555; line-height: 1.5; white-space: pre-line; margin: 0;">{{ product.description }}</p>
             </div>
         </div>
 
         <div style="flex: 1.2; min-width: 300px;">
-            <h1 style="color: #003366; font-size: 1.6rem; margin-bottom: 5px;">{{ product.title }}</h1>
-            <p style="color: #7f8c8d; font-size: 0.9rem;">Parte/Modelo: <strong>{{ product.part_number }}</strong></p>
-            <h2 style="color: #27ae60; margin: 15px 0;">${{ product.price }} MXN</h2>
+            <h1 style="color: #003366; font-size: 1.7rem; margin-bottom: 5px; line-height: 1.2;">{{ product.title }}</h1>
+            <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px;">Modelo / No. Parte: <strong>{{ product.part_number }}</strong></p>
+            
+            <div style="margin-bottom: 20px;">
+                <span style="font-size: 2.2rem; font-weight: bold; color: #27ae60;">${{ product.price }} <small style="font-size: 0.9rem; color: #7f8c8d;">MXN</small></span>
+            </div>
 
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-            <div style="background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #dee2e6; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; color: #003366; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizar Flete</h4>
+            <div style="background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e0e6ed; margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <h4 style="margin: 0 0 12px 0; color: #003366; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizador de Flete</h4>
                 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                    <input type="text" id="cp_destino" placeholder="Introduce C.P. destino" style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
-                    <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="text" id="cp_destino" placeholder="C.P. de destino" style="flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                    <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">
                         COTIZAR
                     </button>
                 </div>
                 
-                <div id="lista-tarifas" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 5px; background: #fafafa;">
+                <div id="lista-tarifas" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 8px; background: #fdfdfd;">
                     </div>
             </div>
 
-            <div id="wallet_container" style="min-height: 50px; margin-top: 10px;"></div>
+            <div id="wallet_container" style="min-height: 50px;"></div>
+            
+            <p style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 15px;">
+                <i class="fas fa-shield-alt"></i> Pago procesado de forma segura por Mercado Pago
+            </p>
         </div>
     </div>
 </div>
@@ -63,6 +77,7 @@
         });
     }
 
+    // Inicializar con el precio base del producto
     renderMP("{{ preference_id }}");
 
     function cotizarFlete() {
@@ -70,10 +85,10 @@
         const btn = document.getElementById('btn-cotizar');
         const lista = document.getElementById('lista-tarifas');
         
-        if (!cp) return alert("Por favor ingresa un código postal");
+        if (!cp || cp.length < 5) return alert("Por favor ingresa un código postal válido");
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
 
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
             .then(res => res.json())
@@ -82,27 +97,22 @@
                 if (data.tarifas && data.tarifas.length > 0) {
                     data.tarifas.forEach(t => {
                         const item = document.createElement('div');
-                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;";
-                        item.onmouseover = () => item.style.backgroundColor = "#eef2f7";
-                        item.onmouseout = () => item.style.backgroundColor = "transparent";
+                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f1f1; cursor: pointer;";
                         
-                        // Al hacer clic en una fila, se selecciona y actualiza el pago
-                        item.onclick = () => {
-                            seleccionarTarifa(item, t.precio_final);
-                        };
+                        item.onclick = () => seleccionarTarifa(item, t.precio_final);
 
                         item.innerHTML = `
                             <div style="font-size: 0.85rem;">
-                                <strong>${t.paqueteria}</strong><br>
-                                <small style="color: #666;">Entrega: ${t.tiempo}</small>
+                                <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
+                                <small style="color: #718096;">Llega en: ${t.tiempo}</small>
                             </div>
-                            <div style="font-weight: bold; color: #27ae60;">$${t.precio_final}</div>
+                            <div style="font-weight: bold; color: #38a169;">$${t.precio_final}</div>
                         `;
                         lista.appendChild(item);
                     });
                     lista.style.display = 'block';
                 } else {
-                    alert("No hay cobertura para ese CP.");
+                    alert("Lo sentimos, no hay tarifas disponibles para este CP.");
                 }
             })
             .finally(() => {
@@ -112,13 +122,15 @@
     }
 
     function seleccionarTarifa(elemento, precio) {
-        // Estilo visual de selección
         const filas = document.getElementById('lista-tarifas').children;
-        for(let f of filas) f.style.borderLeft = "none";
-        elemento.style.borderLeft = "5px solid #27ae60";
-        elemento.style.backgroundColor = "#eef2f7";
+        for(let f of filas) {
+            f.style.backgroundColor = "transparent";
+            f.style.borderLeft = "none";
+        }
+        elemento.style.backgroundColor = "#f0fff4";
+        elemento.style.borderLeft = "4px solid #38a169";
 
-        // Actualizar preferencia de Mercado Pago
+        // Llamar a la vista que recalcula todo (Comisiones + Envío)
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
             .then(res => res.json())
             .then(data => {
