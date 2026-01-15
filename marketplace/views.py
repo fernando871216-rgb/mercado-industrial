@@ -13,6 +13,7 @@ import uuid
 import os
 import time
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 # IMPORTANTE: Solo importamos lo que existe en tu models.py
 from .models import IndustrialProduct, Category, Sale, Profile
@@ -408,7 +409,11 @@ def pago_exitoso(request):
         'mostrar_contacto': mostrar_contacto
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
-def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+    
+@csrf_exempt  # ESTO ES LO MÁS IMPORTANTE PARA EL WEBHOOK
+def mercadopago_webhook(request):
+    # ... tu código de recibir el pago ...
+    return HttpResponse(status=200)
 
 
 
