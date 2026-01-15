@@ -410,11 +410,35 @@ def pago_exitoso(request):
     })
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
     
-@csrf_exempt  # ESTO ES LO MÁS IMPORTANTE PARA EL WEBHOOK
+@csrf_exempt
 def mercadopago_webhook(request):
-    # ... tu código de recibir el pago ...
-    return HttpResponse(status=200)
+    payment_id = request.GET.get('id')
+    topic = request.GET.get('topic')
 
+    if topic == 'payment':
+        # 1. Consultar a Mercado Pago por el estado del pago
+        # (Aquí va tu código de consulta con el Access Token)
+        
+        # 2. Si el pago es 'approved':
+        if status == 'approved':
+            producto = get_object_or_404(IndustrialProduct, id=id_producto_pagado)
+            
+            # ACTUALIZAR STOCK
+            if producto.stock > 0:
+                producto.stock -= 1
+                producto.save()
+            
+            # REGISTRAR LA VENTA
+            Venta.objects.create(
+                producto=producto,
+                vendedor=producto.user,
+                comprador=usuario_que_compro,
+                total=total_pagado
+            )
+            
+            return HttpResponse(status=200)
+    
+    return HttpResponse(status=200)
 
 
 
