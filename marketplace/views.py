@@ -443,8 +443,7 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
 @csrf_exempt
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
-    topic = request.GET.get('topic') or request.GET.get('type')
-
+    
     if payment_id:
         token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
@@ -457,12 +456,8 @@ def mercadopago_webhook(request):
                 status = data.get('status')
                 ref_data = str(data.get('external_reference', ''))
                 
-                print(f"--- PROCESANDO: Status={status}, Ref={ref_data} ---")
-
                 if status == 'approved' and ref_data:
                     parts = ref_data.split('-')
-                    
-                    # Si mandamos bien los datos, parts tendrá 2 elementos
                     if len(parts) >= 2:
                         prod_id = parts[0]
                         user_id = parts[1]
@@ -476,25 +471,32 @@ def mercadopago_webhook(request):
                             status='approved',
                             defaults={'price': producto.price}
                         )
+                        
+                        # ESTO SOLO OCURRE LA PRIMERA VEZ QUE SE REGISTRA EL PAGO
                         if created:
                             print("VENTA REGISTRADA CON ÉXITO")
+                            
+                            # Envío de correo
                             send_mail(
                                 '¡Felicidades, vendiste un equipo!',
                                 f'Hola {producto.user.username}, han comprado tu {producto.title}. Revisa tu panel de ventas para enviar el producto.',
-                                'tu-correo@gmail.com',
-                                [producto.user.email], # El correo del vendedor
+                                'tu-correo@gmail.com', # Cambia esto por tu correo real de settings
+                                [producto.user.email],
                                 fail_silently=False,
-)
+                            )
+                            
+                            # Descuento de stock (solo una vez)
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
                     else:
-                        print(f"ERROR: ExternalRef incompleto ({ref_data}). Falta el ID del comprador.")
+                        print(f"ERROR: ExternalRef incompleto ({ref_data})")
             
         except Exception as e:
-            print(f"ERROR CRÍTICO: {e}")
+            print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
