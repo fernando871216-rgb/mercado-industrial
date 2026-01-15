@@ -56,11 +56,13 @@
                 </div>
             </div>
 
-            <div style="background: #fff; border: 2px dashed #27ae60; padding: 15px; border-radius: 15px; min-height: 100px;">
+            <div id="pago_seccion" style="background: #fff; border: 2px dashed #27ae60; padding: 15px; border-radius: 15px; min-height: 120px; position: relative;">
                 <p style="text-align: center; font-size: 0.7rem; color: #27ae60; font-weight: bold; margin-bottom: 10px;">
                     <i class="fas fa-lock"></i> PAGO SEGURO CON MERCADO PAGO
                 </p>
-                <div id="wallet_container"></div>
+                <div id="contenedor_magico">
+                    <div id="wallet_container"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -69,30 +71,31 @@
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
     const mp = new MercadoPago('APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9', { locale: 'es-MX' });
-    const bricksBuilder = mp.bricks();
     
-    // Función mejorada para renderizar el botón
-    async function renderMPButton(prefId) {
-        const container = document.getElementById("wallet_container");
-        if (!container) return;
+    // Función Maestra para Renderizar el Botón
+    function renderMPButton(prefId) {
+        // 1. Destruimos el contenedor viejo por completo para limpiar la memoria del SDK
+        const magico = document.getElementById("contenedor_magico");
+        magico.innerHTML = '<div id="wallet_container"></div>'; 
         
-        container.innerHTML = ""; // Limpia el anterior
-        
-        try {
-            await bricksBuilder.create("wallet", "wallet_container", {
-                initialization: { 
-                    preferenceId: prefId, 
-                    redirectMode: "modal" 
-                },
-                customization: {
-                    texts: { valueProp: 'smart_option' },
+        // 2. Creamos el nuevo botón
+        const bricksBuilder = mp.bricks();
+        bricksBuilder.create("wallet", "wallet_container", {
+            initialization: { 
+                preferenceId: prefId,
+                redirectMode: "modal" 
+            },
+            customization: {
+                texts: { valueProp: 'smart_option' },
+                visual: { 
+                    buttonHeight: '48px',
+                    borderRadius: '10px'
                 }
-            });
-        } catch (e) {
-            console.error("Error al crear el botón de MP:", e);
-        }
+            }
+        });
     }
 
+    // Carga inicial
     {% if preference_id %} renderMPButton("{{ preference_id }}"); {% endif %}
 
     function consultarSoloEnvios() {
@@ -102,7 +105,7 @@
         
         if(cp_destino.length < 5) { alert("Ingresa un CP de 5 dígitos"); return; }
         
-        btn.innerText = "Consultando tarifas..."; btn.disabled = true;
+        btn.innerText = "Cotizando..."; btn.disabled = true;
 
         const params = new URLSearchParams({
             cp_origen: '72460',
@@ -133,17 +136,19 @@
     }
 
     function seleccionarEnvio(precio, nombre) {
-        // Al seleccionar, deshabilitamos la lista un momento
-        document.getElementById('lista_tarifas').style.opacity = "0.5";
+        // Indicador visual de carga
+        document.getElementById('pago_seccion').style.opacity = "0.5";
         
         fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
             .then(r => r.json())
             .then(data => {
                 document.getElementById('display_price').innerText = data.total_nuevo;
-                // RE-RENDERIZAMOS EL BOTÓN CON LA NUEVA PREFERENCIA
+                
+                // RE-GENERACIÓN TOTAL DEL BOTÓN
                 renderMPButton(data.preference_id);
-                document.getElementById('lista_tarifas').style.opacity = "1";
-                alert("Has seleccionado " + nombre + ". El botón de pago se ha actualizado con el total.");
+                
+                document.getElementById('pago_seccion').style.opacity = "1";
+                alert("Total actualizado: $" + data.total_nuevo + " (Incluye envío por " + nombre + ")");
             });
     }
 </script>
