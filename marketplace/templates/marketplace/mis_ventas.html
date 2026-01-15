@@ -1,55 +1,69 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
-    <h2 style="color: #003366; margin-bottom: 25px;"><i class="fas fa-hand-holding-usd"></i> Mis Ventas / Intenciones</h2>
+<div class="container" style="max-width: 1000px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
+    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-hand-holding-usd" style="color: #27ae60;"></i> Mis Ventas</h2>
 
     {% if ventas %}
-        {% for venta in ventas %}
-            <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid {% if venta.status == 'pendiente' %}#f39c12{% elif venta.status == 'pagado' %}#27ae60{% else %}#bdc3c7{% endif %};">
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        {% for v in ventas %}
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid {% if v.pagado_a_vendedor %}#27ae60{% else %}#f39c12{% endif %};">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    {% if v.product.image %}
+                        <img src="{{ v.product.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                    {% endif %}
                     <div>
-                        <span style="font-size: 0.8rem; color: #95a5a6;">{{ venta.created_at|date:"d M Y" }}</span>
-                        <h3 style="margin: 5px 0; color: #2c3e50;">{{ venta.product.title }}</h3>
-                        <p style="margin: 0; font-size: 0.9rem;">Comprador: <strong>{{ venta.buyer.username }}</strong></p>
-                    </div>
-                    <div style="text-align: right;">
-                        <h3 style="margin: 0; color: #2c3e50;">${{ venta.price }}</h3>
-                        <span style="font-size: 0.7rem; font-weight: bold; text-transform: uppercase; background: #eee; padding: 4px 8px; border-radius: 4px;">{{ venta.status }}</span>
+                        <h4 style="margin: 0; color: #2c3e50;">{{ v.product.title }}</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: #7f8c8d;">Comprador: <strong>{{ v.buyer.username }}</strong></p>
                     </div>
                 </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.1rem; font-weight: bold; color: #2c3e50;">Ganancia Neta: ${{ v.get_net_amount }}</div>
+                    <span style="font-size: 0.7rem; color: #95a5a6; text-transform: uppercase;">Estado: {{ v.status }}</span>
+                </div>
+            </div>
 
-                {% if venta.status == 'pendiente' %}
-                    <div style="background: #fff3e0; padding: 10px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffe0b2;">
-                        <p style="margin: 0; color: #e67e22; font-size: 0.9rem; font-weight: bold;">
-                            <i class="fas fa-exclamation-triangle"></i> Intención de compra detectada. El cliente aún no completa el pago.
-                        </p>
-                        <form action="{% url 'cancelar_venta' venta.id %}" method="post" style="margin-top: 10px;">
-                            {% csrf_token %}
-                            <button type="submit" onclick="return confirm('¿Liberar stock y cancelar esta intención?')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 0;">
-                                Cancelar intención y devolver al inventario
-                            </button>
-                        </form>
-                    </div>
-                {% endif %}
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
 
-                {% if venta.status == 'pagado' or venta.status == 'enviado' %}
-                    <form action="{% url 'actualizar_guia' venta.id %}" method="post" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="background: #fcfcfc; padding: 15px; border-radius: 8px;">
+                {% if not v.tracking_number %}
+                    <p style="margin-bottom: 10px; font-weight: bold; font-size: 0.9rem; color: #e67e22;">
+                        <i class="fas fa-exclamation-triangle"></i> Pendiente de envío
+                    </p>
+                    <form method="POST" style="display: flex; gap: 10px; flex-wrap: wrap;">
                         {% csrf_token %}
-                        <input type="text" name="shipping_company" placeholder="Paquetería (FEDEX, DHL...)" value="{{ venta.shipping_company|default:'' }}" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex: 1; min-width: 150px;">
-                        <input type="text" name="tracking_number" placeholder="Número de Guía" value="{{ venta.tracking_number|default:'' }}" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex: 1; min-width: 150px;">
-                        <button type="submit" style="background: #3498db; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                            Actualizar Envío
+                        <input type="hidden" name="venta_id" value="{{ v.id }}">
+                        <input type="text" name="shipping_company" placeholder="Paquetería (Ej: FedEx)" required style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                        <input type="text" name="tracking_number" placeholder="Número de Guía" required style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                        <button type="submit" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                            CONFIRMAR ENVÍO
                         </button>
                     </form>
+                {% else %}
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <p style="margin: 0; font-size: 0.9rem; color: #27ae60;">
+                            <i class="fas fa-check-circle"></i> Enviado por <strong>{{ v.shipping_company }}</strong> (Guía: {{ v.tracking_number }})
+                        </p>
+                        {% if v.pagado_a_vendedor %}
+                            <span style="background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;">
+                                <i class="fas fa-money-check-alt"></i> PAGO RECIBIDO
+                            </span>
+                        {% else %}
+                            <span style="background: #fff3e0; color: #ef6c00; padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;">
+                                <i class="fas fa-hourglass-half"></i> PAGO EN PROCESO
+                            </span>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
+        </div>
         {% endfor %}
     {% else %}
-        <div style="text-align: center; padding: 50px; background: white; border-radius: 15px;">
-            <i class="fas fa-history" style="font-size: 3rem; color: #bdc3c7; margin-bottom: 20px;"></i>
-            <p style="color: #7f8c8d;">Aún no tienes ventas registradas.</p>
+        <div style="text-align: center; padding: 80px 20px; background: white; border-radius: 15px; border: 1px dashed #ccc;">
+            <i class="fas fa-store-slash" style="font-size: 3.5rem; color: #eee; margin-bottom: 20px;"></i>
+            <h3 style="color: #95a5a6;">Aún no has realizado ninguna venta</h3>
+            <p style="color: #bdc3c7;">¡Sube más productos para aumentar tus posibilidades!</p>
         </div>
     {% endif %}
 </div>
