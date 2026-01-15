@@ -239,7 +239,7 @@ def detalle_producto(request, product_id):
             "unit_price": float(product.price), 
             "currency_id": "MXN"
         }],
-        "external_reference": str(product.id),
+        "external_reference": f"{producto.id}-{request.user.id}",
     }
     pref = SDK.preference().create(pref_data)
     
@@ -366,7 +366,7 @@ def actualizar_pago(request):
                     "currency_id": "MXN"
                 }
             ],
-            "external_reference": ext_ref,
+            "external_reference": f"{producto.id}-{request.user.id}",
             "back_urls": {
                 "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
@@ -489,6 +489,7 @@ def mercadopago_webhook(request):
             print(f"CRITICAL ERROR IN WEBHOOK: {e}")
             
     return HttpResponse(status=200)
+
 
 
 
