@@ -299,15 +299,19 @@ def panel_administrador(request):
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
     if request.method == 'POST':
-        v = get_object_or_404(Sale, id=venta_id)
-        v.pagado_a_vendedor = True
-        v.save()
-        messages.success(request, f"Venta #{v.id} marcada como liquidada con éxito.")
+        # Buscamos la venta por el ID que viene en la URL
+        venta = get_object_or_404(Sale, id=venta_id)
+        venta.pagado_a_vendedor = True
+        venta.save()
+        messages.success(request, f"Venta {venta.id} liquidada con éxito.")
+    
+    # Después de pagar, regresamos al panel
     return redirect('panel_administrador')
 
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
