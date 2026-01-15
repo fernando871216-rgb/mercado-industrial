@@ -339,18 +339,22 @@ def actualizar_pago(request):
         comision_initre = precio_producto * 0.05
         
         # 2. Subtotal antes de Mercado Pago
-        # (Precio Producto + Tu 5% + Envío con tu 8%)
         subtotal = precio_producto + comision_initre + envio_con_comision_logistica
         
         # 3. Comisión Mercado Pago (3.49% + $4 + IVA)
-        # Calculamos sobre el subtotal para que el cliente absorba el costo de la pasarela
         porcentaje_mp = subtotal * 0.0349
         fijo_mp = 4.0
-        iva_mp = (porcentaje_mp + fijo_mp) * 0.16
+        iva_mp = (porcentaje_mp + fjo_mp) * 0.16
         total_comision_mp = porcentaje_mp + fijo_mp + iva_mp
         
         # --- TOTAL FINAL QUE COBRA EL BOTÓN ---
         total_final = subtotal + total_comision_mp
+
+        # CORRECCIÓN AQUÍ: 
+        # Usamos 'prod.id' (que es tu variable arriba) en lugar de 'producto.id'
+        # Usamos str() para asegurar que el ID del usuario se envíe bien
+        user_id = request.user.id if request.user.is_authenticated else 0
+        ext_ref = f"{prod.id}-{user_id}"
 
         preference_data = {
             "items": [
@@ -362,13 +366,13 @@ def actualizar_pago(request):
                     "currency_id": "MXN"
                 }
             ],
-            "external_reference": f"{producto.id}-{request.user.id}",
+            "external_reference": ext_ref,
             "back_urls": {
                 "success": request.build_absolute_uri(f"/pago-exitoso/?id={pid}"),
                 "failure": request.build_absolute_uri('/pago-fallido/'),
                 "pending": request.build_absolute_uri('/pago-pendiente/'),
             },
-            "auto_return": "approved",
+            "auto_return": "approved", # Esto obliga a Mercado Pago a volver a tu web
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
         }
 
@@ -380,6 +384,7 @@ def actualizar_pago(request):
         })
         
     except Exception as e:
+        print(f"Error en actualizar_pago: {e}") # Para que puedas verlo en los logs de Render
         return JsonResponse({'error': str(e)}, status=400)
         
 @login_required
@@ -469,6 +474,7 @@ def mercadopago_webhook(request):
             return HttpResponse(status=200)
 
     return HttpResponse(status=200)
+
 
 
 
