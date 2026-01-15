@@ -190,6 +190,16 @@
     {% endif %}
 
     <div class="main-content">
+        {% if messages %}
+  <div class="container" style="margin-top: 10px;">
+    {% for message in messages %}
+      <div style="padding: 15px; background: #d4edda; color: #155724; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 20px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+        
         {% block content %}
         {% endblock %}
     </div>
@@ -222,3 +232,4 @@
 
 </body>
 </html>
+
