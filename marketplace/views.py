@@ -329,31 +329,27 @@ def procesar_pago(request, product_id):
 def actualizar_pago(request):
     try:
         pid = request.GET.get('id')
-        # Este 'envio' ya viene con el 8% aplicado desde cotizar_soloenvios
         envio_con_comision_logistica = float(request.GET.get('envio', 0))
+        
+        # Aquí definiste 'prod' (con d)
         prod = get_object_or_404(IndustrialProduct, id=pid)
         
         precio_producto = float(prod.price)
-        
-        # 1. Tu comisión sobre el PRODUCTO (5% de INITRE)
         comision_initre = precio_producto * 0.05
-        
-        # 2. Subtotal antes de Mercado Pago
         subtotal = precio_producto + comision_initre + envio_con_comision_logistica
         
-        # 3. Comisión Mercado Pago (3.49% + $4 + IVA)
         porcentaje_mp = subtotal * 0.0349
         fijo_mp = 4.0
-        iva_mp = (porcentaje_mp + fjo_mp) * 0.16
+        # Corregido error de dedo: era fijo_mp, no fjo_mp
+        iva_mp = (porcentaje_mp + fijo_mp) * 0.16 
         total_comision_mp = porcentaje_mp + fijo_mp + iva_mp
         
-        # --- TOTAL FINAL QUE COBRA EL BOTÓN ---
         total_final = subtotal + total_comision_mp
 
-        # CORRECCIÓN AQUÍ: 
-        # Usamos 'prod.id' (que es tu variable arriba) en lugar de 'producto.id'
-        # Usamos str() para asegurar que el ID del usuario se envíe bien
+        # Preparamos los datos para el Webhook
         user_id = request.user.id if request.user.is_authenticated else 0
+        
+        # IMPORTANTE: Usamos 'prod' que es la variable real
         ext_ref = f"{prod.id}-{user_id}"
 
         preference_data = {
@@ -366,13 +362,14 @@ def actualizar_pago(request):
                     "currency_id": "MXN"
                 }
             ],
-            "external_reference": f"{producto.id}-{request.user.id}",
+            # CORRECCIÓN: Cambié 'producto.id' por 'prod.id'
+            "external_reference": ext_ref, 
             "back_urls": {
-                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
+                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{prod.id}/",
                 "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
-                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/"
+                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{prod.id}/"
             },
-            "auto_return": "approved", # Esto obliga a Mercado Pago a volver a tu web
+            "auto_return": "approved",
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
         }
 
@@ -384,7 +381,7 @@ def actualizar_pago(request):
         })
         
     except Exception as e:
-        print(f"Error en actualizar_pago: {e}") # Para que puedas verlo en los logs de Render
+        print(f"Error en actualizar_pago: {e}") 
         return JsonResponse({'error': str(e)}, status=400)
         
 @login_required
@@ -481,6 +478,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
