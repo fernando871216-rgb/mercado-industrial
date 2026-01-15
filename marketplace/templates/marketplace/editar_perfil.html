@@ -1,68 +1,50 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    
+<div class="container" style="max-width: 700px; margin: 20px auto; padding: 0 15px;">
     <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <h2 style="color: #003366; margin-bottom: 20px; border-bottom: 2px solid #f39c12; padding-bottom: 10px;">
-            <i class="fas fa-user-edit"></i> Mi Perfil y Configuración de Pagos
+        <h2 style="color: #003366; border-bottom: 2px solid #f39c12; padding-bottom: 10px;">
+            <i class="fas fa-user-circle"></i> Mi Información de Vendedor
         </h2>
 
         <form method="POST">
             {% csrf_token %}
             
-            <div style="margin-bottom: 30px;">
-                <h3 style="font-size: 1.1rem; color: #2c3e50; margin-bottom: 15px;">Datos Personales</h3>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Nombre(s)</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Apellidos</label>
-                        <input type="text" name="last_name" value="{{ user.last_name }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-                    </div>
-                </div>
-
-                <div style="margin-top: 15px;">
-                    <label style="display: block; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">
-                        <i class="fab fa-whatsapp" style="color: #25D366;"></i> Teléfono WhatsApp (Para ventas)
-                    </label>
-                    <input type="text" name="telefono" value="{{ user.telefono }}" placeholder="Ej: 525512345678" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-                    <small style="color: #95a5a6;">Incluye clave de país sin el signo +, ej: 52 para México.</small>
+            <h3 style="font-size: 1rem; color: #7f8c8d; text-transform: uppercase;">Datos de Contacto</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+                <div style="flex: 1; min-width: 250px;">
+                    <label>Teléfono WhatsApp</label>
+                    <input type="text" name="telefono" value="{{ user.telefono }}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
                 </div>
             </div>
 
-            <div style="background: #fdfaf3; padding: 20px; border-radius: 12px; border: 1px solid #fceecb; margin-bottom: 30px;">
-                <h3 style="font-size: 1.1rem; color: #b7791f; margin-bottom: 15px;">
-                    <i class="fas fa-wallet"></i> Credenciales de Mercado Pago
-                </h3>
-                <p style="font-size: 0.85rem; color: #744210; margin-bottom: 15px;">
-                    Necesitas tus credenciales de producción para recibir los pagos de tus ventas directamente.
-                </p>
+            <h3 style="font-size: 1rem; color: #7f8c8d; text-transform: uppercase;">Datos para recibir Pagos</h3>
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold;">Nombre del Banco</label>
+                    <input type="text" name="banco" value="{{ user.banco }}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold;">CLABE Interbancaria (18 dígitos)</label>
+                    <input type="text" name="clabe" value="{{ user.clabe }}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                </div>
 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px;">Public Key</label>
-                    <input type="text" name="public_key" value="{{ user.public_key }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; box-sizing: border-box;">
-                </div>
-
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px;">Access Token</label>
-                    <input type="password" name="access_token" value="{{ user.access_token }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; box-sizing: border-box;">
+                    <label style="display: block; font-weight: bold;">Nombre Completo del Titular</label>
+                    <input type="text" name="titular" value="{{ user.titular }}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
                 </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
-                GUARDAR CONFIGURACIÓN
+            <h3 style="font-size: 1rem; color: #7f8c8d; text-transform: uppercase; margin-top: 20px;">Dirección Fiscal/Cobro</h3>
+            <div style="margin-bottom: 25px;">
+                <textarea name="direccion" rows="3" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">{{ user.direccion }}</textarea>
+            </div>
+
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 18px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">
+                ACTUALIZAR MI INFORMACIÓN
             </button>
         </form>
-    </div>
-
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="{% url 'home' %}" style="color: #7f8c8d; text-decoration: none; font-size: 0.9rem;">
-            <i class="fas fa-arrow-left"></i> Volver al inicio
-        </a>
     </div>
 </div>
 {% endblock %}
