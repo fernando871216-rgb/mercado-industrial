@@ -368,9 +368,9 @@ def actualizar_pago(request):
             ],
             "external_reference": ext_ref,
             "back_urls": {
-                "success": request.build_absolute_uri(f"/pago-exitoso/?id={pid}"),
-                "failure": request.build_absolute_uri('/pago-fallido/'),
-                "pending": request.build_absolute_uri('/pago-pendiente/'),
+                "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
+                "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
+                "pending": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/"
             },
             "auto_return": "approved", # Esto obliga a Mercado Pago a volver a tu web
             "notification_url": "https://mercado-industrial.onrender.com/webhook/mercadopago/",
@@ -484,6 +484,7 @@ def mercadopago_webhook(request):
             print(f"CRITICAL ERROR IN WEBHOOK: {e}")
             
     return HttpResponse(status=200)
+
 
 
 
