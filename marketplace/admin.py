@@ -33,9 +33,13 @@ class IndustrialProductAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone', 'banco', 'clabe', 'beneficiario')
-    search_fields = ('user__username', 'clabe', 'phone')
-
+    list_display = ('user', 'phone', 'banco', 'clabe', 'beneficiario', 'get_address')
+    search_fields = ('user__username', 'clabe', 'phone', 'address')
+    def get_address(self, obj):
+        return obj.address
+    
+    # Nombre de la columna en el panel
+    get_address.short_description = 'Dirección Completa'
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
     # HE FUSIONADO LAS COLUMNAS AQUÍ:
@@ -56,4 +60,5 @@ class SaleAdmin(admin.ModelAdmin):
     
     # Buscador por nombre de producto o comprador
     search_fields = ('product__title', 'buyer__username')
+
 
