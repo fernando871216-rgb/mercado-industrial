@@ -10,7 +10,6 @@
                     <img src="{{ product.image.url }}" style="max-width: 100%; border-radius: 15px; max-height: 450px; object-fit: contain;">
                 {% endif %}
             </div>
-            
             <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 <h1 style="font-size: 2.2rem; color: #1a2a3a; margin-bottom: 10px;">{{ product.title }}</h1>
                 <p style="color: #7f8c8d; line-height: 1.6;">{{ product.description }}</p>
@@ -37,16 +36,16 @@
                         </div>
                     </div>
 
-                    <button id="btn-cotizar" onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                    <button id="btn-cotizar" onclick="cotizarEnvio()" style="width: 100%; background: #003366; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase;">
                         CALCULAR TARIFAS REALES
                     </button>
 
-                    <div id="lista_paqueterias" style="margin-top: 20px;"></div>
+                    <div id="lista_paqueterias" style="margin-top: 20px; max-height: 300px; overflow-y: auto;"></div>
                 </div>
 
-                <div style="border: 2px dashed #27ae60; border-radius: 15px; padding: 20px; text-align: center;">
+                <div id="area-pago" style="border: 2px dashed #27ae60; border-radius: 15px; padding: 20px; text-align: center; background: #f9fff9;">
                     <div id="wallet_container">
-                        <p style="color: #7f8c8d; font-size: 0.9rem;">Calcula el envío para habilitar el pago.</p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem;">Selecciona una paquetería arriba para habilitar el pago seguro.</p>
                     </div>
                 </div>
             </div>
@@ -56,52 +55,77 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    const mp = new MercadoPago('TU_PUBLIC_KEY'); // <-- CAMBIA ESTO POR TU KEY
+    // REEMPLAZA CON TU KEY REAL
+    const mp = new MercadoPago('TU_PUBLIC_KEY'); 
 
     async function cotizarEnvio() {
         const cp = document.getElementById('cp_destino').value;
         const lista = document.getElementById('lista_paqueterias');
+        const wallet = document.getElementById('wallet_container');
         
-        if (cp.length < 5) return alert("CP inválido");
+        if (cp.length < 5) return alert("Ingresa un CP válido de 5 dígitos");
 
-        lista.innerHTML = "<p>Cotizando con SoloEnvíos...</p>";
+        lista.innerHTML = "<p style='text-align:center;'>Consultando SoloEnvíos...</p>";
+        wallet.innerHTML = "<p style='color: #7f8c8d;'>Esperando selección de envío...</p>";
 
         try {
-            // CORRECCIÓN AQUÍ: Ahora coincide con tu urls.py
             const res = await fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`);
             const data = await res.json();
 
             if (data.tarifas && data.tarifas.length > 0) {
-                let html = '';
+                let html = '<p style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">Haz clic en una opción:</p>';
                 data.tarifas.forEach(t => {
+                    // Al hacer clic, llamamos a generarBotonPago con el precio que ya trae tu 8%
                     html += `
-                    <div onclick="generarPago(${t.precio_final})" style="background:white; border:1px solid #ddd; padding:12px; border-radius:10px; margin-bottom:8px; cursor:pointer; display:flex; justify-content:space-between;">
-                        <span>${t.paqueteria}</span>
-                        <strong style="color:#27ae60;">$${t.precio_final}</strong>
+                    <div onclick="generarBotonPago(${t.precio_final}, '${t.paqueteria}')" 
+                         style="background:white; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:0.2s;"
+                         onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+                        <div>
+                            <strong style="display:block; color:#333;">${t.paqueteria}</strong>
+                            <small style="color:#7f8c8d;">Llega en: ${t.tiempo}</small>
+                        </div>
+                        <span style="color:#27ae60; font-weight:bold; font-size:1.1rem;">$${t.precio_final}</span>
                     </div>`;
                 });
                 lista.innerHTML = html;
             } else {
-                lista.innerHTML = "<p style='color:red;'>No hay rutas disponibles.</p>";
+                lista.innerHTML = "<p style='color:red;'>No hay rutas disponibles para este CP.</p>";
             }
         } catch (e) {
-            lista.innerHTML = "<p style='color:red;'>Error de conexión.</p>";
+            lista.innerHTML = "<p style='color:red;'>Error al conectar con el servidor de envíos.</p>";
         }
     }
 
-    async function generarPago(costoEnvio) {
-        const wallet = document.getElementById('wallet_container');
-        wallet.innerHTML = "<p>Cargando pago...</p>";
+    async function generarBotonPago(costoEnvio, paqueteriaNombre) {
+        const walletContainer = document.getElementById('wallet_container');
+        walletContainer.innerHTML = "<p>Actualizando total y conectando con Mercado Pago...</p>";
 
-        // Enviamos el costo que ya trae tu 8% a la función que suma el 5% y lo de MP
-        const res = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
-        const data = await res.json();
+        try {
+            // Llamamos a tu función que suma el 5% de INITRE y la comisión de MP
+            const res = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
+            const data = await res.json();
 
-        if (data.preference_id) {
-            wallet.innerHTML = '';
-            mp.bricks().create("wallet", "wallet_container", {
-                initialization: { preferenceId: data.preference_id }
-            });
+            if (data.preference_id) {
+                walletContainer.innerHTML = ''; // Limpiamos el texto de espera
+                
+                // Creamos el botón oficial de Mercado Pago
+                mp.bricks().create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: data.preference_id,
+                    },
+                    customization: {
+                        texts: { valueProp: 'smart_option' },
+                    }
+                });
+                
+                // Opcional: Mostrar el total final debajo del botón
+                const totalMsg = document.createElement("p");
+                totalMsg.style.cssText = "margin-top:10px; font-weight:bold; color:#2c3e50;";
+                totalMsg.innerHTML = `Total a pagar: $${data.total_nuevo} MXN`;
+                walletContainer.appendChild(totalMsg);
+            }
+        } catch (e) {
+            walletContainer.innerHTML = "<p style='color:red;'>Error al generar el pago. Intenta de nuevo.</p>";
         }
     }
 </script>
