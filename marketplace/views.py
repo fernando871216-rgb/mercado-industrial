@@ -359,6 +359,8 @@ def actualizar_pago(request):
         
         total_final = subtotal + total_comision_mp
         user_id = request.user.id if request.user.is_authenticated else 0
+        tipo_entrega = "E" if envio_val > 0 else "R"
+        ext_ref = f"{product.id}-{user_id}-{tipo_entrega}"
 
         preference_data = {
             "items": [
@@ -367,7 +369,8 @@ def actualizar_pago(request):
                     "description": "Pago seguro Mercado Industrial",
                     "quantity": 1,
                     "unit_price": round(total_final, 2),
-                    "currency_id": "MXN"
+                    "currency_id": "MXN",
+                    "external_reference": ext_ref,
                 }
             ],
          
@@ -458,9 +461,10 @@ def mercadopago_webhook(request):
                 
                 if status == 'approved' and ref_data:
                     parts = ref_data.split('-')
-                    if len(parts) >= 2:
+                    if len(parts) >= 3:
                         prod_id = parts[0]
                         user_id = parts[1]
+                        tipo = parts[2]
                         
                         producto = IndustrialProduct.objects.get(id=prod_id)
                         comprador = User.objects.get(id=user_id)
@@ -496,6 +500,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO EN WEBHOOK: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
