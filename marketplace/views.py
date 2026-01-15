@@ -295,40 +295,36 @@ def procesar_pago(request, product_id):
 def actualizar_pago(request):
     try:
         pid = request.GET.get('id')
-        # Obtenemos el costo base que devuelve SoloEnvíos
-        envio_base = float(request.GET.get('envio', 0))
+        # Este 'envio' ya viene con el 8% aplicado desde cotizar_soloenvios
+        envio_con_comision_logistica = float(request.GET.get('envio', 0))
         prod = get_object_or_404(IndustrialProduct, id=pid)
         
         precio_producto = float(prod.price)
         
         # 1. Tu comisión sobre el PRODUCTO (5% de INITRE)
-        comision_producto = precio_producto * 0.05
+        comision_initre = precio_producto * 0.05
         
-        # 2. Tu comisión sobre el ENVÍO (8% de logística)
-        comision_logistica = envio_base * 0.08
-        envio_total_con_tu_comision = envio_base + comision_logistica
+        # 2. Subtotal antes de Mercado Pago
+        # (Precio Producto + Tu 5% + Envío con tu 8%)
+        subtotal = precio_producto + comision_initre + envio_con_comision_logistica
         
-        # 3. Subtotal antes de Mercado Pago
-        subtotal = precio_producto + comision_producto + envio_total_con_tu_comision
-        
-        # 4. Comisión Mercado Pago (3.49% + $4 + IVA del 16% sobre eso)
-        # Calculamos cuánto debe pagar el cliente para que tú recibas el subtotal neto
-        comision_mp_porcentaje = subtotal * 0.0349
+        # 3. Comisión Mercado Pago (3.49% + $4 + IVA)
+        # Calculamos sobre el subtotal para que el cliente absorba el costo de la pasarela
+        porcentaje_mp = subtotal * 0.0349
         fijo_mp = 4.0
-        iva_sobre_comision = (comision_mp_porcentaje + fijo_mp) * 0.16
-        total_comision_mp = comision_mp_porcentaje + fijo_mp + iva_sobre_comision
+        iva_mp = (porcentaje_mp + fijo_mp) * 0.16
+        total_comision_mp = porcentaje_mp + fijo_mp + iva_mp
         
-        # --- TOTAL FINAL PARA EL BOTÓN ---
-        total_a_cobrar = subtotal + total_comision_mp
+        # --- TOTAL FINAL QUE COBRA EL BOTÓN ---
+        total_final = subtotal + total_comision_mp
 
-        # Creación de la preferencia
         preference_data = {
             "items": [
                 {
                     "title": f"{prod.title}",
-                    "description": "Incluye costo de equipo, envío certificado y gestión de plataforma",
+                    "description": "Equipo industrial + Envío certificado + Gestión de plataforma",
                     "quantity": 1,
-                    "unit_price": round(total_a_cobrar, 2), # Redondeamos a 2 decimales para evitar errores en MP
+                    "unit_price": round(total_final, 2),
                     "currency_id": "MXN"
                 }
             ],
@@ -343,7 +339,7 @@ def actualizar_pago(request):
         
         return JsonResponse({
             'preference_id': pref_response["response"]["id"], 
-            'total_nuevo': f"{total_a_cobrar:,.2f}"
+            'total_nuevo': f"{total_final:,.2f}"
         })
         
     except Exception as e:
@@ -375,6 +371,7 @@ def marcar_como_pagado(request, venta_id):
 def pago_exitoso(request): return render(request, 'marketplace/pago_exitoso.html')
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 def mercadopago_webhook(request): return JsonResponse({'status': 'ok'})
+
 
 
 
