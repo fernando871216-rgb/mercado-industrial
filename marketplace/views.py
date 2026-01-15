@@ -19,6 +19,7 @@ from django.http import HttpResponse
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -477,6 +478,13 @@ def mercadopago_webhook(request):
                         )
                         if created:
                             print("VENTA REGISTRADA CON ÉXITO")
+                            send_mail(
+                                '¡Felicidades, vendiste un equipo!',
+                                f'Hola {producto.user.username}, han comprado tu {producto.title}. Revisa tu panel de ventas para enviar el producto.',
+                                'tu-correo@gmail.com',
+                                [producto.user.email], # El correo del vendedor
+                                fail_silently=False,
+)
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
@@ -487,6 +495,7 @@ def mercadopago_webhook(request):
             print(f"ERROR CRÍTICO: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
