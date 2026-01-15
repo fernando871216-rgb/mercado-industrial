@@ -23,12 +23,6 @@
         </div>
 
         <div style="flex: 1.2; min-width: 280px;">
-            <div style="margin-bottom: 10px;">
-                <span style="background: #ebf5ff; color: #3498db; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase;">
-                    {{ product.brand|default:"Industrial" }}
-                </span>
-            </div>
-
             <h1 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 1.8rem;">{{ product.title }}</h1>
             
             <div style="font-size: 2rem; font-weight: 800; color: #27ae60; margin-bottom: 5px;">
@@ -45,19 +39,12 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
                     <div>
                         <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP ORIGEN</label>
-                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #eee; background: #f1f1f1; cursor: not-allowed;">
+                        <input type="text" id="envio_cp_origen" value="72460" readonly style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #eee; background: #f1f1f1;">
                     </div>
                     <div>
                         <label style="display:block; font-size: 0.65rem; color: #666; font-weight: bold;">CP DESTINO</label>
-                        <input type="text" id="envio_cp_destino" placeholder="Tu CP" maxlength="5" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                        <input type="text" id="envio_cp_destino" placeholder="Ej: 06600" maxlength="5" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
                     </div>
-                </div>
-
-                <div style="display: none;">
-                    <input type="number" id="envio_largo" value="{{ product.largo|default:20 }}">
-                    <input type="number" id="envio_ancho" value="{{ product.ancho|default:20 }}">
-                    <input type="number" id="envio_alto" value="{{ product.alto|default:20 }}">
-                    <input type="number" id="envio_peso" value="{{ product.peso|default:1 }}">
                 </div>
 
                 <button type="button" id="btn_cotizar" onclick="consultarSoloEnvios()" style="width: 100%; background: #003366; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">
@@ -66,34 +53,11 @@
 
                 <div id="resultados_flete" style="margin-top: 15px; display: none;">
                     <div id="lista_paqueterias" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                    <button onclick="quitarEnvio()" style="margin-top: 10px; width: 100%; background: none; border: none; color: #e74c3c; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
-                        Quitar envío
-                    </button>
                 </div>
-                <div id="mensaje_error_flete" style="margin-top:10px; color:red; font-size:0.8rem;"></div>
             </div>
 
-            <div style="margin-bottom: 25px;">
-                {% if product.stock > 0 and user.is_authenticated %}
-                    <div style="margin-bottom: 15px;">
-                        <a href="{% url 'crear_intencion_compra' product.id %}" 
-                           onclick="return confirm('¿Confirmas tu intención?')"
-                           style="display: block; text-align: center; background: #f39c12; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; text-decoration: none; font-size: 1rem;">
-                             <i class="fas fa-hand-paper"></i> CONFIRMAR INTENCIÓN
-                        </a>
-                    </div>
-                    <div id="wallet_container"></div>
-                {% else %}
-                    <div style="text-align: center; color: #e67e22; background: #fff3e0; padding: 15px; border-radius: 10px; border: 1px solid #ffe0b2;">
-                        {% if not user.is_authenticated %} 
-                            <a href="{% url 'login' %}" style="color: inherit; font-weight: bold;">Inicia sesión para comprar</a>
-                        {% else %} 
-                            Producto agotado 
-                        {% endif %}
-                    </div>
-                {% endif %}
-            </div>
-
+            <div id="wallet_container"></div>
+            
             <div style="margin-top: 20px;">
                 <h3 style="font-size: 1rem; color: #2c3e50; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-bottom: 12px;">Descripción</h3>
                 <p style="line-height: 1.5; color: #4a5568; white-space: pre-line; font-size: 0.9rem;">{{ product.description }}</p>
@@ -124,53 +88,53 @@
         const btn = document.getElementById('btn_cotizar');
         const listaPaqueterias = document.getElementById('lista_paqueterias');
         const resultadosDiv = document.getElementById('resultados_flete');
-        const errorDiv = document.getElementById('mensaje_error_flete');
-        
-        const cp_origen = document.getElementById('envio_cp_origen').value;
         const cp_destino = document.getElementById('envio_cp_destino').value;
-        const peso = document.getElementById('envio_peso').value;
-        const largo = document.getElementById('envio_largo').value;
-        const ancho = document.getElementById('envio_ancho').value;
-        const alto = document.getElementById('envio_alto').value;
 
-        if (!cp_destino || cp_destino.length < 5) {
-            alert("Ingresa un CP de destino de 5 dígitos.");
+        if (cp_destino.length < 5) {
+            alert("Ingresa un CP de 5 dígitos.");
             return;
         }
 
         btn.disabled = true;
-        btn.innerText = "Cotizando...";
-        errorDiv.innerText = "";
-        listaPaqueterias.innerHTML = "";
+        btn.innerText = "Buscando tarifas...";
 
-        fetch(`/cotizar-soloenvios/?cp_origen=${cp_origen}&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`)
-            .then(response => response.json())
+        // Usamos valores de respaldo por si el producto no tiene medidas en la DB
+        const peso = "{{ product.peso }}" !== "None" && "{{ product.peso }}" !== "" ? "{{ product.peso }}" : "1";
+        const largo = "{{ product.largo }}" !== "None" && "{{ product.largo }}" !== "" ? "{{ product.largo }}" : "20";
+        const ancho = "{{ product.ancho }}" !== "None" && "{{ product.ancho }}" !== "" ? "{{ product.ancho }}" : "20";
+        const alto = "{{ product.alto }}" !== "None" && "{{ product.alto }}" !== "" ? "{{ product.alto }}" : "20";
+
+        const url = `/cotizar-soloenvios/?cp_origen=72460&cp_destino=${cp_destino}&peso=${peso}&largo=${largo}&ancho=${ancho}&alto=${alto}`;
+
+        fetch(url)
+            .then(r => r.json())
             .then(data => {
                 btn.disabled = false;
                 btn.innerText = "CALCULAR ENVÍO";
+                listaPaqueterias.innerHTML = "";
 
                 if (data.tarifas && data.tarifas.length > 0) {
                     resultadosDiv.style.display = "block";
                     data.tarifas.forEach(t => {
-                        const card = document.createElement('div');
-                        card.style = "cursor:pointer; border:1px solid #ddd; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px;";
-                        card.onclick = () => seleccionarFlete(t.precio_final);
-                        card.innerHTML = `
+                        const div = document.createElement('div');
+                        div.style = "cursor:pointer; border:1px solid #ddd; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px;";
+                        div.onclick = () => seleccionarFlete(t.precio_final);
+                        div.innerHTML = `
                             <div>
                                 <div style="font-weight:bold;">${t.paqueteria}</div>
                                 <small>${t.tiempo}</small>
                             </div>
                             <div style="color:#27ae60; font-weight:bold;">$${t.precio_final}</div>`;
-                        listaPaqueterias.appendChild(card);
+                        listaPaqueterias.appendChild(div);
                     });
                 } else {
-                    alert("No se encontraron tarifas. Revisa el CP.");
+                    alert("SoloEnvíos no devolvió tarifas. Revisa que el CP sea de México y que tu cuenta tenga saldo o esté activa.");
                 }
             })
-            .catch(err => {
+            .catch(e => {
                 btn.disabled = false;
                 btn.innerText = "CALCULAR ENVÍO";
-                alert("Error al conectar con el servidor.");
+                alert("Error técnico al conectar con la cotización.");
             });
     }
 
@@ -184,13 +148,6 @@
             document.getElementById('display_price').innerText = data.total_nuevo;
             renderMPButton(data.preference_id);
         });
-    }
-
-    function quitarEnvio() {
-        document.getElementById('envio_info').style.display = "none";
-        document.getElementById('display_price').innerText = "{{ product.price }}";
-        renderMPButton("{{ preference_id }}");
-        document.getElementById('resultados_flete').style.display = "none";
     }
 </script>
 {% endblock %}
