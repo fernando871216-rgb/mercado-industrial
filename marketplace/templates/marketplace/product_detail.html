@@ -21,30 +21,28 @@
 
             <hr>
 
-            <div class="p-3 border rounded bg-light shadow-sm">
-                <label class="form-label fw-bold small">🚚 Calcular Envío</label>
-                <div class="input-group input-group-sm">
+            <div class="card p-3 border-0 bg-light shadow-sm" style="border-radius: 15px;">
+                <label class="form-label fw-bold mb-2">🚚 Calcular costo de envío</label>
+                <div class="input-group">
                     <input type="text" id="cp_input" class="form-control" placeholder="C.P. Destino" maxlength="5">
-                    <button class="btn btn-dark" id="btn_calcular" type="button">Calcular</button>
+                    <button class="btn btn-primary" id="btn_calcular" type="button">Calcular</button>
                     <button class="btn btn-outline-secondary" id="btn_limpiar" type="button">✕</button>
                 </div>
 
-                <div id="loader" class="text-center mt-2" style="display: none;">
+                <div id="loader" class="text-center mt-3" style="display: none;">
                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2 small">Buscando tarifas...</span>
                 </div>
 
-                <div id="div_resultados" class="mt-2" style="display: none; max-height: 150px; overflow-y: auto;">
-                    <ul class="list-group list-group-flush small" id="lista_tarifas">
+                <div id="div_resultados" class="mt-3" style="display: none; max-height: 200px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush" id="lista_tarifas">
                         </ul>
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-4">
                 <button class="btn btn-warning btn-lg fw-bold shadow-sm">Confirmar Intención</button>
-                
-                <div id="wallet_container">
-                    <button class="btn btn-info btn-lg text-white shadow-sm w-100">Pagar con Mercado Pago</button>
-                </div>
+                <button class="btn btn-info btn-lg text-white shadow-sm">Pagar con Mercado Pago</button>
             </div>
         </div>
     </div>
@@ -63,4 +61,53 @@
     const resDiv = document.getElementById('div_resultados');
     const lista = document.getElementById('lista_tarifas');
 
-    btnLimp.
+    btnLimp.onclick = () => {
+        inputCP.value = '';
+        resDiv.style.display = 'none';
+        lista.innerHTML = '';
+    };
+
+    btnCalc.onclick = () => {
+        const cp = inputCP.value.trim();
+        if(cp.length < 5) {
+            alert("Escribe los 5 dígitos de tu C.P.");
+            return;
+        }
+
+        loader.style.display = 'block';
+        resDiv.style.display = 'none';
+        lista.innerHTML = '';
+
+        const params = new URLSearchParams({
+            cp_origen: '72460',
+            cp_destino: cp,
+            peso: document.getElementById('val_peso').value,
+            largo: document.getElementById('val_largo').value,
+            ancho: document.getElementById('val_ancho').value,
+            alto: document.getElementById('val_alto').value
+        });
+
+        fetch(`/cotizar-soloenvios/?${params.toString()}`)
+            .then(r => r.json())
+            .then(data => {
+                loader.style.display = 'none';
+                if(data.tarifas && data.tarifas.length > 0) {
+                    data.tarifas.forEach(t => {
+                        lista.innerHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0">
+                                <span><strong>${t.paqueteria}</strong><br><small class="text-muted">${t.tiempo}</small></span>
+                                <span class="badge bg-success rounded-pill">$${t.precio_final}</span>
+                            </li>`;
+                    });
+                    resDiv.style.display = 'block';
+                } else {
+                    alert("No hay tarifas disponibles. Intenta de nuevo.");
+                }
+            })
+            .catch(e => {
+                loader.style.display = 'none';
+                alert("Error de conexión.");
+            });
+    };
+</script>
+{% endblock %}
