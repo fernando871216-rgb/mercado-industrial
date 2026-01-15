@@ -110,7 +110,7 @@
 
         /* Diseño para Celulares */
         @media (max-width: 992px) {
-            .search-container { display: none; } /* Ocultar búsqueda en móvil para simplificar, o moverla al menú */
+            .search-container { display: none; }
             .menu-toggle { display: block; }
             .nav-links {
                 display: none;
@@ -123,95 +123,4 @@
                 padding: 20px 0;
                 gap: 20px;
             }
-            .nav-links.active { display: flex; }
-            .logo-text { font-size: 0.8rem; }
-        }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar">
-        <a href="{% url 'home' %}" class="logo-container">
-            <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span class="logo-text">MERCADO INDUSTRIAL</span>
-        </a>
-
-        <div class="search-container">
-            <form action="{% url 'home' %}" method="GET" class="search-form">
-                <input type="text" name="q" class="search-input" placeholder="Buscar equipo o # de parte..." value="{{ request.GET.q }}">
-                <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-        </div>
-
-        <div class="menu-toggle" id="mobile-menu">
-            <i class="fas fa-bars"></i>
-        </div>
-
-        <div class="nav-links" id="nav-content">
-            <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
-            
-            {% if user.is_authenticated %}
-                <a href="{% url 'mis_productos' %}">Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
-                <a href="{% url 'mis_compras' %}">Mis Compras</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Mi Perfil</a>
-
-                {% if user.is_staff %}
-                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
-                {% endif %}
-
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}">Ingresar</a>
-                <a href="{% url 'registro' %}">Registro</a>
-            {% endif %}
-        </div>
-    </nav>
-
-    {% if messages %}
-    <div style="padding: 10px 20px;">
-        {% for message in messages %}
-            <div style="padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: {% if message.tags == 'success' %}#d4edda{% else %}#f8d7da{% endif %}; color: {% if message.tags == 'success' %}#155724{% else %}#721c24{% endif %}; border: 1px solid {% if message.tags == 'success' %}#c3e6cb{% else %}#f5c6cb{% endif %};">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="main-content">
-        {% block content %}
-        {% endblock %}
-    </div>
-
-    <footer>
-        <div class="footer-links">
-            <a href="{% url 'terminos' %}">Aviso de Privacidad</a>
-            <a href="{% url 'terminos' %}">Términos y Condiciones</a>
-        </div>
-        <div class="copyright">
-            &copy; 2026 Mercado Industrial INITRE. Todos los derechos reservados.
-        </div>
-    </footer>
-
-    <script>
-        const menuToggle = document.getElementById('mobile-menu');
-        const navContent = document.getElementById('nav-content');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => {
-                navContent.classList.toggle('active');
-                const icon = menuToggle.querySelector('i');
-                icon.classList.toggle('fa-bars');
-                icon.classList.toggle('fa-times');
-            });
-        }
-    </script>
-
-</body>
-</html>
+            .nav-links.active {
