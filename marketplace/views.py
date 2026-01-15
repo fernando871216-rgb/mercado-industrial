@@ -435,13 +435,10 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
-    # Mercado Pago puede enviar el ID por parámetros GET o en el cuerpo JSON
     payment_id = request.GET.get('id') or request.GET.get('data.id')
     topic = request.GET.get('topic') or request.GET.get('type')
 
-    # Si es una notificación de pago
-    if (topic == 'payment' or topic == 'opened_preference') and payment_id:
-        # TU TOKEN (Verifica que sea el "Production Access Token")
+    if payment_id:
         token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {'Authorization': f'Bearer {token}'}
@@ -451,44 +448,40 @@ def mercadopago_webhook(request):
             if response.status_code == 200:
                 data = response.json()
                 status = data.get('status')
-                ref_data = data.get('external_reference')
+                ref_data = str(data.get('external_reference', ''))
                 
-                print(f"--- WEBHOOK DATA: Status={status}, ExternalRef={ref_data} ---")
+                print(f"--- PROCESANDO: Status={status}, Ref={ref_data} ---")
 
                 if status == 'approved' and ref_data:
-                    # Separamos ID Producto e ID Comprador
-                    # Usamos split('-') pero nos aseguramos de que sean solo números
-                    parts = str(ref_data).split('-')
+                    parts = ref_data.split('-')
+                    
+                    # Si mandamos bien los datos, parts tendrá 2 elementos
                     if len(parts) >= 2:
-                        product_id = parts[0]
-                        buyer_id = parts[1]
+                        prod_id = parts[0]
+                        user_id = parts[1]
                         
-                        producto = IndustrialProduct.objects.get(id=product_id)
-                        comprador = User.objects.get(id=buyer_id)
+                        producto = IndustrialProduct.objects.get(id=prod_id)
+                        comprador = User.objects.get(id=user_id)
                         
-                        # Creamos la venta
                         venta, created = Sale.objects.get_or_create(
                             product=producto,
                             buyer=comprador,
                             status='approved',
                             defaults={'price': producto.price}
                         )
-                        
                         if created:
-                            print(f"VENTA EXITOSA: Producto {product_id} comprado por {buyer_id}")
-                            # Bajamos el stock
+                            print("VENTA REGISTRADA CON ÉXITO")
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                        else:
-                            print("AVISO: Esta venta ya había sido registrada anteriormente.")
-            else:
-                print(f"ERROR MP API: Status {response.status_code} - {response.text}")
-
-        except Exception as e:
-            print(f"CRITICAL ERROR IN WEBHOOK: {e}")
+                    else:
+                        print(f"ERROR: ExternalRef incompleto ({ref_data}). Falta el ID del comprador.")
             
+        except Exception as e:
+            print(f"ERROR CRÍTICO: {e}")
+
     return HttpResponse(status=200)
+
 
 
 
