@@ -38,4 +38,104 @@
                 <span style="color: #7f8c8d; font-size: 0.9rem;">Precio del equipo:</span>
                 <h2 style="font-size: 2.5rem; color: #2c3e50; margin: 5px 0 20px 0;">${{ product.price }} <span style="font-size: 1rem; color: #95a5a6;">MXN</span></h2>
                 
-                <div style="background: #f0f7ff; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px solid #d1e9
+                <div style="background: #f0f7ff; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px solid #d1e9ff;">
+                    <label style="display: block; font-weight: bold; color: #2980b9; margin-bottom: 10px;">
+                        <i class="fas fa-truck"></i> Cotizar envío a mi domicilio:
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cp_destino" placeholder="Tu C.P." maxlength="5" style="flex: 1; padding: 10px; border: 1px solid #3498db; border-radius: 5px;">
+                        <button onclick="cotizarEnvio()" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            CALCULAR
+                        </button>
+                    </div>
+                    <div id="resultados_envio" style="margin-top: 15px; font-size: 0.85rem;"></div>
+                </div>
+
+                <div id="wallet_container"></div>
+            </div>
+
+            <div style="background: #fdfdfd; border-radius: 15px; padding: 20px; border: 1px dashed #bdc3c7;">
+                <h4 style="font-size: 0.9rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <i class="fas fa-info-circle"></i> Información de Origen
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <small style="color: #95a5a6; display: block;">Ubicación (Origen):</small>
+                        <strong style="color: #2c3e50;"><i class="fas fa-map-marker-alt" style="color: #e74c3c;"></i> CP {{ product.cp_origen }}</strong>
+                    </div>
+                    <div>
+                        <small style="color: #95a5a6; display: block;">Peso del equipo:</small>
+                        <strong style="color: #2c3e50;">{{ product.peso }} Kg</strong>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <small style="color: #95a5a6; display: block;">Dimensiones del paquete:</small>
+                        <strong style="color: #2c3e50;">{{ product.largo }} x {{ product.ancho }} x {{ product.alto }} cm</strong>
+                    </div>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.75rem; color: #7f8c8d; font-style: italic;">
+                    * Las tarifas de envío son calculadas en tiempo real por paqueterías certificadas.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+    const mp = new MercadoPago('TU_PUBLIC_KEY'); // Reemplaza con tu Public Key real
+    let envioSeleccionado = 0;
+
+    async function cotizarEnvio() {
+        const cp = document.getElementById('cp_destino').value;
+        const resDiv = document.getElementById('resultados_envio');
+        
+        if(cp.length < 5) {
+            alert("Por favor ingresa un código postal válido de 5 dígitos.");
+            return;
+        }
+
+        resDiv.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Buscando tarifas...";
+
+        try {
+            // Llamamos a tu función en views.py pasando el ID del producto y el CP
+            const response = await fetch(`/cotizar-envio/?product_id={{ product.id }}&cp_destino=${cp}`);
+            const data = await response.json();
+
+            if (data.tarifas && data.tarifas.length > 0) {
+                let html = '<ul style="list-style: none; padding: 0;">';
+                data.tarifas.forEach(t => {
+                    html += `
+                    <li style="background: white; margin-bottom: 8px; padding: 10px; border-radius: 5px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <input type="radio" name="envio" onclick="actualizarTotal(${t.precio_final})" style="cursor:pointer;">
+                            <span style="font-weight:bold;">${t.paqueteria}</span><br>
+                            <small style="color: #7f8c8d;">Llega en: ${t.tiempo}</small>
+                        </div>
+                        <span style="color: #27ae60; font-weight:bold;">$${t.precio_final}</span>
+                    </li>`;
+                });
+                html += '</ul>';
+                resDiv.innerHTML = html;
+            } else {
+                resDiv.innerHTML = "<p style='color:red;'>No hay envíos disponibles para este CP.</p>";
+            }
+        } catch (error) {
+            resDiv.innerHTML = "<p style='color:red;'>Error al conectar con el servidor.</p>";
+        }
+    }
+
+    async function actualizarTotal(costoEnvio) {
+        envioSeleccionado = costoEnvio;
+        // Llamamos a tu vista de Django que crea la preferencia de Mercado Pago
+        const response = await fetch(`/actualizar-pago/?id={{ product.id }}&envio=${costoEnvio}`);
+        const data = await response.json();
+        
+        // Limpiamos y recreamos el botón de Mercado Pago con el precio nuevo (Producto + Envío)
+        document.getElementById('wallet_container').innerHTML = '';
+        mp.bricks().create("wallet", "wallet_container", {
+            initialization: { preferenceId: data.preference_id },
+        });
+    }
+</script>
+{% endblock %}
