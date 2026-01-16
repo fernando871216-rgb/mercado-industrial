@@ -14,7 +14,7 @@ class IndustrialProductAdmin(admin.ModelAdmin):
     list_filter = ('brand', 'category')
     
     # Buscador por nombre y marca
-    search_fields = ('title', 'brand')
+    search_fields = ('title', 'brand', 'description')
 
     # Organización de los campos dentro del formulario de edición
     fieldsets = (
@@ -59,6 +59,8 @@ class SaleAdmin(admin.ModelAdmin):
     list_filter = ('status', 'recibido_por_comprador', 'pagado_a_vendedor', 'created_at')
     
     # Buscador por nombre de producto o comprador
+    readonly_fields = ('created_at',)
     search_fields = ('product__title', 'buyer__username')
+
 
 
