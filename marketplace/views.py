@@ -400,21 +400,31 @@ def crear_intencion_compra(request, product_id):
     Sale.objects.create(product=p, buyer=request.user, price=p.price, status='pendiente')
     return redirect('mis_compras')
 
-@staff_member_required
+@login_required
 def panel_administrador(request):
-    ventas = Sale.objects.all().order_by('-created_at')
+    # Verificamos que sea staff o superusuario
+    if not request.user.is_staff:
+        return redirect('home')
+
+    # 1. Traemos las ventas (SOLO los campos que existen)
+    # Usamos .only() para obligar a Django a ignorar campos que den error
+    ventas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
+
+    # 2. Cálculos para las gráficas/estadísticas
+    total_ventas_count = ventas.count()
+    ingresos_totales = sum(v.price for v in ventas)
     
-    total_comisiones = Decimal('0.00')
-    for v in ventas:
-        # Usamos los estados que definimos en el HTML y el webhook
-        if v.status in ['approved', 'entregado', 'enviado', 'completado']:
-            # Usamos la función que ya escribiste en tu modelo
-            total_comisiones += v.get_platform_commission()
-            
-    return render(request, 'marketplace/panel_admin.html', {
+    # 3. Datos para los últimos productos (opcional)
+    productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
+
+    context = {
         'ventas': ventas,
-        'total_comisiones': total_comisiones
-    })
+        'total_ventas_count': total_ventas_count,
+        'ingresos_totales': ingresos_totales,
+        'productos_recientes': productos_recientes,
+    }
+    
+    return render(request, 'marketplace/panel_administrador.html', context)
 
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
@@ -509,6 +519,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
