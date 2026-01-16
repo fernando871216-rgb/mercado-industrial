@@ -48,7 +48,7 @@
 
         // 2. Llamada a Django
         // Usamos la URL que definimos en urls.py
-        fetch('/generar-preferencia/{{ producto.id }}/?envio=' + monto)
+        fetch(`/generar-preferencia/{{ producto.id }}/?envio=${costoEnvio}`)
             .then(response => response.json())
             .then(data => {
                 console.log("Respuesta de Django:", data);
@@ -76,3 +76,4 @@
     };
 </script>
 {% endblock %}
+
