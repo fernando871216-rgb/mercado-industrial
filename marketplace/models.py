@@ -25,6 +25,8 @@ class IndustrialProduct(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
     image = CloudinaryField('image', blank=True, null=True)
+    image2 = CloudinaryField('image', blank=True, null=True)
+    image3 = CloudinaryField('image', blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -95,6 +97,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
