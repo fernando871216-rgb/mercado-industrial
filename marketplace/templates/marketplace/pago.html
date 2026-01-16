@@ -1,60 +1,29 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card p-4 shadow-sm">
-                <h3>Resumen de tu compra</h3>
-                <hr>
-                <h5>Selecciona el método de entrega</h5>
-                
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="radio" name="envio_radio" id="envio1" value="0" checked onclick="actualizarPreferencia(this.value)">
-                    <label class="form-check-label" for="envio1">Recoger en sucursal ($0.00)</label>
-                </div>
-                
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="envio_radio" id="envio2" value="140.52" onclick="actualizarPreferencia(this.value)">
-                    <label class="form-check-label" for="envio2">Envío a domicilio ($140.52)</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card p-4 shadow-sm border-primary">
-                <h4 class="text-center">Total a pagar</h4>
-                <h2 class="text-center text-primary fw-bold" id="total-display">$ {{ producto.price }}</h2>
-                <hr>
-                <div id="wallet_container"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
     const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
 
-    function actualizarPreferencia(monto) {
+    function actualizarPreferencia(montoFlete) {
         const display = document.getElementById('total-display');
         const container = document.getElementById('wallet_container');
         
-        display.innerText = 'Calculando...';
-        container.innerHTML = 'Actualizando botón...';
+        display.innerText = 'Calculando total...';
+        container.innerHTML = '<p>Actualizando pago...</p>';
 
-        // USAMOS LA ETIQUETA URL DE DJANGO PARA EVITAR EL 404
-        const urlBase = "{% url 'generar_preferencia_pago' producto.id %}";
-        const urlFinal = `${urlBase}?envio=${monto}`;
+        // USAMOS LA RUTA QUE DJANGO SÍ CONOCE
+        // Esto evita el error 404 de /actualizar-pago/
+        const url = `/generar-preferencia/{{ producto.id }}/?envio=${montoFlete}`;
+        
+        console.log("Intentando conectar a:", url);
 
-        console.log("Llamando a:", urlFinal);
-
-        fetch(urlFinal)
+        fetch(url)
             .then(response => {
-                if (!response.ok) throw new Error('Error 404: La ruta no existe en urls.py');
+                if (!response.ok) throw new Error('No se encontró la ruta en el servidor');
                 return response.json();
             })
             .then(data => {
+                // Aquí ya viene el precio con tu 8% del flete sumado desde Python
                 display.innerText = '$' + data.total_final + ' MXN';
+
                 container.innerHTML = '';
                 mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
@@ -62,15 +31,15 @@
                     },
                 });
             })
-            .catch(error => {
-                console.error('Error:', error);
-                display.innerText = 'Error de conexión';
-                container.innerHTML = '<p class="text-danger small">Error 404: Verifica tu archivo urls.py</p>';
+            .catch(err => {
+                console.error("Error fatal:", err);
+                display.innerText = "Error 404";
+                container.innerHTML = '<p class="text-danger">Error: La ruta /actualizar-pago/ es vieja. Usa /generar-preferencia/</p>';
             });
     }
 
-    window.onload = function() {
-        actualizarPreferencia(0);
-    };
+    // Carga inicial al entrar a la página
+    document.addEventListener('DOMContentLoaded', () => {
+        actualizarPreferencia(0); 
+    });
 </script>
-{% endblock %}
