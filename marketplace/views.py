@@ -27,6 +27,7 @@ from django.utils import timezone
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
+@login_required
 def generar_preferencia_pago(request, producto_id):
     # Usamos producto_id (el que viene en la URL)
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
@@ -82,6 +83,7 @@ def generar_preferencia_pago(request, producto_id):
 # ==========================================
 # 1. PERFIL (Corregido con tus 2 formularios)
 # ==========================================
+
 @login_required
 def editar_perfil(request):
     # Intentamos obtener el perfil del usuario, si no existe lo creamos
@@ -111,6 +113,7 @@ def editar_perfil(request):
 # ==========================================
 # 2. SOLOENVÍOS (Corregido con tus campos: peso, largo, etc.)
 # ==========================================
+
 def obtener_token_soloenvios():
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     client_id = os.environ.get('SOLOENVIOS_CLIENT_ID', '').strip()
@@ -539,6 +542,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
