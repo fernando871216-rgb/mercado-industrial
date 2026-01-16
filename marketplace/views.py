@@ -65,9 +65,9 @@ def generar_preferencia_pago(request, producto_id):
             }
         ],
         "back_urls": {
-            "success": request.build_absolute_uri('/pago-exitoso/'),
-            "failure": request.build_absolute_uri('/pago-fallido/'),
-            "pending": request.build_absolute_uri('/pago-pendiente/'),
+            "success": "https://mercado-industrial.onrender.com/pago-exitoso/" + str(product_id) + "/",
+            "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
+            "pending": "https://mercado-industrial.onrender.com/pago-fallido/",
         },
         "auto_return": "approved",
         "binary_mode": True, # Para que sea aprobado o rechazado de inmediato
@@ -523,6 +523,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
