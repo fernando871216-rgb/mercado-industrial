@@ -58,6 +58,7 @@ class Sale(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='pendiente')
     pagado_a_vendedor = models.BooleanField(default=False)
+    payment_id = models.CharField(max_length=100, null=True, blank=True)
     recibido_por_comprador = models.BooleanField(default=False)
     tracking_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Número de Guía")
     shipping_company = models.CharField(max_length=50, blank=True, null=True, verbose_name="Paquetería")
@@ -95,6 +96,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
