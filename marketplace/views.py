@@ -21,28 +21,46 @@ from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from decimal import Decimal
+from datetime import timedelta
+from django.utils import timezone
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    envio_val = float(request.GET.get('envio', 0))
+    
+    try:
+        envio_val = float(request.GET.get('envio', 0))
+    except:
+        envio_val = 0
 
-    # Tus cálculos de comisión
+    # Cálculos de precio con comisiones
     precio_base = float(producto.price)
     comision_initre = precio_base * 0.05
     subtotal = precio_base + comision_initre + envio_val
     
-    # Comisión MP (Fórmula completa)
-    total_comision_mp = (subtotal * 0.0349) + 4.0 + (((subtotal * 0.0349) + 4.0) * 0.16)
-    total_final = round(subtotal + total_comision_mp, 2)
+    # Comisión MP (3.49% + $4 + IVA)
+    comision_mp = (subtotal * 0.0349) + 4.0
+    iva_comision = comision_mp * 0.16
+    total_final = round(subtotal + comision_mp + iva_comision, 2)
 
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
     
+    user_id = request.user.id if request.user.is_authenticated else 0
+    # Referencia externa para el Webhook
+    ext_ref = f"{producto.id}-{user_id}-{int(envio_val)}"
+
     preference_data = {
-        "items": [{"title": producto.title, "quantity": 1, "unit_price": total_final, "currency_id": "MXN"}],
-        "external_reference": f"{producto.id}-{request.user.id}-{int(envio_val)}",
+        "items": [
+            {
+                "title": f"{producto.title}",
+                "quantity": 1,
+                "unit_price": total_final,
+                "currency_id": "MXN",
+            }
+        ],
+        "external_reference": ext_ref,
         "back_urls": {
             "success": f"https://mercado-industrial.onrender.com/pago-exitoso/{producto.id}/",
             "failure": "https://mercado-industrial.onrender.com/pago-fallido/",
@@ -53,9 +71,9 @@ def generar_preferencia_pago(request, producto_id):
         "binary_mode": True,
     }
 
-    pref_response = sdk.preference().create(preference_data)
+    preference_response = sdk.preference().create(preference_data)
     return JsonResponse({
-        'preference_id': pref_response["response"]["id"],
+        'preference_id': preference_response["response"]["id"],
         'total_final': f"{total_final:,.2f}"
     })
 
@@ -373,7 +391,6 @@ def actualizar_guia(request, venta_id):
 
 def procesar_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    # Solo pasamos el producto, el resto lo hace el JavaScript de arriba
     return render(request, 'marketplace/pago.html', {'producto': producto})
 
         
@@ -437,7 +454,6 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
 @csrf_exempt
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
-    # Pon tu Token Real aquí
     access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
 
     if payment_id:
@@ -457,18 +473,11 @@ def mercadopago_webhook(request):
                         producto_id = parts[0]
                         comprador_id = parts[1]
                         
-                        from .models import Sale, IndustrialProduct, User
-                        from decimal import Decimal
-                        from django.utils import timezone
-                        from datetime import timedelta
-
                         producto = IndustrialProduct.objects.get(id=producto_id)
                         comprador = User.objects.get(id=comprador_id)
                         monto = Decimal(str(data.get('transaction_amount')))
                         
-                        # --- VALIDACIÓN ANTI-DUPLICADOS TEMPORAL ---
-                        # Si ya existe una venta de ESTE usuario y ESTE producto 
-                        # creada en los últimos 60 segundos, la ignoramos.
+                        # BLOQUEO DE DUPLICADOS: Evita crear 2 ventas en el mismo minuto
                         hace_un_minuto = timezone.now() - timedelta(seconds=60)
                         venta_reciente = Sale.objects.filter(
                             product=producto, 
@@ -477,26 +486,30 @@ def mercadopago_webhook(request):
                         ).exists()
 
                         if not venta_reciente:
-                            nueva_venta = Sale.objects.create(
+                            Sale.objects.create(
                                 product=producto,
                                 buyer=comprador,
                                 price=monto,
                                 status='approved'
                             )
-                            
+                            # Descontamos stock
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                                
-                            print(f"ÉXITO: Venta {nueva_venta.id} registrada correctamente.")
+                            print(f"VENTA EXITOSA: Producto {producto_id} para usuario {comprador_id}")
                         else:
-                            print("AVISO: Notificación duplicada recibida, ignorando...")
+                            print("AVISO: Notificación duplicada detectada, no se crea otra venta.")
             
         except Exception as e:
             print(f"Error en webhook: {e}")
 
-    # Muy importante: Siempre devolver 200 para que MP deje de enviar avisos
     return HttpResponse(status=200)
+
+# 4. Pantalla de Éxito
+def pago_exitoso(request, producto_id):
+    producto = get_object_or_404(IndustrialProduct, id=producto_id)
+    return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
