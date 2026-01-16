@@ -30,31 +30,57 @@ SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319e
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
-    # 1. Obtenemos el costo del flete que mandó el JavaScript
-    flete_base = float(request.GET.get('envio', 0))
+    # 1. Recibimos el costo base del flete (ejemplo: 172.11)
+    try:
+        flete_bruto = float(request.GET.get('envio', 0))
+    except (TypeError, ValueError):
+        flete_bruto = 0
 
-    # 2. Tu ganancia del 8% sobre el flete
-    ganancia_flete = flete_base * 0.08
-    flete_total = flete_base + ganancia_flete
+    # 2. CALCULAMOS TUS COMISIONES
+    # Tu 8% sobre el flete
+    ganancia_flete_initre = flete_bruto * 0.08
+    flete_final_con_comision = flete_bruto + ganancia_flete_initre
 
-    # 3. Tu comisión del 5% sobre el producto
-    precio_producto = float(producto.price)
-    comision_prod = precio_producto * 0.05
+    # Tu 5% sobre el precio del producto
+    precio_base = float(producto.price)
+    comision_prod = precio_base * 0.05
+    
+    # 3. UNIFICAMOS TODO (Subtotal)
+    total_unificado = precio_base + comision_prod + flete_final_con_comision
+    
+    # 4. Sumamos comisión de Mercado Pago (aprox 4.5% para cubrir el costo del gateway)
+    # Así el cliente paga la comisión y tú recibes tus ganancias íntegras
+    total_pagar_final = round(total_unificado / (1 - 0.045), 2)
 
-    # 4. Total antes de comisiones de Mercado Pago
-    subtotal = precio_producto + comision_prod + flete_total
+    # 5. CONFIGURACIÓN DE MERCADO PAGO
+    sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817") # Asegúrate de usar tu Access Token real
 
-    # 5. Sumamos comisiones de MP (aprox 4.5% para cubrir todo)
-    total_final = round(subtotal / (1 - 0.045), 2)
+    preference_data = {
+        "items": [
+            {
+                "title": f"{producto.title} (Incluye gestión y flete)",
+                "quantity": 1,
+                "unit_price": total_pagar_final,
+                "currency_id": "MXN",
+            }
+        ],
+        "back_urls": {
+            "success": request.build_absolute_uri('/pago-exitoso/'),
+            "failure": request.build_absolute_uri('/pago-fallido/'),
+            "pending": request.build_absolute_uri('/pago-pendiente/'),
+        },
+        "auto_return": "approved",
+        "binary_mode": True, # Para que sea aprobado o rechazado de inmediato
+    }
 
-    # ... Aquí va el código de Mercado Pago que ya tienes ...
-    # Asegúrate de pasar 'total_final' a la preferencia
+    preference_response = sdk.preference().create(preference_data)
+    preference = preference_response["response"]
 
+    # 6. RESPUESTA AL JAVASCRIPT
     return JsonResponse({
-        'preference_id': preference_response["response"]["id"],
-        'total_final': f"{total_final:,.2f}" # Enviamos el número formateado
+        'preference_id': preference["id"],
+        'total_final': f"{total_pagar_final:,.2f}" # Formateado con comas para el HTML
     })
-
 # ==========================================
 # 1. PERFIL (Corregido con tus 2 formularios)
 # ==========================================
@@ -497,6 +523,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
