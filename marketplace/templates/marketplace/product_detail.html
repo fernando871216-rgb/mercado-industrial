@@ -111,7 +111,7 @@
         const bricksBuilder = mp.bricks();
         if (walletBrickController) walletBrickController.unmount();
         walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { preferenceId: preferenceId, redirectMode: "modal" },
+            initialization: { preferenceId: preferenceId, redirectMode: "self" },
         });
     }
 
@@ -175,3 +175,4 @@
     }
 </script>
 {% endblock %}
+
