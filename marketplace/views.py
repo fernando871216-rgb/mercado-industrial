@@ -66,7 +66,7 @@ def generar_preferencia_pago(request, producto_id):
         "back_urls": {
             # --- CORRECCIÓN AQUÍ ---
             # Antes decía 'product.id', debe decir 'producto.id' (con 'o' al final)
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/'),
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/'),
         },
@@ -448,32 +448,38 @@ def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
+    
+    # Capturamos el flete que ahora sí viene en la URL
+    try:
+        flete_con_comision = float(request.GET.get('envio', 0))
+    except:
+        flete_con_comision = 0
 
     if status_mp == 'approved':
-        # RECUPERAMOS LOS CÁLCULOS DE COMISIÓN (Igual que en generar_preferencia)
-        try:
-            flete_bruto = float(request.GET.get('envio', 0)) # Mercado Pago lo devuelve en la URL si lo enviamos
-        except:
-            flete_bruto = 0
+        # Cálculo de comisiones
+        # Ganancia del producto (5%)
+        ganancia_prod = float(producto.price) * 0.05
+        # Ganancia del flete (tu 8% ya viene incluido en el flete_con_comision que calculamos antes)
+        # O si prefieres calcularlo sobre el flete bruto aquí:
+        ganancia_flete = flete_con_comision * 0.074 # (Este ajuste es porque el flete ya trae tu 8% encima)
+        
+        total_ganancia_neta = ganancia_prod + ganancia_flete
 
-        ganancia_flete = flete_bruto * 0.08
-        ganancia_producto = float(producto.price) * 0.05
-        total_ganancia_initre = ganancia_flete + ganancia_producto
-
-        venta, created = Sale.objects.get_or_create(
-            product=producto,
-            buyer=request.user,
-            payment_id=payment_id,
+        venta, created = Sale.objects.update_or_create(
+            payment_id=payment_id, # Buscamos por el ID de pago de MP
             defaults={
+                'product': producto,
+                'buyer': request.user,
                 'seller': producto.user,
                 'amount': float(producto.price),
-                'ganancia_neta': total_ganancia_initre, # <--- GUARDAMOS TU GANANCIA
+                'ganancia_neta': total_ganancia_neta,
                 'status': 'approved',
                 'created_at': timezone.now()
             }
         )
         
-        if producto.stock > 0:
+        # Solo bajamos el stock si la venta es nueva
+        if created and producto.stock > 0:
             producto.stock -= 1
             producto.save()
 
@@ -547,6 +553,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
