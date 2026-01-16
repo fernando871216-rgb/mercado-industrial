@@ -6,29 +6,16 @@
             <div class="card p-4 shadow-sm">
                 <h3>Resumen de tu compra</h3>
                 <hr>
-                <div class="d-flex align-items-center">
-                    {% if producto.image %}
-                        <img src="{{ producto.image.url }}" width="100" class="img-fluid rounded" alt="{{ producto.title }}">
-                    {% endif %}
-                    <div class="ms-3">
-                        <h5>{{ producto.title }}</h5>
-                        <p class="text-muted">Precio base: ${{ producto.price }} MXN</p>
-                    </div>
-                </div>
-                
-                <hr>
                 <h5>Selecciona el método de entrega</h5>
                 
                 <div class="form-check mt-3">
-                    <input class="form-check-input" type="radio" name="envio" id="recoger" value="0" checked 
-                           onchange="actualizarPreferencia(this.value)">
-                    <label class="form-check-label" for="recoger">Recoger en sucursal (Gratis)</label>
+                    <input class="form-check-input" type="radio" name="envio_radio" id="envio1" value="0" checked onclick="actualizarPreferencia(this.value)">
+                    <label class="form-check-label" for="envio1">Recoger en sucursal ($0.00)</label>
                 </div>
                 
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="envio" id="soloenvios" value="150" 
-                           onchange="actualizarPreferencia(this.value)">
-                    <label class="form-check-label" for="soloenvios">Envío a domicilio (SoloEnvios) - $150.00 MXN</label>
+                    <input class="form-check-input" type="radio" name="envio_radio" id="envio2" value="150" onclick="actualizarPreferencia(this.value)">
+                    <label class="form-check-label" for="envio2">Envío a domicilio ($150.00)</label>
                 </div>
             </div>
         </div>
@@ -36,7 +23,7 @@
         <div class="col-md-4">
             <div class="card p-4 shadow-sm border-primary">
                 <h4 class="text-center">Total a pagar</h4>
-                <h2 class="text-center text-primary fw-bold" id="total-display">Calculando...</h2>
+                <h2 class="text-center text-primary fw-bold" id="total-display">$ {{ producto.price }}</h2>
                 <hr>
                 <div id="wallet_container"></div>
             </div>
@@ -46,30 +33,30 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
+    // Inicialización del SDK
     const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
 
-    function actualizarPreferencia(costoEnvio) {
-        console.log("Cambiando flete a:", costoEnvio); // Esto saldrá en la consola (F12)
+    function actualizarPreferencia(monto) {
+        console.log("Iniciando actualización con monto:", monto);
         
         const display = document.getElementById('total-display');
         const container = document.getElementById('wallet_container');
         
-        display.innerText = 'Actualizando...';
-        container.innerHTML = '<p class="text-center small">Generando nueva orden...</p>';
-        
-        // Añadimos un timestamp para evitar que el navegador guarde la respuesta vieja
-        const timestamp = new Date().getTime();
-        const url = `/generar-preferencia/{{ producto.id }}/?envio=${costoEnvio}&t=${timestamp}`;
+        // 1. Cambiamos el texto inmediatamente para saber que el clic funcionó
+        display.innerText = 'Calculando...';
+        container.innerHTML = 'Cargando botón...';
 
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Error en servidor Django');
-                return response.json();
-            })
+        // 2. Llamada a Django
+        // Usamos la URL que definimos en urls.py
+        fetch('/generar-preferencia/{{ producto.id }}/?envio=' + monto)
+            .then(response => response.json())
             .then(data => {
-                console.log("Datos recibidos de Django:", data);
-                display.innerText = '$' + data.total_final + ' MXN';
+                console.log("Respuesta de Django:", data);
+                
+                // 3. Actualizamos el número con lo que nos diga Django
+                display.innerText = '$' + data.total_final;
 
+                // 4. Re-creamos el botón de Mercado Pago
                 container.innerHTML = '';
                 mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
@@ -78,15 +65,14 @@
                 });
             })
             .catch(error => {
-                console.error('Error detallado:', error);
-                display.innerText = 'Error';
-                container.innerHTML = '<p class="text-danger">Error al conectar. Intenta de nuevo.</p>';
+                console.error('Error en el fetch:', error);
+                display.innerText = 'Error de conexión';
             });
     }
 
-    // Carga inicial
-    document.addEventListener('DOMContentLoaded', () => {
+    // Ejecutar una vez al cargar
+    window.onload = function() {
         actualizarPreferencia(0);
-    });
+    };
 </script>
 {% endblock %}
