@@ -70,7 +70,7 @@ class ProductForm(forms.ModelForm):
         model = IndustrialProduct
         fields = [
             'title', 'brand', 'part_number', 'description', 'price', 
-            'stock', 'category', 'image', 'peso', 'largo', 'ancho', 'alto', 'cp_origen'
+            'stock', 'category', 'image','image2', 'image3', 'peso', 'largo', 'ancho', 'alto', 'cp_origen'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -96,4 +96,5 @@ class UserUpdateForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+
 
