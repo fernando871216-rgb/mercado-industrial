@@ -437,7 +437,8 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
 @csrf_exempt
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
-    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" # Pon tu token real aquí
+    # Pon tu Token Real aquí
+    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
 
     if payment_id:
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
@@ -456,34 +457,47 @@ def mercadopago_webhook(request):
                         producto_id = parts[0]
                         comprador_id = parts[1]
                         
-                        # --- CAMBIO AQUÍ: Quitamos payment_id de la búsqueda ---
-                        # Buscamos si ya existe para evitar duplicados, pero por ahora
-                        # sin usar el campo que da error.
                         from .models import Sale, IndustrialProduct, User
                         from decimal import Decimal
+                        from django.utils import timezone
+                        from datetime import timedelta
 
                         producto = IndustrialProduct.objects.get(id=producto_id)
                         comprador = User.objects.get(id=comprador_id)
                         monto = Decimal(str(data.get('transaction_amount')))
                         
-                        # Creamos la venta (SIN el campo payment_id para que no falle)
-                        nueva_venta = Sale.objects.create(
-                            product=producto,
-                            buyer=comprador,
-                            price=monto,
-                            status='approved'
-                        )
-                        
-                        if producto.stock > 0:
-                            producto.stock -= 1
-                            producto.save()
+                        # --- VALIDACIÓN ANTI-DUPLICADOS TEMPORAL ---
+                        # Si ya existe una venta de ESTE usuario y ESTE producto 
+                        # creada en los últimos 60 segundos, la ignoramos.
+                        hace_un_minuto = timezone.now() - timedelta(seconds=60)
+                        venta_reciente = Sale.objects.filter(
+                            product=producto, 
+                            buyer=comprador, 
+                            created_at__gte=hace_un_minuto
+                        ).exists()
+
+                        if not venta_reciente:
+                            nueva_venta = Sale.objects.create(
+                                product=producto,
+                                buyer=comprador,
+                                price=monto,
+                                status='approved'
+                            )
                             
-                        print(f"NUEVA VENTA CREADA: {nueva_venta.id}")
+                            if producto.stock > 0:
+                                producto.stock -= 1
+                                producto.save()
+                                
+                            print(f"ÉXITO: Venta {nueva_venta.id} registrada correctamente.")
+                        else:
+                            print("AVISO: Notificación duplicada recibida, ignorando...")
             
         except Exception as e:
             print(f"Error en webhook: {e}")
 
+    # Muy importante: Siempre devolver 200 para que MP deje de enviar avisos
     return HttpResponse(status=200)
+
 
 
 
