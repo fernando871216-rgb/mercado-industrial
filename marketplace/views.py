@@ -31,14 +31,15 @@ def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
-        envio_val = float(request.GET.get('envio', 0))
+        costo_flete_base = float(request.GET.get('envio', 0))
     except:
-        envio_val = 0
-
+        costo_flete_base = 0
+    comision_flete_initre = costo_flete_base * 0.08
+    flete_con_ganancia = costo_flete_base + comision_flete_initre
     # Cálculos de precio con comisiones
     precio_base = float(producto.price)
-    comision_initre = precio_base * 0.05
-    subtotal = precio_base + comision_initre + envio_val
+    comision_producto_initre = precio_base * 0.05  
+    subtotal = precio_base + comision_producto_initre + flete_con_ganancia
     
     # Comisión MP (3.49% + $4 + IVA)
     comision_mp = (subtotal * 0.0349) + 4.0
@@ -519,6 +520,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
