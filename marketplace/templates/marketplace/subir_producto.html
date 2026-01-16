@@ -1,24 +1,29 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 40px auto; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+<div class="container" style="max-width: 900px; margin: 40px auto; font-family: 'Segoe UI', sans-serif; margin-bottom: 60px;">
+    <div style="background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid #eef2f7;">
         
-        <h2 style="color: #2c3e50; margin-bottom: 10px; text-align: center;">
-            <i class="fas fa-plus-circle" style="color: #3498db;"></i> Publicar Nuevo Equipo
-        </h2>
-        <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Completa los datos técnicos y de envío para tu producto.</p>
+        <div style="text-align: center; margin-bottom: 35px;">
+            <h2 style="color: #003366; font-weight: 800; margin-bottom: 10px;">
+                <i class="fas fa-rocket" style="color: #f39c12;"></i> Publicar Nuevo Equipo
+            </h2>
+            <p style="color: #7f8c8d; font-size: 1rem;">Optimiza tu venta completando la ficha técnica detallada</p>
+        </div>
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #3498db; display: inline-block;">1. Datos del Producto</h4>
-                <div style="display: grid; gap: 15px;">
+            <div style="background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #edf2f7; margin-bottom: 25px;">
+                <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 20px; border-left: 4px solid #f39c12; padding-left: 15px; font-weight: 700;">
+                    1. Información del Producto
+                </h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     {% for field in form %}
-                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' %}
-                            <div>
-                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #34495e;">{{ field.label }}</label>
+                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' and field.name != 'image' and field.name != 'image2' and field.name != 'image3' %}
+                            <div style="{% if field.name == 'title' or field.name == 'description' %}grid-column: span 2;{% endif %}">
+                                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">{{ field.label }}</label>
                                 {{ field }}
                             </div>
                         {% endif %}
@@ -26,61 +31,98 @@
                 </div>
             </div>
 
-            <div style="background: #eef7ff; padding: 25px; border-radius: 12px; border: 1px solid #3498db; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #003366; margin-bottom: 15px;"><i class="fas fa-money-bill-wave"></i> 2. Precio y Ganancias</h4>
+            <div style="background: #eef7ff; padding: 30px; border-radius: 15px; border: 1px solid #3498db; margin-bottom: 25px;">
+                <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 20px; font-weight: 700;">
+                    <i class="fas fa-money-bill-wave" style="color: #27ae60;"></i> 2. Configuración de Precio
+                </h4>
                 
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #003366;">Precio de Venta (MXN)</label>
-                    <input type="number" name="price" id="id_price" step="0.01" class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 12px; border: 2px solid #3498db; border-radius: 8px; font-size: 1.1rem; font-weight: bold;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 10px; color: #003366;">Precio de Venta Sugerido (MXN)</label>
+                    <input type="number" name="price" id="id_price" step="0.01" class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 15px; border: 2px solid #3498db; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: #2c3e50;">
                 </div>
 
-                <div id="desglose_comisiones" style="background: white; padding: 15px; border-radius: 10px; font-size: 0.9rem; color: #555;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div id="desglose_comisiones" style="background: white; padding: 20px; border-radius: 12px; font-size: 0.95rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span>Comisión Mercado Pago (3.49% + $4 + IVA):</span>
                         <span id="calc_mp" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span>Comisión Plataforma INITRE (5%):</span>
                         <span id="calc_initre" style="color: #e74c3c; font-weight: bold;">-$0.00</span>
                     </div>
-                    <hr style="border: 0; border-top: 1px solid #eee;">
-                    <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #27ae60; font-weight: bold;">
-                        <span>Tú recibes aproximadamente:</span>
+                    <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #27ae60; font-weight: 800;">
+                        <span>Tu Ganancia Estimada:</span>
                         <span id="calc_total">$0.00</span>
                     </div>
                 </div>
             </div>
 
-            <div style="background: #fff9eb; padding: 20px; border-radius: 12px; border: 1px solid #f39c12; margin-bottom: 25px;">
-                <h4 style="font-size: 1rem; color: #a04000; margin-bottom: 15px;"><i class="fas fa-truck"></i> 3. Información de Envío</h4>
-                <p style="font-size: 0.8rem; color: #a04000; margin-bottom: 15px;">Estos datos se usan para que el cliente cotice el envío real por paquetería.</p>
+            <div style="background: #fff9eb; padding: 25px; border-radius: 15px; border: 1px solid #f39c12; margin-bottom: 25px;">
+                <h4 style="font-size: 1.1rem; color: #a04000; margin-bottom: 10px; font-weight: 700;">
+                    <i class="fas fa-truck-loading"></i> 3. Dimensiones para Flete
+                </h4>
+                <p style="font-size: 0.85rem; color: #856404; margin-bottom: 20px;">Indica medidas precisas para evitar ajustes de costo en paquetería.</p>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <label style="font-weight: bold; font-size: 0.8rem;">Código Postal Origen</label>
-                        <input type="text" name="cp_origen" id="id_cp_origen" class="form-control" placeholder="Ej: 72000" maxlength="5" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                        <label style="font-weight: 600; font-size: 0.9rem; color: #34495e;">Código Postal Origen</label>
+                        <input type="text" name="cp_origen" id="id_cp_origen" required class="form-control" placeholder="72000" maxlength="5" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
                     </div>
                     <div>
-                        <label style="font-weight: bold; font-size: 0.8rem;">Peso (Kg)</label>
-                        <input type="number" name="peso" id="id_peso" step="0.1" class="form-control" placeholder="Kg" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                        <label style="font-weight: 600; font-size: 0.9rem; color: #34495e;">Peso Total (Kg)</label>
+                        <input type="number" name="peso" id="id_peso" step="0.1" required class="form-control" placeholder="Peso en Kg" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;">
-                    <div><label style="font-size: 0.7rem;">Largo (cm)</label><input type="number" name="largo" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
-                    <div><label style="font-size: 0.7rem;">Ancho (cm)</label><input type="number" name="ancho" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
-                    <div><label style="font-size: 0.7rem;">Alto (cm)</label><input type="number" name="alto" placeholder="cm" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;">
+                    <div><label style="font-size: 0.8rem; font-weight: 600;">Largo (cm)</label><input type="number" name="largo" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
+                    <div><label style="font-size: 0.8rem; font-weight: 600;">Ancho (cm)</label><input type="number" name="ancho" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
+                    <div><label style="font-size: 0.8rem; font-weight: 600;">Alto (cm)</label><input type="number" name="alto" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
                 </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
-                PUBLICAR PRODUCTO AHORA
+            <div style="background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #edf2f7; margin-bottom: 35px;">
+                <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 20px; font-weight: 700;">
+                    <i class="fas fa-images"></i> 4. Galería de Fotos (Máx. 3)
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div style="text-align: center; border: 2px dashed #3498db; border-radius: 15px; padding: 15px; transition: 0.3s;" id="box1">
+                        <label style="cursor: pointer; display: block;">
+                            <i class="fas fa-camera fa-2x" style="color: #3498db; margin-bottom: 10px;"></i>
+                            <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #7f8c8d;">PORTADA</span>
+                            <input type="file" name="image" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box1', 'txt1')">
+                            <small id="txt1" style="color: #27ae60; font-size: 0.65rem;"></small>
+                        </label>
+                    </div>
+                    <div style="text-align: center; border: 2px dashed #cbd5e0; border-radius: 15px; padding: 15px;" id="box2">
+                        <label style="cursor: pointer; display: block;">
+                            <i class="fas fa-image fa-2x" style="color: #cbd5e0; margin-bottom: 10px;"></i>
+                            <span style="display: block; font-size: 0.75rem; color: #7f8c8d;">FOTO 2</span>
+                            <input type="file" name="image2" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box2', 'txt2')">
+                            <small id="txt2" style="color: #27ae60; font-size: 0.65rem;"></small>
+                        </label>
+                    </div>
+                    <div style="text-align: center; border: 2px dashed #cbd5e0; border-radius: 15px; padding: 15px;" id="box3">
+                        <label style="cursor: pointer; display: block;">
+                            <i class="fas fa-image fa-2x" style="color: #cbd5e0; margin-bottom: 10px;"></i>
+                            <span style="display: block; font-size: 0.75rem; color: #7f8c8d;">FOTO 3</span>
+                            <input type="file" name="image3" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box3', 'txt3')">
+                            <small id="txt3" style="color: #27ae60; font-size: 0.65rem;"></small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" style="width: 100%; background: #003366; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 1.3rem; font-weight: 800; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 20px rgba(0,51,102,0.2);">
+                <i class="fas fa-cloud-upload-alt"></i> PUBLICAR PRODUCTO AHORA
             </button>
         </form>
     </div>
 </div>
 
 <script>
+    // Tu lógica original de cálculos
     const priceInput = document.getElementById('id_price');
     const calcMp = document.getElementById('calc_mp');
     const calcInitre = document.getElementById('calc_initre');
@@ -88,23 +130,25 @@
 
     priceInput.addEventListener('input', function() {
         const price = parseFloat(this.value) || 0;
-        
-        // 1. Calcular Mercado Pago (3.49% + $4 + IVA sobre la comisión)
         const comisionMP = price * 0.0349;
         const fijo = 4;
         const iva = (comisionMP + fijo) * 0.16;
         const totalMP = comisionMP + fijo + iva;
-
-        // 2. Calcular Comisión INITRE (5%)
         const totalInitre = price * 0.05;
-
-        // 3. Calcular lo que recibe el vendedor
         const neto = price - totalMP - totalInitre;
 
-        // Mostrar resultados
         calcMp.innerText = `-$${totalMP.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         calcInitre.innerText = `-$${totalInitre.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         calcTotal.innerText = `$${(neto > 0 ? neto : 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     });
+
+    // Función estética para las fotos
+    function previewUpload(input, boxId, txtId) {
+        if (input.files && input.files[0]) {
+            document.getElementById(boxId).style.borderColor = "#27ae60";
+            document.getElementById(boxId).style.background = "#f0fff4";
+            document.getElementById(txtId).innerText = "✅ Cargada";
+        }
+    }
 </script>
 {% endblock %}
