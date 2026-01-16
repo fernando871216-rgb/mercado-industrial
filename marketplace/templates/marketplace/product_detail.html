@@ -5,13 +5,27 @@
     <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         
         <div style="flex: 1; min-width: 300px;">
-            <div style="text-align: center; margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 15px; background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 350px; display: flex; align-items: center; justify-content: center;">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.title }}" style="width: 100%; max-width: 400px; border-radius: 10px; border: 1px solid #eee;">
+                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.3s;">
                 {% else %}
-                    <div style="width: 100%; height: 250px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
                     </div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #003366; transition: 0.2s;" class="thumb">
+                {% endif %}
+                
+                {% if product.image2 %}
+                    <img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
+                {% endif %}
+                
+                {% if product.image3 %}
+                    <img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
                 {% endif %}
             </div>
             
@@ -56,22 +70,17 @@
             </div>
 
             <div id="wallet_container" style="min-height: 50px;"></div>
-            <div id="wallet_container" style="min-height: 50px;"></div>
 
             <div style="margin-top: 20px; padding: 15px; background-color: #f0f7ff; border: 1px solid #d0e3ff; border-radius: 10px; display: flex; align-items: flex-start; gap: 12px;">
-                
-            <i class="fas fa-info-circle" style="color: #0056b3; margin-top: 3px;"></i>
-            <p style="margin: 0; font-size: 0.88rem; color: #004085; line-height: 1.4;">
-        Al cotizar y seleccionar precio de <strong>FLETE</strong>, el sistema actualiza el total a pagar automáticamente ya con flete incluido. Administración se pondrá en contacto para solicitar datos de envío. O puede acordar el flete con el vendedor.
-    </p>
-</div>
+                <i class="fas fa-info-circle" style="color: #0056b3; margin-top: 3px;"></i>
+                <p style="margin: 0; font-size: 0.88rem; color: #004085; line-height: 1.4;">
+                    Al cotizar y seleccionar precio de <strong>FLETE</strong>, el sistema actualiza el total a pagar automáticamente con flete incluido. Administración se pondrá en contacto para solicitar datos de envío.
+                </p>
+            </div>
 
-<p style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 15px;">
-    <i class="fas fa-shield-alt"></i> Pago procesado de forma segura por Mercado Pago
-</p>
-            
-            <p style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 15px;">
-                <i class="fas fa-shield-alt"></i> No es necesaria una cuenta con mercado Pago para realizar su pago
+            <p style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 20px;">
+                <i class="fas fa-shield-alt"></i> Pago procesado de forma segura por Mercado Pago<br>
+                No es necesaria una cuenta de Mercado Pago para realizar su pago.
             </p>
         </div>
     </div>
@@ -79,6 +88,22 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
+    // --- LÓGICA DE GALERÍA ---
+    function changeImage(src) {
+        const mainImg = document.getElementById('mainImage');
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+            mainImg.src = src;
+            mainImg.style.opacity = '1';
+        }, 200);
+
+        // Actualizar bordes de miniaturas
+        const thumbs = document.querySelectorAll('.thumb');
+        thumbs.forEach(t => t.style.borderColor = '#eee');
+        event.target.style.borderColor = '#003366';
+    }
+
+    // --- LÓGICA DE MERCADO PAGO ---
     const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
     let walletBrickController = null;
 
@@ -90,7 +115,6 @@
         });
     }
 
-    // Carga inicial
     renderMP("{{ preference_id }}");
 
     function cotizarFlete() {
@@ -111,8 +135,6 @@
                     data.tarifas.forEach(t => {
                         const item = document.createElement('div');
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f1f1; cursor: pointer;";
-                        
-                        // Enviamos el precio para que el servidor le sume tu 8%
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
 
                         item.innerHTML = `
@@ -126,7 +148,7 @@
                     });
                     lista.style.display = 'block';
                 } else {
-                    alert("Lo sentimos, no hay tarifas disponibles para este CP.");
+                    alert("No hay tarifas disponibles para este CP.");
                 }
             })
             .finally(() => {
@@ -144,19 +166,12 @@
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "4px solid #38a169";
 
-        // --- CORRECCIÓN CLAVE ---
-        // Cambiamos /actualizar-pago/ por la ruta correcta de tu urls.py
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
             .then(res => res.json())
             .then(data => {
-                // El servidor devuelve el preferenceId con el precio unificado (Flete + 8%)
-                if (data.preference_id) {
-                    renderMP(data.preference_id);
-                }
+                if (data.preference_id) renderMP(data.preference_id);
             })
-            .catch(error => console.error("Error al actualizar preferencia:", error));
+            .catch(error => console.error("Error:", error));
     }
 </script>
 {% endblock %}
-
-
