@@ -442,7 +442,8 @@ def marcar_como_pagado(request, venta_id):
     
     # Después de pagar, regresamos al panel
     return redirect('panel_administrador')
-
+    
+@login_required
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
@@ -542,6 +543,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
