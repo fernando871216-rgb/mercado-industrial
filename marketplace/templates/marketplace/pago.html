@@ -14,8 +14,8 @@
                 </div>
                 
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="envio_radio" id="envio2" value="150" onclick="actualizarPreferencia(this.value)">
-                    <label class="form-check-label" for="envio2">Envío a domicilio ($150.00)</label>
+                    <input class="form-check-input" type="radio" name="envio_radio" id="envio2" value="140.52" onclick="actualizarPreferencia(this.value)">
+                    <label class="form-check-label" for="envio2">Envío a domicilio ($140.52)</label>
                 </div>
             </div>
         </div>
@@ -33,30 +33,28 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // Inicialización del SDK
     const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
 
     function actualizarPreferencia(monto) {
-        console.log("Iniciando actualización con monto:", monto);
-        
         const display = document.getElementById('total-display');
         const container = document.getElementById('wallet_container');
         
-        // 1. Cambiamos el texto inmediatamente para saber que el clic funcionó
         display.innerText = 'Calculando...';
-        container.innerHTML = 'Cargando botón...';
+        container.innerHTML = 'Actualizando botón...';
 
-        // 2. Llamada a Django
-        // Usamos la URL que definimos en urls.py
-        fetch(`/generar-preferencia/{{ producto.id }}/?envio=${costoEnvio}`)
-            .then(response => response.json())
+        // USAMOS LA ETIQUETA URL DE DJANGO PARA EVITAR EL 404
+        const urlBase = "{% url 'generar_preferencia_pago' producto.id %}";
+        const urlFinal = `${urlBase}?envio=${monto}`;
+
+        console.log("Llamando a:", urlFinal);
+
+        fetch(urlFinal)
+            .then(response => {
+                if (!response.ok) throw new Error('Error 404: La ruta no existe en urls.py');
+                return response.json();
+            })
             .then(data => {
-                console.log("Respuesta de Django:", data);
-                
-                // 3. Actualizamos el número con lo que nos diga Django
-                display.innerText = '$' + data.total_final;
-
-                // 4. Re-creamos el botón de Mercado Pago
+                display.innerText = '$' + data.total_final + ' MXN';
                 container.innerHTML = '';
                 mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
@@ -65,15 +63,14 @@
                 });
             })
             .catch(error => {
-                console.error('Error en el fetch:', error);
+                console.error('Error:', error);
                 display.innerText = 'Error de conexión';
+                container.innerHTML = '<p class="text-danger small">Error 404: Verifica tu archivo urls.py</p>';
             });
     }
 
-    // Ejecutar una vez al cargar
     window.onload = function() {
         actualizarPreferencia(0);
     };
 </script>
 {% endblock %}
-
