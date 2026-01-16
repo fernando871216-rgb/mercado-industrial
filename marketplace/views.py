@@ -443,37 +443,31 @@ def marcar_como_pagado(request, venta_id):
     # Después de pagar, regresamos al panel
     return redirect('panel_administrador')
     
-@login_required
+login_required
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    
-    # Capturamos los datos que Mercado Pago envía en la URL al regresar
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
 
-    # 1. Verificamos si el pago es aprobado
     if status_mp == 'approved':
-        # 2. Creamos el registro de la venta si no existe ya (para evitar duplicados)
-        # Esto asegura que la venta se registre en tu base de datos
         venta, created = Sale.objects.get_or_create(
             product=producto,
             buyer=request.user,
-            payment_id=payment_id, # Guardamos el ID de Mercado Pago para aclaraciones
+            payment_id=payment_id,
             defaults={
                 'seller': producto.user,
-                'amount': producto.price, # El precio base
+                'amount': producto.price,
                 'status': 'approved',
                 'created_at': timezone.now()
             }
         )
-        
-        # Opcional: Si quieres que el producto ya no aparezca disponible
-         producto.stock -= 1
-         producto.save()
+        # Estas líneas ahora están bien alineadas:
+        if producto.stock > 0:
+            producto.stock -= 1
+            producto.save()
 
         mostrar_contacto = True
     else:
-        # Si por alguna razón no es approved, revisamos si ya se había confirmado antes
         mostrar_contacto = Sale.objects.filter(product=producto, buyer=request.user, status='approved').exists()
 
     return render(request, 'marketplace/pago_exitoso.html', {
@@ -543,6 +537,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
