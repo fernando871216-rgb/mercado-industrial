@@ -34,7 +34,7 @@ class IndustrialProductAdmin(admin.ModelAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone', 'banco', 'clabe', 'beneficiario', 'get_address')
-    search_fields = ('user__username', 'clabe', 'phone', 'address')
+    search_fields = ('user__username', 'clabe', 'phone', 'address', 'beneficiario')
     def get_address(self, obj):
         return obj.address
     
@@ -61,6 +61,7 @@ class SaleAdmin(admin.ModelAdmin):
     # Buscador por nombre de producto o comprador
     readonly_fields = ('created_at',)
     search_fields = ('product__title', 'buyer__username')
+
 
 
 
