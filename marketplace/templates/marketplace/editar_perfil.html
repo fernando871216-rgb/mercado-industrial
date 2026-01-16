@@ -56,25 +56,37 @@
 
                 <div style="margin-bottom: 30px;">
                     <h3 style="color: #003366; font-size: 1rem; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid #f4f7f6; padding-bottom: 5px;">
-                        <i class="fas fa-truck"></i> Ventas y Envíos
+                        <i class="fas fa-university"></i> Ventas y Datos de Cobro
                     </h3>
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="label-style">Teléfono de Contacto</label>
-                        {{ p_form.phone }}
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label class="label-style">Teléfono de Contacto</label>
+                            {{ p_form.phone }}
+                        </div>
+                        <div class="form-group">
+                            <label class="label-style">CLABE Interbancaria (18 dígitos)</label>
+                            {{ p_form.clabe }}
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="label-style">Dirección Completa (Para recolección/envío)</label>
-                        {{ p_form.address }}
+
+                    <div class="form-group" style="margin-bottom: 15px; background: #fff9eb; padding: 15px; border-radius: 10px; border: 1px solid #f39c12;">
+                        <label class="label-style" style="color: #a04000;"><i class="fas fa-id-card"></i> Nombre del Beneficiario</label>
+                        {{ p_form.beneficiario }}
+                        <p style="font-size: 0.75rem; color: #a04000; margin-top: 5px; margin-bottom: 0;">
+                            * Debe coincidir exactamente con el titular de la cuenta CLABE.
+                        </p>
                     </div>
+
                     <div class="form-group">
-                        <label class="label-style">CLABE Interbancaria (Para recibir tus pagos)</label>
-                        {{ p_form.clabe }}
+                        <label class="label-style">Dirección Completa (Para recolección de equipos)</label>
+                        {{ p_form.address }}
                     </div>
                 </div>
 
                 <div style="text-align: center; margin-top: 30px;">
                     <button type="submit" class="btn-submit">
-                        GUARDAR CAMBIOS
+                        <i class="fas fa-save"></i> GUARDAR CAMBIOS
                     </button>
                     <a href="{% url 'home' %}" style="display: block; margin-top: 15px; color: #718096; text-decoration: none; font-size: 0.9rem;">
                         Volver al inicio
@@ -89,7 +101,7 @@
     /* Reset de box-sizing */
     * { box-sizing: border-box; }
 
-    /* Grid responsiva: 2 columnas en PC, 1 en Celular */
+    /* Grid responsiva */
     .grid-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -114,14 +126,15 @@
         font-size: 0.85rem;
     }
 
-    /* Estilo para los inputs que genera Django y los manuales */
-    input[type="text"], input[type="email"], textarea, select {
+    /* Estilo para los inputs de Django */
+    input[type="text"], input[type="email"], input[type="number"], textarea, select {
         width: 100% !important;
         padding: 12px !important;
         border: 1px solid #cbd5e0 !important;
         border-radius: 8px !important;
         font-size: 1rem !important;
         outline: none;
+        background: white !important;
     }
 
     input:focus {
@@ -129,7 +142,6 @@
         box-shadow: 0 0 0 2px rgba(0,51,102,0.1);
     }
 
-    /* Estilo específico para el campo bloqueado */
     .input-readonly {
         background-color: #edf2f7 !important;
         color: #718096 !important;
@@ -156,7 +168,7 @@
     }
 
     textarea {
-        min-height: 100px;
+        min-height: 80px;
         resize: vertical;
     }
 </style>
