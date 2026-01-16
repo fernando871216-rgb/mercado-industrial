@@ -52,7 +52,7 @@
                 </div>
                 
                 <div id="lista-tarifas" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 8px; background: #fdfdfd;">
-                    </div>
+                </div>
             </div>
 
             <div id="wallet_container" style="min-height: 50px;"></div>
@@ -77,7 +77,7 @@
         });
     }
 
-    // Inicializar con el precio base del producto
+    // Carga inicial
     renderMP("{{ preference_id }}");
 
     function cotizarFlete() {
@@ -99,6 +99,7 @@
                         const item = document.createElement('div');
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f1f1; cursor: pointer;";
                         
+                        // Enviamos el precio para que el servidor le sume tu 8%
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
 
                         item.innerHTML = `
@@ -130,12 +131,17 @@
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "4px solid #38a169";
 
-        // Llamar a la vista que recalcula todo (Comisiones + Envío)
-        fetch(`/actualizar-pago/?id={{ product.id }}&envio=${precio}`)
+        // --- CORRECCIÓN CLAVE ---
+        // Cambiamos /actualizar-pago/ por la ruta correcta de tu urls.py
+        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
             .then(res => res.json())
             .then(data => {
-                if (data.preference_id) renderMP(data.preference_id);
-            });
+                // El servidor devuelve el preferenceId con el precio unificado (Flete + 8%)
+                if (data.preference_id) {
+                    renderMP(data.preference_id);
+                }
+            })
+            .catch(error => console.error("Error al actualizar preferencia:", error));
     }
 </script>
 {% endblock %}
