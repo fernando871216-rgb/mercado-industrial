@@ -447,25 +447,36 @@ def marcar_como_pagado(request, venta_id):
     # Después de pagar, regresamos al panel
     return redirect('panel_administrador')
     
-login_required
+@login_required
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
 
     if status_mp == 'approved':
+        # RECUPERAMOS LOS CÁLCULOS DE COMISIÓN (Igual que en generar_preferencia)
+        try:
+            flete_bruto = float(request.GET.get('envio', 0)) # Mercado Pago lo devuelve en la URL si lo enviamos
+        except:
+            flete_bruto = 0
+
+        ganancia_flete = flete_bruto * 0.08
+        ganancia_producto = float(producto.price) * 0.05
+        total_ganancia_initre = ganancia_flete + ganancia_producto
+
         venta, created = Sale.objects.get_or_create(
             product=producto,
             buyer=request.user,
             payment_id=payment_id,
             defaults={
                 'seller': producto.user,
-                'amount': producto.price,
+                'amount': float(producto.price),
+                'ganancia_neta': total_ganancia_initre, # <--- GUARDAMOS TU GANANCIA
                 'status': 'approved',
                 'created_at': timezone.now()
             }
         )
-        # Estas líneas ahora están bien alineadas:
+        
         if producto.stock > 0:
             producto.stock -= 1
             producto.save()
@@ -479,7 +490,6 @@ def pago_exitoso(request, producto_id):
         'mostrar_contacto': mostrar_contacto,
         'payment_id': payment_id
     })
-
 
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
     
@@ -541,6 +551,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
