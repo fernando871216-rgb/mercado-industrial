@@ -411,19 +411,15 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    # 1. Traemos las ventas aprobadas para las estadísticas
-    ventas_aprobadas = Sale.objects.filter(status='approved').select_related('product', 'buyer')
+    ventas_aprobadas = Sale.objects.filter(status='approved')
     
-    # 2. Cálculos para las estadísticas
     total_ventas_count = ventas_aprobadas.count()
     
-    # Sumamos el total de dinero que entró (usando el campo amount del modelo Sale)
-    # Si tu modelo usa otro nombre de campo para el dinero, cámbialo aquí:
-    ingresos_totales = sum(v.amount for v in ventas_aprobadas)
+    # SUMAMOS SOLO TU COMISIÓN NETA
+    from django.db.models import Sum
+    ingresos_totales = ventas_aprobadas.aggregate(Sum('ganancia_neta'))['ganancia_neta__sum'] or 0.00
     
-    # 3. Traemos todas las ventas para la tabla de abajo (incluyendo pendientes)
     ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
-    
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
@@ -551,6 +547,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
