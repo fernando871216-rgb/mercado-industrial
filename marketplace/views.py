@@ -442,22 +442,40 @@ def marcar_como_pagado(request, venta_id):
 
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
     
-    # Mercado Pago manda el estado en la URL como ?status=approved
+    # Capturamos los datos que Mercado Pago envía en la URL al regresar
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
-    
-    # 1. Primero revisamos si el status que viene en la URL es aprobado
-    # 2. Por si acaso, también revisamos si ya existe una venta registrada en nuestra base de datos
-    venta_confirmada = Sale.objects.filter(product=producto, buyer=request.user, status='approved').exists()
-    
-    mostrar_contacto = False
-    if status_mp == 'approved' or venta_confirmada:
-        mostrar_contacto = True
+    payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
+
+    # 1. Verificamos si el pago es aprobado
+    if status_mp == 'approved':
+        # 2. Creamos el registro de la venta si no existe ya (para evitar duplicados)
+        # Esto asegura que la venta se registre en tu base de datos
+        venta, created = Sale.objects.get_or_create(
+            product=producto,
+            buyer=request.user,
+            payment_id=payment_id, # Guardamos el ID de Mercado Pago para aclaraciones
+            defaults={
+                'seller': producto.user,
+                'amount': producto.price, # El precio base
+                'status': 'approved',
+                'created_at': timezone.now()
+            }
+        )
         
+        # Opcional: Si quieres que el producto ya no aparezca disponible
+         producto.stock -= 1
+         producto.save()
+
+        mostrar_contacto = True
+    else:
+        # Si por alguna razón no es approved, revisamos si ya se había confirmado antes
+        mostrar_contacto = Sale.objects.filter(product=producto, buyer=request.user, status='approved').exists()
+
     return render(request, 'marketplace/pago_exitoso.html', {
         'producto': producto,
-        'mostrar_contacto': mostrar_contacto
+        'mostrar_contacto': mostrar_contacto,
+        'payment_id': payment_id
     })
 
 
@@ -521,6 +539,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
