@@ -7,10 +7,12 @@
                 <h3>Resumen de tu compra</h3>
                 <hr>
                 <div class="d-flex align-items-center">
-                    <img src="{{ producto.image.url }}" width="100" class="img-fluid rounded" alt="{{ producto.title }}">
+                    {% if producto.image %}
+                        <img src="{{ producto.image.url }}" width="100" class="img-fluid rounded" alt="{{ producto.title }}">
+                    {% endif %}
                     <div class="ms-3">
                         <h5>{{ producto.title }}</h5>
-                        <p class="text-muted">Precio base: ${{ producto.price }} MXN</p>
+                        <p class="text-muted">Precio base del producto: ${{ producto.price }} MXN</p>
                     </div>
                 </div>
                 
@@ -19,7 +21,7 @@
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="radio" name="envio" id="recoger" value="0" checked onchange="actualizarPreferencia(0)">
                     <label class="form-check-label" for="recoger">
-                        Recoger en sucursal (Gratis)
+                        Recoger en sucursal (Sin costo de envío)
                     </label>
                 </div>
                 <div class="form-check">
@@ -28,18 +30,23 @@
                         Envío a domicilio (SoloEnvios) - $150.00 MXN
                     </label>
                 </div>
+                <p class="mt-3 small text-muted">* El precio final incluirá las comisiones de plataforma y gestión de pago.</p>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="card p-4 shadow-sm border-primary">
                 <h4 class="text-center">Total a pagar</h4>
-                <h2 class="text-center text-primary fw-bold" id="total-display">${{ total_final }}</h2>
-                <p class="text-center text-muted small">(Incluye comisiones e impuestos)</p>
+                <h2 class="text-center text-primary fw-bold" id="total-display">Calculando...</h2>
+                <p class="text-center text-muted small">(Incluye flete, comisiones e IVA)</p>
                 
                 <hr>
                 
                 <div id="wallet_container"></div>
+                
+                <div class="text-center mt-3">
+                    <img src="https://imgmp.mlstatic.com/resources/frontend/statics/ml-main-frontend/registration-da-gui/img/ml-logo.png" width="80" alt="Mercado Pago">
+                </div>
             </div>
         </div>
     </div>
@@ -47,33 +54,49 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // Inicializamos Mercado Pago con tu Public Key
+    // Inicializamos con tu Public Key
     const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
 
-    // Función para actualizar el botón cada vez que el usuario cambie el envío
     function actualizarPreferencia(costoEnvio) {
-        // Mostramos un mensaje de carga
-        document.getElementById('total-display').innerText = 'Cargando...';
+        const display = document.getElementById('total-display');
+        const container = document.getElementById('wallet_container');
         
-        // Llamamos a la función de Django que creamos antes
+        display.innerText = 'Actualizando...';
+        container.innerHTML = '<p class="text-center">Preparando pago...</p>';
+        
+        // El fetch debe coincidir con la URL en urls.py
         fetch(`/generar-preferencia/{{ producto.id }}/?envio=${costoEnvio}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Error en el servidor');
+                return response.json();
+            })
             .then(data => {
-                // Actualizamos el precio visual
-                document.getElementById('total-display').innerText = '$' + data.total_final;
+                // Actualizamos el precio con el formato que viene de Django
+                display.innerText = '$' + data.total_final + ' MXN';
 
-                // Limpiamos el contenedor del botón viejo y creamos el nuevo
-                document.getElementById('wallet_container').innerHTML = '';
+                // Limpiamos y recreamos el ladrillo de Mercado Pago
+                container.innerHTML = '';
                 mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
                         preferenceId: data.preference_id,
                     },
+                    customization: {
+                        texts: {
+                            valueProp: 'smart_option',
+                        },
+                    },
                 });
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                display.innerText = 'Error al calcular';
+                container.innerHTML = '<p class="text-danger text-center">Hubo un error al conectar con el sistema de pagos.</p>';
+            });
     }
 
-    // Cargamos el botón por primera vez (Sin envío por defecto)
-    actualizarPreferencia(0);
+    // Al cargar la página, se ejecuta la opción por defecto (0 pesos de envío)
+    document.addEventListener('DOMContentLoaded', () => {
+        actualizarPreferencia(0);
+    });
 </script>
 {% endblock %}
