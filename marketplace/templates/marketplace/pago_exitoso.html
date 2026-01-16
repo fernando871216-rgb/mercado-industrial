@@ -67,5 +67,13 @@
         }, 1000);
     </script>
 
+    <script>
+    // Después de 5 segundos, redirige automáticamente a Mis Compras
+    setTimeout(function(){
+        window.location.href = "{% url 'mis_compras' %}";
+    }, 5000);
+    </script>
+
 </body>
 </html>
+
