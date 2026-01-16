@@ -1,45 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm border-0 mb-4">
+                <h3 class="fw-bold">Resumen de compra</h3>
+                <hr>
+                <div class="d-flex align-items-center mb-4">
+                    {% if producto.image %}
+                        <img src="{{ producto.image.url }}" width="120" class="img-fluid rounded shadow-sm" alt="{{ producto.title }}">
+                    {% endif %}
+                    <div class="ms-4">
+                        <h5 class="fw-bold">{{ producto.title }}</h5>
+                        <p class="text-muted mb-0">Precio unitario: ${{ producto.price }} MXN</p>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mt-4">1. Opciones de entrega</h5>
+                <div class="form-check p-3 border rounded mb-2">
+                    <input class="form-check-input" type="radio" name="envio_opcion" id="recoger" value="0" checked onclick="seleccionarPaqueteria(0)">
+                    <label class="form-check-label w-100" for="recoger">
+                        <strong>Recoger en sucursal</strong> - Gratis
+                    </label>
+                </div>
+
+                <div id="contenedor-paqueterias" class="mt-3">
+                    </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm border-primary" style="position: sticky; top: 20px;">
+                <h4 class="text-center fw-bold">Total Unificado</h4>
+                <h2 class="text-center text-primary fw-bold my-3" id="total-display">$ {{ producto.price }}</h2>
+                <p class="text-center text-muted small">Incluye producto, gestión y flete con seguro.</p>
+                
+                <hr>
+                
+                <div id="wallet_container"></div>
+                
+                <div class="text-center mt-4">
+                    <img src="https://imgmp.mlstatic.com/resources/frontend/statics/ml-main-frontend/registration-da-gui/img/ml-logo.png" width="100" alt="Mercado Pago">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
+    // Inicializar Mercado Pago
     const mp = new MercadoPago('APP_USR-67803862-f286-4f48-a006-8d541571f308', { locale: 'es-MX' });
 
-    function actualizarPreferencia(montoFlete) {
-        const display = document.getElementById('total-display');
-        const container = document.getElementById('wallet_container');
+    /**
+     * Esta función es la que ARREGLA EL ERROR 404
+     * y unifica los precios con tu 8% de ganancia en el flete.
+     */
+    function seleccionarPaqueteria(costoFlete) {
+        console.log("Costo detectado:", costoFlete);
         
-        display.innerText = 'Calculando total...';
-        container.innerHTML = '<p>Actualizando pago...</p>';
+        const displayTotal = document.getElementById('total-display');
+        const walletContainer = document.getElementById('wallet_container');
 
-        // USAMOS LA RUTA QUE DJANGO SÍ CONOCE
-        // Esto evita el error 404 de /actualizar-pago/
-        const url = `/generar-preferencia/{{ producto.id }}/?envio=${montoFlete}`;
-        
-        console.log("Intentando conectar a:", url);
+        displayTotal.innerText = 'Calculando...';
+        walletContainer.innerHTML = '<p class="text-center small">Actualizando orden de pago...</p>';
+
+        // RUTA CORRECTA: /generar-preferencia/ (Evitamos /actualizar-pago/)
+        const url = `/generar-preferencia/{{ producto.id }}/?envio=${costoFlete}`;
 
         fetch(url)
             .then(response => {
-                if (!response.ok) throw new Error('No se encontró la ruta en el servidor');
+                if (!response.ok) throw new Error('Error 404: Ruta no encontrada');
                 return response.json();
             })
             .then(data => {
-                // Aquí ya viene el precio con tu 8% del flete sumado desde Python
-                display.innerText = '$' + data.total_final + ' MXN';
+                // Actualizamos el precio final en la pantalla
+                displayTotal.innerText = '$' + data.total_final + ' MXN';
 
-                container.innerHTML = '';
+                // Re-generamos el botón de Mercado Pago con el nuevo ID
+                walletContainer.innerHTML = '';
                 mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
                         preferenceId: data.preference_id,
                     },
+                    customization: {
+                        texts: { valueProp: 'smart_option' }
+                    }
                 });
             })
-            .catch(err => {
-                console.error("Error fatal:", err);
-                display.innerText = "Error 404";
-                container.innerHTML = '<p class="text-danger">Error: La ruta /actualizar-pago/ es vieja. Usa /generar-preferencia/</p>';
+            .catch(error => {
+                console.error('Error:', error);
+                displayTotal.innerText = 'Error';
+                walletContainer.innerHTML = '<div class="alert alert-danger small">Error de conexión con el servidor.</div>';
             });
     }
 
-    // Carga inicial al entrar a la página
+    // Carga inicial al abrir la página (Costo 0 por defecto)
     document.addEventListener('DOMContentLoaded', () => {
-        actualizarPreferencia(0); 
+        seleccionarPaqueteria(0);
     });
 </script>
+{% endblock %}
