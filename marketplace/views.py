@@ -23,6 +23,7 @@ from django.core.mail import send_mail
 from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
+from django.db.models import Sum
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -407,23 +408,26 @@ def crear_intencion_compra(request, product_id):
 
 @login_required
 def panel_administrador(request):
-    # Verificamos que sea staff o superusuario
     if not request.user.is_staff:
         return redirect('home')
 
-    # 1. Traemos las ventas (SOLO los campos que existen)
-    # Usamos .only() para obligar a Django a ignorar campos que den error
-    ventas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
-
-    # 2. Cálculos para las gráficas/estadísticas
-    total_ventas_count = ventas.count()
-    ingresos_totales = sum(v.price for v in ventas)
+    # 1. Traemos las ventas aprobadas para las estadísticas
+    ventas_aprobadas = Sale.objects.filter(status='approved').select_related('product', 'buyer')
     
-    # 3. Datos para los últimos productos (opcional)
+    # 2. Cálculos para las estadísticas
+    total_ventas_count = ventas_aprobadas.count()
+    
+    # Sumamos el total de dinero que entró (usando el campo amount del modelo Sale)
+    # Si tu modelo usa otro nombre de campo para el dinero, cámbialo aquí:
+    ingresos_totales = sum(v.amount for v in ventas_aprobadas)
+    
+    # 3. Traemos todas las ventas para la tabla de abajo (incluyendo pendientes)
+    ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
+    
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
-        'ventas': ventas,
+        'ventas': ventas_todas,
         'total_ventas_count': total_ventas_count,
         'ingresos_totales': ingresos_totales,
         'productos_recientes': productos_recientes,
@@ -537,6 +541,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
