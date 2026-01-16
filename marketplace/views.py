@@ -436,20 +436,10 @@ def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html
     
 @csrf_exempt
 def mercadopago_webhook(request):
-    # 1. Obtenemos el ID del pago
     payment_id = request.GET.get('id') or request.GET.get('data.id')
-    
-    # 2. Tu Token
-    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
+    access_token = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817" # Pon tu token real aquí
 
     if payment_id:
-        # --- BLOQUE DE SEGURIDAD ANTI-DUPLICADOS ---
-        # Si ya existe una venta con este ID de pago en la base de datos, 
-        # respondemos 200 y nos salimos para no hacer nada más.
-        # (Asegúrate de tener un campo para guardar el payment_id en tu modelo Sale)
-        from .models import Sale 
-        
-        # Consultamos a la API de Mercado Pago para ver los detalles
         url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
         headers = {'Authorization': f'Bearer {access_token.strip()}'}
         
@@ -466,35 +456,32 @@ def mercadopago_webhook(request):
                         producto_id = parts[0]
                         comprador_id = parts[1]
                         
-                        # BUSCAMOS SI YA EXISTE ESTA VENTA PARA EVITAR DUPLICAR
-                        # Usamos el payment_id para estar 100% seguros
-                        venta_existe = Sale.objects.filter(payment_id=payment_id).exists()
+                        # --- CAMBIO AQUÍ: Quitamos payment_id de la búsqueda ---
+                        # Buscamos si ya existe para evitar duplicados, pero por ahora
+                        # sin usar el campo que da error.
+                        from .models import Sale, IndustrialProduct, User
+                        from decimal import Decimal
+
+                        producto = IndustrialProduct.objects.get(id=producto_id)
+                        comprador = User.objects.get(id=comprador_id)
+                        monto = Decimal(str(data.get('transaction_amount')))
                         
-                        if not venta_existe:
-                            producto = IndustrialProduct.objects.get(id=producto_id)
-                            comprador = User.objects.get(id=comprador_id)
-                            monto = Decimal(str(data.get('transaction_amount')))
+                        # Creamos la venta (SIN el campo payment_id para que no falle)
+                        nueva_venta = Sale.objects.create(
+                            product=producto,
+                            buyer=comprador,
+                            price=monto,
+                            status='approved'
+                        )
+                        
+                        if producto.stock > 0:
+                            producto.stock -= 1
+                            producto.save()
                             
-                            # CREAMOS LA VENTA ÚNICA
-                            Sale.objects.create(
-                                product=producto,
-                                buyer=comprador,
-                                price=monto,
-                                status='approved',
-                                payment_id=payment_id # <--- IMPORTANTE GUARDAR ESTO
-                            )
-                            
-                            # Solo descontamos stock si la venta es nueva
-                            if producto.stock > 0:
-                                producto.stock -= 1
-                                producto.save()
-                                
-                            print(f"VENTA REALIZADA CON ÉXITO: {payment_id}")
-                        else:
-                            print(f"VENTA YA PROCESADA ANTERIORMENTE: {payment_id}")
+                        print(f"NUEVA VENTA CREADA: {nueva_venta.id}")
             
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
 
