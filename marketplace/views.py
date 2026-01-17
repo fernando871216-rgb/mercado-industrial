@@ -246,6 +246,7 @@ def mi_inventario(request):
 @login_required
 def subir_producto(request):
     if request.method == 'POST':
+        form = IndustrialProductForm(request.POST, request.FILES)
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
@@ -558,6 +559,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
