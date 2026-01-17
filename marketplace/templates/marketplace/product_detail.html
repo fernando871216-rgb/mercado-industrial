@@ -19,16 +19,23 @@
                 {% if product.image %}
                     <img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #003366; transition: 0.2s;" class="thumb">
                 {% endif %}
-                
                 {% if product.image2 %}
                     <img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
                 {% endif %}
-                
                 {% if product.image3 %}
                     <img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
                 {% endif %}
             </div>
             
+            {% if product.ficha_tecnica %}
+            <div style="margin-bottom: 20px; padding: 15px; background: #fff5f5; border: 2px dashed #e74c3c; border-radius: 10px; text-align: center;">
+                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.95rem;"><i class="fas fa-file-pdf" style="color: #e74c3c;"></i> Documentación Técnica</h5>
+                <a href="{{ product.ficha_tecnica.url }}" target="_blank" style="display: inline-block; background: #e74c3c; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+                    <i class="fas fa-download"></i> DESCARGAR FICHA TÉCNICA
+                </a>
+            </div>
+            {% endif %}
+
             <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #f39c12; margin-bottom: 15px;">
                 <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-microchip"></i> Especificaciones de Envío</h5>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; color: #444;">
@@ -44,20 +51,6 @@
                 <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Descripción del Equipo</h5>
                 <p style="font-size: 0.88rem; color: #555; line-height: 1.5; white-space: pre-line; margin: 0;">{{ product.description }}</p>
             </div>
-
-            {% if producto.ficha_tecnica %}
-            <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 1px dashed #003366;">
-                <h5 style="color: #003366; margin-top: 0;"><i class="fas fa-file-pdf"></i> Especificaciones Técnicas</h5>
-                <p style="font-size: 0.9rem; color: #666;">Consulta las dimensiones, capacidades y detalles técnicos oficiales de este equipo.</p>
-                <a href="{{ producto.ficha_tecnica.url }}" target="_blank" style="display: inline-block; background: #003366; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s;">
-                    <i class="fas fa-download"></i> Descargar Ficha Técnica (PDF)
-                </a>
-            </div>
-            {% else %}
-            <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 10px; color: #856404; font-size: 0.85rem;">
-                <i class="fas fa-info-circle"></i> Este vendedor no ha adjuntado una ficha técnica. Puedes solicitarla vía WhatsApp.
-            </div>
-            {% endif %}
         </div>
 
         <div style="flex: 1.2; min-width: 300px;">
@@ -88,13 +81,12 @@
             <div style="margin-top: 20px; padding: 15px; background-color: #f0f7ff; border: 1px solid #d0e3ff; border-radius: 10px; display: flex; align-items: flex-start; gap: 12px;">
                 <i class="fas fa-info-circle" style="color: #0056b3; margin-top: 3px;"></i>
                 <p style="margin: 0; font-size: 0.88rem; color: #004085; line-height: 1.4;">
-                    Al cotizar y seleccionar precio con <strong>FLETE</strong>, el sistema actualiza Total a pagar = Precio + Flete automáticamente y Administración se pondrá en contacto para solicitar datos de envío. Si encambio decide hacer el pago directo, usted acuerda el flete con el vendedor. La gestion de Flete en la plataforma genera 8% de comision sobre el monto del flete cotizado. 
+                    Al cotizar y seleccionar precio con <strong>FLETE</strong>, el sistema actualiza Total a pagar = Precio + Flete automáticamente.
                 </p>
             </div>
 
             <p style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 20px;">
-                <i class="fas fa-shield-alt"></i> Pago procesado de forma segura por Mercado Pago<br>
-                No es necesaria una cuenta de Mercado Pago para realizar su pago.
+                <i class="fas fa-shield-alt"></i> Pago procesado de forma segura por Mercado Pago
             </p>
         </div>
     </div>
@@ -102,7 +94,7 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // --- LÓGICA DE GALERÍA ---
+    // Tu lógica de galería
     function changeImage(src) {
         const mainImg = document.getElementById('mainImage');
         mainImg.style.opacity = '0';
@@ -110,14 +102,12 @@
             mainImg.src = src;
             mainImg.style.opacity = '1';
         }, 200);
-
-        // Actualizar bordes de miniaturas
         const thumbs = document.querySelectorAll('.thumb');
         thumbs.forEach(t => t.style.borderColor = '#eee');
         event.target.style.borderColor = '#003366';
     }
 
-    // --- LÓGICA DE MERCADO PAGO ---
+    // Tu lógica de Mercado Pago y Flete se mantiene igual debajo...
     const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
     let walletBrickController = null;
 
@@ -135,12 +125,9 @@
         const cp = document.getElementById('cp_destino').value;
         const btn = document.getElementById('btn-cotizar');
         const lista = document.getElementById('lista-tarifas');
-        
         if (!cp || cp.length < 5) return alert("Por favor ingresa un código postal válido");
-
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
-
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => {
@@ -150,7 +137,6 @@
                         const item = document.createElement('div');
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f1f1; cursor: pointer;";
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
-
                         item.innerHTML = `
                             <div style="font-size: 0.85rem;">
                                 <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
@@ -179,7 +165,6 @@
         }
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "4px solid #38a169";
-
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
             .then(res => res.json())
             .then(data => {
@@ -189,7 +174,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-
