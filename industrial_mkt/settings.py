@@ -88,9 +88,11 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': 'R_pVI8FdS2aQ411SJ0pM_fehj74',
     'RESOURCE_TYPES': ['image', 'raw', 'video'],
 }
-
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+import cloudinary_storage.storage
+cloudinary_storage.storage.RAW_AS_ATTACHMENT = True
+
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -115,6 +117,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
