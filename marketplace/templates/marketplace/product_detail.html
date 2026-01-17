@@ -44,6 +44,20 @@
                 <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Descripción del Equipo</h5>
                 <p style="font-size: 0.88rem; color: #555; line-height: 1.5; white-space: pre-line; margin: 0;">{{ product.description }}</p>
             </div>
+
+            {% if producto.ficha_tecnica %}
+            <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 1px dashed #003366;">
+                <h5 style="color: #003366; margin-top: 0;"><i class="fas fa-file-pdf"></i> Especificaciones Técnicas</h5>
+                <p style="font-size: 0.9rem; color: #666;">Consulta las dimensiones, capacidades y detalles técnicos oficiales de este equipo.</p>
+                <a href="{{ producto.ficha_tecnica.url }}" target="_blank" style="display: inline-block; background: #003366; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s;">
+                    <i class="fas fa-download"></i> Descargar Ficha Técnica (PDF)
+                </a>
+            </div>
+            {% else %}
+            <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 10px; color: #856404; font-size: 0.85rem;">
+                <i class="fas fa-info-circle"></i> Este vendedor no ha adjuntado una ficha técnica. Puedes solicitarla vía WhatsApp.
+            </div>
+            {% endif %}
         </div>
 
         <div style="flex: 1.2; min-width: 300px;">
@@ -175,6 +189,7 @@
     }
 </script>
 {% endblock %}
+
 
 
 
