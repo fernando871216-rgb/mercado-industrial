@@ -7,14 +7,77 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f4f7f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 40px; text-align: center; max-width: 550px; background: white; }
-        .checkmark { font-size: 70px; color: #28a745; margin-bottom: 15px; }
-        .btn-primary { background-color: #003366; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .btn-primary:hover { background-color: #001f3f; transform: translateY(-2px); }
-        .timer { font-size: 0.9em; color: #6c757d; margin-top: 25px; }
-        .contact-box { background-color: #e8f4fd; border-radius: 10px; padding: 20px; margin: 20px 0; border: 1px dashed #009ee3; }
-        .id-pago { font-size: 0.8rem; color: #a0aec0; margin-top: 10px; }
+        body { 
+            background-color: #f4f7f6; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+        }
+        .card { 
+            border: none; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            padding: 40px; 
+            text-align: center; 
+            max-width: 550px; 
+            background: white; 
+        }
+        .checkmark { 
+            font-size: 80px; 
+            color: #28a745; 
+            margin-bottom: 20px; 
+            animation: scaleIn 0.5s ease-out;
+        }
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        .btn-primary { 
+            background-color: #003366; 
+            border: none; 
+            padding: 14px 30px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            transition: 0.3s; 
+        }
+        .btn-primary:hover { 
+            background-color: #001f3f; 
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(0,51,102,0.3);
+        }
+        .timer { 
+            font-size: 0.9em; 
+            color: #6c757d; 
+            margin-top: 25px; 
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 30px;
+        }
+        .contact-box { 
+            background-color: #e8f4fd; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin: 25px 0; 
+            border: 1px solid #b3e5fc; 
+            text-align: left;
+        }
+        .id-pago { 
+            font-size: 0.85rem; 
+            color: #718096; 
+            margin-top: 15px; 
+            padding: 5px 15px;
+            background: #edf2f7;
+            display: inline-block;
+            border-radius: 5px;
+        }
+        .product-title {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -23,38 +86,51 @@
         <div class="checkmark">
             <i class="fas fa-check-circle"></i>
         </div>
+        
         <h1 class="fw-bold" style="color: #003366;">¡Pago Confirmado!</h1>
-        <p class="text-muted">Hemos recibido tu pago correctamente por:</p>
-        <h5 class="text-dark mb-4">{{ producto.title }}</h5>
+        <p class="text-muted mb-1">Hemos recibido tu pago correctamente por:</p>
+        <h5 class="product-title">{{ producto.title }}</h5>
         
         <hr>
 
         {% if mostrar_contacto %}
         <div class="contact-box">
-            <h6 class="fw-bold" style="color: #003366;"><i class="fas fa-address-book"></i> Datos del Vendedor para coordinar:</h6>
-            <p class="mb-1"><strong>Nombre:</strong> {{ producto.user.get_full_name|default:producto.user.username }}</p>
-            <p class="mb-1"><strong>Teléfono:</strong> {{ producto.user.profile.phone|default:"No proporcionado" }}</p>
+            <h6 class="fw-bold" style="color: #003366; margin-bottom: 15px;">
+                <i class="fas fa-truck-loading me-2"></i> Próximos pasos:
+            </h6>
+            <p class="small text-muted mb-3">Administración se contactará contigo para el flete. Aquí los datos del vendedor para tu referencia:</p>
+            
+            <p class="mb-1"><strong>Vendedor:</strong> {{ producto.user.get_full_name|default:producto.user.username }}</p>
+            <p class="mb-1"><strong>Teléfono:</strong> {{ producto.user.profile.phone|default:"Ver en Mis Compras" }}</p>
             <p class="mb-0"><strong>Email:</strong> {{ producto.user.email }}</p>
         </div>
         {% else %}
-        <p class="my-4">Tu pedido está siendo procesado. En breve podrás ver los datos de contacto en tu panel.</p>
+        <div class="alert alert-warning">
+            Tu pedido está en proceso. En breve recibirás un correo con la confirmación.
+        </div>
         {% endif %}
 
         {% if payment_id %}
-        <p class="id-pago">ID de Transacción: <strong>{{ payment_id }}</strong></p>
+        <div class="id-pago">
+            <i class="fas fa-receipt me-1"></i> Transacción: <strong>{{ payment_id }}</strong>
+        </div>
         {% endif %}
         
         <div class="d-grid gap-2 mt-4">
-            <a href="/mis-compras/" class="btn btn-primary">VER MI COMPRA</a>
-            <a href="/" style="text-decoration: none; color: #718096; font-size: 0.9rem;">Volver al inicio</a>
+            <a href="{% url 'mis_compras' %}" class="btn btn-primary">VER MI COMPRA</a>
+            <a href="{% url 'home' %}" class="text-secondary mt-2" style="text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left me-1"></i> Volver a la tienda
+            </a>
         </div>
         
-        <p class="timer">Redirigiendo automáticamente en <span id="count" class="fw-bold">8</span> segundos...</p>
+        <p class="timer">
+            Redirigiendo a tus compras en <span id="count" class="fw-bold">10</span> segundos...
+        </p>
     </div>
 
     <script>
-        // Aumentamos a 8 segundos para que alcancen a leer los datos del vendedor
-        let seconds = 8;
+        // Contador único y preciso
+        let seconds = 10;
         const display = document.getElementById('count');
         
         const countdown = setInterval(() => {
@@ -62,18 +138,10 @@
             display.textContent = seconds;
             if (seconds <= 0) {
                 clearInterval(countdown);
-                window.location.href = "/mis-compras/";
+                window.location.href = "{% url 'mis_compras' %}";
             }
         }, 1000);
     </script>
 
-    <script>
-    // Después de 5 segundos, redirige automáticamente a Mis Compras
-    setTimeout(function(){
-        window.location.href = "{% url 'mis_compras' %}";
-    }, 5000);
-    </script>
-
 </body>
 </html>
-
