@@ -27,6 +27,7 @@ class IndustrialProduct(models.Model):
     image = CloudinaryField('image', blank=True, null=True)
     image2 = CloudinaryField('image', blank=True, null=True)
     image3 = CloudinaryField('image', blank=True, null=True)
+    ficha_tecnica = CloudinaryField('raw', folder='fichas_tecnicas/')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -35,7 +36,7 @@ class IndustrialProduct(models.Model):
     ancho = models.IntegerField(default=30, help_text="Ancho en cm")
     alto = models.IntegerField(default=30, help_text="Alto en cm")
     cp_origen = models.CharField(max_length=5, default="00000", help_text="Código Postal donde está el equipo")
-    ficha_tecnica = models.FileField(upload_to='fichas_tecnicas/', null=True, blank=True)
+    
 
     def __str__(self):
         return self.title
@@ -100,6 +101,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
