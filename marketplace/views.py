@@ -414,6 +414,8 @@ def panel_administrador(request):
     ventas_aprobadas = Sale.objects.filter(status='approved')
     
     total_ventas_count = ventas_aprobadas.count()
+    total_monto = sum(v.amount for v in ventas_aprobadas)
+    ingresos_totales = float(total_monto) * 0.05
     
     # SUMAMOS SOLO TU COMISIÓN NETA
     from django.db.models import Sum
@@ -553,6 +555,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
