@@ -93,9 +93,9 @@ CLOUDINARY_STORAGE = {
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 import cloudinary
 cloudinary.config(
-    cloud_name = CLOUDINARY_STORAGE['dkr9nywvb'],
-    api_key = CLOUDINARY_STORAGE['159795361454715'],
-    api_secret = CLOUDINARY_STORAGE['R_pVI8FdS2aQ411SJ0pM_fehj74']
+    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key = CLOUDINARY_STORAGE['API_KEY'],
+    api_secret = CLOUDINARY_STORAGE['API_SECRET']
 )
 # CORREOS
 ADMIN_EMAIL = 'fernando871216@gmail.com'
@@ -113,6 +113,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
