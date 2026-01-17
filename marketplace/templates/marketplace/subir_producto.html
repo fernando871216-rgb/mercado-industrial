@@ -24,7 +24,7 @@
                         <i class="fas fa-upload" style="color: #003366; margin-right: 15px; font-size: 1.2rem;"></i>
                         <div>
                             <span id="pdf-name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #2f3640;">Subir Ficha Técnica (PDF)</span>
-                            <small style="color: #7f8c8d;">Manuales, planos o especificaciones</small>
+                            <small style="color: #7f8c8d;">Manuales o especificaciones</small>
                         </div>
                     </div>
                     
@@ -82,95 +82,62 @@
                 <h4 style="font-size: 1.1rem; color: #a04000; margin-bottom: 10px; font-weight: 700;">
                     <i class="fas fa-truck-loading"></i> 3. Dimensiones para Flete
                 </h4>
-                <p style="font-size: 0.85rem; color: #856404; margin-bottom: 20px;">Datos necesarios para calcular el envío automáticamente.</p>
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <label style="font-weight: 600; font-size: 0.9rem; color: #34495e;">Código Postal Origen</label>
-                        <input type="text" name="cp_origen" id="id_cp_origen" required class="form-control" placeholder="72000" maxlength="5" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
+                        <label style="font-weight: 600; font-size: 0.9rem;">CP Origen</label>
+                        <input type="text" name="cp_origen" id="id_cp_origen" required class="form-control" maxlength="5">
                     </div>
                     <div>
-                        <label style="font-weight: 600; font-size: 0.9rem; color: #34495e;">Peso Total (Kg)</label>
-                        <input type="number" name="peso" id="id_peso" step="0.1" required class="form-control" placeholder="Peso en Kg" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
+                        <label style="font-weight: 600; font-size: 0.9rem;">Peso Total (Kg)</label>
+                        <input type="number" name="peso" id="id_peso" step="0.1" required class="form-control">
                     </div>
                 </div>
-
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;">
-                    <div><label style="font-size: 0.8rem; font-weight: 600;">Largo (cm)</label><input type="number" name="largo" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
-                    <div><label style="font-size: 0.8rem; font-weight: 600;">Ancho (cm)</label><input type="number" name="ancho" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
-                    <div><label style="font-size: 0.8rem; font-weight: 600;">Alto (cm)</label><input type="number" name="alto" placeholder="cm" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px;"></div>
+                    <div><label>Largo (cm)</label><input type="number" name="largo" required></div>
+                    <div><label>Ancho (cm)</label><input type="number" name="ancho" required></div>
+                    <div><label>Alto (cm)</label><input type="number" name="alto" required></div>
                 </div>
             </div>
 
             <div style="background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #edf2f7; margin-bottom: 35px;">
                 <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 20px; font-weight: 700;">
-                    <i class="fas fa-images"></i> 4. Galería de Fotos (Máx. 3)
+                    <i class="fas fa-images"></i> 4. Galería de Fotos
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                    <div style="text-align: center; border: 2px dashed #3498db; border-radius: 15px; padding: 15px; transition: 0.3s;" id="box1">
+                    <div style="text-align: center; border: 2px dashed #3498db; border-radius: 15px; padding: 15px;" id="box1">
                         <label style="cursor: pointer; display: block;">
-                            <i class="fas fa-camera fa-2x" style="color: #3498db; margin-bottom: 10px;"></i>
-                            <span style="display: block; font-size: 0.75rem; font-weight: bold; color: #7f8c8d;">PORTADA</span>
+                            <i class="fas fa-camera fa-2x" style="color: #3498db;"></i>
                             <input type="file" name="image" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box1', 'txt1')">
-                            <small id="txt1" style="color: #27ae60; font-size: 0.65rem;"></small>
+                            <small id="txt1" style="display:block; color: #7f8c8d; font-size: 0.7rem;">PORTADA</small>
                         </label>
                     </div>
                     <div style="text-align: center; border: 2px dashed #cbd5e0; border-radius: 15px; padding: 15px;" id="box2">
                         <label style="cursor: pointer; display: block;">
-                            <i class="fas fa-image fa-2x" style="color: #cbd5e0; margin-bottom: 10px;"></i>
-                            <span style="display: block; font-size: 0.75rem; color: #7f8c8d;">FOTO 2</span>
+                            <i class="fas fa-image fa-2x" style="color: #cbd5e0;"></i>
                             <input type="file" name="image2" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box2', 'txt2')">
-                            <small id="txt2" style="color: #27ae60; font-size: 0.65rem;"></small>
+                            <small id="txt2" style="display:block; color: #7f8c8d; font-size: 0.7rem;">FOTO 2</small>
                         </label>
                     </div>
                     <div style="text-align: center; border: 2px dashed #cbd5e0; border-radius: 15px; padding: 15px;" id="box3">
                         <label style="cursor: pointer; display: block;">
-                            <i class="fas fa-image fa-2x" style="color: #cbd5e0; margin-bottom: 10px;"></i>
-                            <span style="display: block; font-size: 0.75rem; color: #7f8c8d;">FOTO 3</span>
+                            <i class="fas fa-image fa-2x" style="color: #cbd5e0;"></i>
                             <input type="file" name="image3" accept="image/*" style="display: none;" onchange="previewUpload(this, 'box3', 'txt3')">
-                            <small id="txt3" style="color: #27ae60; font-size: 0.65rem;"></small>
+                            <small id="txt3" style="display:block; color: #7f8c8d; font-size: 0.7rem;">FOTO 3</small>
                         </label>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #003366; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 1.3rem; font-weight: 800; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 20px rgba(0,51,102,0.2);">
-                <i class="fas fa-cloud-upload-alt"></i> PUBLICAR PRODUCTO AHORA
+            <button type="submit" style="width: 100%; background: #003366; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 1.3rem; font-weight: 800; cursor: pointer;">
+                <i class="fas fa-cloud-upload-alt"></i> PUBLICAR PRODUCTO
             </button>
         </form>
     </div>
 </div>
 
-<style>
-    /* Estilo para que el input de Django sea invisible pero cliqueable */
-    .custom-file-upload input[type="file"] {
-        cursor: pointer;
-    }
-    
-    /* Mejoramos los campos de texto del form de Django */
-    input[type="text"], input[type="number"], select, textarea {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        font-family: inherit;
-        font-size: 0.9rem;
-    }
-
-    input:focus, textarea:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-</style>
-
 <script>
-    // Lógica de Comisiones
+    // Lógica de Comisiones (Mantenemos tu lógica pero aseguramos el cálculo)
     const priceInput = document.getElementById('id_price');
-    const calcMp = document.getElementById('calc_mp');
-    const calcInitre = document.getElementById('calc_initre');
-    const calcTotal = document.getElementById('calc_total');
-
     priceInput.addEventListener('input', function() {
         const price = parseFloat(this.value) || 0;
         const comisionMP = price * 0.0349;
@@ -180,31 +147,38 @@
         const totalInitre = price * 0.05;
         const neto = price - totalMP - totalInitre;
 
-        calcMp.innerText = `-$${totalMP.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        calcInitre.innerText = `-$${totalInitre.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        calcTotal.innerText = `$${(neto > 0 ? neto : 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('calc_mp').innerText = `-$${totalMP.toFixed(2)}`;
+        document.getElementById('calc_initre').innerText = `-$${totalInitre.toFixed(2)}`;
+        document.getElementById('calc_total').innerText = `$${(neto > 0 ? neto : 0).toFixed(2)}`;
     });
 
-    // Detectar cuando se sube el PDF para cambiar el texto
-    const pdfInput = document.querySelector('input[name="ficha_tecnica"]');
-    const pdfNameSpan = document.getElementById('pdf-name');
+    // CORRECCIÓN PARA EL PDF: Buscamos cualquier input de tipo file que sea para la ficha técnica
+    const allInputs = document.querySelectorAll('input[type="file"]');
+    allInputs.forEach(input => {
+        if (input.name.includes('ficha_tecnica')) {
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const pdfNameSpan = document.getElementById('pdf-name');
+                    pdfNameSpan.innerText = "✅ " + this.files[0].name;
+                    pdfNameSpan.style.color = "#27ae60";
+                }
+            });
+        }
+    });
 
-    if (pdfInput) {
-        pdfInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                pdfNameSpan.innerText = "✅ " + this.files[0].name;
-                pdfNameSpan.style.color = "#27ae60";
-            }
-        });
-    }
-
-    // Previsualización de Fotos
     function previewUpload(input, boxId, txtId) {
         if (input.files && input.files[0]) {
             document.getElementById(boxId).style.borderColor = "#27ae60";
             document.getElementById(boxId).style.background = "#f0fff4";
             document.getElementById(txtId).innerText = "✅ Cargada";
+            document.getElementById(txtId).style.color = "#27ae60";
         }
     }
 </script>
+
+<style>
+    input[type="text"], input[type="number"], select, textarea {
+        width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+    }
+</style>
 {% endblock %}
