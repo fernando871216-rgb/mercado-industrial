@@ -10,7 +10,7 @@
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Totales (Comisión 5%)</span>
-            <strong style="font-size: 1.8rem; color: #2ecc71;">${{ total_comisiones|default:"0.00" }}</strong>
+            <strong style="font-size: 1.8rem; color: #2ecc71;">${{ ingresos_totales|default:"0.00"|floatformat:2 }}</strong>
         </div>
     </div>
 
@@ -34,19 +34,22 @@
                         <strong style="display: block; color: #2c3e50;">{{ venta.product.title }}</strong>
                         <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: {{ venta.product.user.username }}</span>
                     </td>
-                    <td style="padding: 20px; font-weight: bold;">${{ venta.price }}</td>
+                    <td style="padding: 20px; font-weight: bold;">
+                        ${{ venta.amount|default:venta.product.price }}
+                    </td>
                     
                     <td style="padding: 20px; color: #e74c3c;">
-                        {# Costo aproximado de MP #}
+                        {# Costo aproximado de MP (4.5% + flete aprox) #}
                         -${{ venta.get_gateway_cost|default:"---" }}
                     </td>
                     
                     <td style="padding: 20px; color: #3498db; font-weight: bold;">
-                        {# Calculamos el 5% directamente en el template como respaldo #}
+                        {# Tu comisión del 5% #}
                         +${{ venta.get_platform_commission|default:"---" }}
                     </td>
                     
                     <td style="padding: 20px; color: #27ae60; font-weight: bold;">
+                        {# Lo que le queda al vendedor #}
                         ${{ venta.get_net_amount|default:"---" }}
                     </td>
                     
@@ -90,5 +93,3 @@
     </div>
 </div>
 {% endblock %}
-
-
