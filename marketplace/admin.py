@@ -8,10 +8,10 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(IndustrialProduct)
 class IndustrialProductAdmin(admin.ModelAdmin):
     # Columnas que verás en la lista principal
-    list_display = ('title', 'price', 'brand', 'peso', 'cp_origen', 'stock')
+    list_display = ('title', 'price', 'brand', 'peso', 'cp_origen', 'stock', 'created_at', 'user')
     
     # Filtros laterales para encontrar productos rápido
-    list_filter = ('brand', 'category')
+    list_filter = ('brand', 'category', 'user', 'created_at', 'user__username')
     
     # Buscador por nombre y marca
     search_fields = ('title', 'brand', 'description')
@@ -40,6 +40,7 @@ class ProfileAdmin(admin.ModelAdmin):
     
     # Nombre de la columna en el panel
     get_address.short_description = 'Dirección Completa'
+    
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
     # HE FUSIONADO LAS COLUMNAS AQUÍ:
@@ -61,6 +62,7 @@ class SaleAdmin(admin.ModelAdmin):
     # Buscador por nombre de producto o comprador
     readonly_fields = ('created_at',)
     search_fields = ('product__title', 'buyer__username')
+
 
 
 
