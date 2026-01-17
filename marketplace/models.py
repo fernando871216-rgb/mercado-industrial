@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from cloudinary.models import CloudinaryField
 from decimal import Decimal
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 # --- MODELO DE CATEGORÍA ---
 class Category(models.Model):
@@ -33,7 +34,12 @@ class IndustrialProduct(models.Model):
     # FICHA TÉCNICA (CAMBIO CLAVE AQUÍ)
     # Quitamos 'raw' para usar el almacenamiento por defecto que configuramos en settings
     # Esto evita el error 401 al descargar
-    ficha_tecnica = models.FileField(upload_to='fichas_tecnicas/', blank=True, null=True)
+    ficha_tecnica = models.FileField(
+        upload_to='fichas_tecnicas/', 
+        storage=RawMediaCloudinaryStorage(), # Esto obliga a subirlo a Cloudinary como PDF
+        blank=True, 
+        null=True
+    )
     
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -103,3 +109,4 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
