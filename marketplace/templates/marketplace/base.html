@@ -48,7 +48,7 @@
         }
         .logo-text { font-weight: bold; font-size: 1.1rem; }
 
-        /* BUSCADOR: Diseño que se integra al estilo original */
+        /* BUSCADOR */
         .search-container {
             flex: 1;
             max-width: 350px;
@@ -93,12 +93,26 @@
             font-family: inherit; 
         }
         .nav-links a:hover, .logout-btn:hover { color: #f39c12; }
+        
+        /* ESTILO ESPECIAL PARA "¿CÓMO FUNCIONA?" */
+        .btn-como-funciona {
+            color: #ffcc00 !important;
+            border: 1px solid #ffcc00;
+            padding: 5px 12px !important;
+            border-radius: 20px;
+            font-weight: bold !important;
+        }
+        .btn-como-funciona:hover {
+            background: #ffcc00;
+            color: #003366 !important;
+        }
+
         .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
         
         /* Menu Hamburguesa Móvil */
         .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
 
-        /* Footer Original */
+        /* Footer */
         footer {
             background-color: #002244;
             color: #bdc3c7;
@@ -110,9 +124,17 @@
         .footer-links a { color: #ffffff; text-decoration: none; margin: 0 10px; font-size: 0.85rem; opacity: 0.8; }
         .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
 
-        /* DISPOSITIVOS MÓVILES (Responsivo) */
+        /* WHATSAPP FLOAT */
+        .whatsapp-float:hover {
+            background-color: #128C7E;
+            color: white;
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Responsivo */
         @media (max-width: 992px) {
-            .search-container { display: none; } /* Oculto en móvil para evitar amontonamiento */
+            .search-container { display: none; }
             .menu-toggle { display: block; }
             .nav-links {
                 display: none;
@@ -127,8 +149,6 @@
                 box-shadow: 0 10px 10px rgba(0,0,0,0.2);
             }
             .nav-links.active { display: flex; }
-            .logo-text { font-size: 0.9rem; }
-            .logo-img { height: 35px; }
         }
     </style>
 </head>
@@ -155,6 +175,10 @@
 
         <div class="nav-links" id="nav-content">
             <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
+            
+            <a href="{% url 'como_funciona' %}" class="btn-como-funciona">
+                <i class="fas fa-question-circle"></i> ¿Cómo funciona?
+            </a>
             
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}">Mis Productos</a>
@@ -190,22 +214,13 @@
     {% endif %}
 
     <div class="main-content">
-        {% if messages %}
-  <div class="container" style="margin-top: 10px;">
-    {% for message in messages %}
-      <div style="padding: 15px; background: #d4edda; color: #155724; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 20px;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-        
         {% block content %}
         {% endblock %}
     </div>
 
     <footer>
         <div class="footer-links">
+            <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
             <a href="{% url 'terminos' %}">Aviso de Privacidad</a>
             <a href="{% url 'terminos' %}">Términos y Condiciones</a>
         </div>
@@ -213,6 +228,13 @@
             &copy; 2026 Mercado Industrial INITRE. Todos los derechos reservados.
         </div>
     </footer>
+
+    <a href="https://wa.me/522225858320?text=Hola,%20necesito%20ayuda%20con%20un%20equipo%20en%20Mercado%20Industrial" 
+       class="whatsapp-float" 
+       target="_blank" 
+       style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 3px #999; z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
     <script>
         const menuToggle = document.getElementById('mobile-menu');
@@ -230,23 +252,5 @@
         }
     </script>
 
-    <a href="https://wa.me/522225858320?text=Hola,%20necesito%20ayuda%20con%20un%20equipo%20en%20Mercado%20Industrial" 
-   class="whatsapp-float" 
-   target="_blank" 
-   style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 3px #999; z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-    <i class="fab fa-whatsapp"></i>
-</a>
-
-<style>
-    .whatsapp-float:hover {
-        background-color: #128C7E;
-        color: white;
-        transform: scale(1.1);
-        transition: all 0.3s ease;
-    }
-</style>
-
 </body>
 </html>
-
-
