@@ -285,7 +285,8 @@ def home(request):
     if query:
         # Filtra por Título O por Número de Parte ignorando mayúsculas/minúsculas
         products = IndustrialProduct.objects.filter(
-            Q(title__icontains=query) | Q(part_number__icontains=query)
+            Q(title__icontains=query) | Q(part_number__icontains=query)| 
+            Q(brand__icontains=query)
         )
     else:
         products = IndustrialProduct.objects.all()
@@ -558,6 +559,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
