@@ -539,7 +539,7 @@ def mercadopago_webhook(request):
                         ).exists()
 
                         if not venta_reciente:
-                            Sale.objects.create(
+                            nueva_venta = Sale.objects.create(
                                 product=producto,
                                 buyer=comprador,
                                 price=monto,
@@ -549,7 +549,7 @@ def mercadopago_webhook(request):
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
-                                enviar_notificacion_venta(nueva_venta)
+                            enviar_notificacion_venta(nueva_venta)
                             print(f"VENTA EXITOSA: Producto {producto_id} para usuario {comprador_id}")
                         else:
                             print("AVISO: Notificación duplicada detectada, no se crea otra venta.")
@@ -558,6 +558,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
