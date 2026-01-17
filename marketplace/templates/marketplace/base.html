@@ -252,5 +252,28 @@
         }
     </script>
 
+    <script>
+    // Este código evita que la App se cierre al dar "atrás"
+    (function() {
+        // Creamos un estado en el historial para "atrapar" el primer clic atrás
+        history.pushState(null, document.title, location.href);
+        
+        window.addEventListener('popstate', function (event) {
+            // Si el usuario puede ir atrás en el historial de la web
+            if (document.referrer.includes(window.location.hostname)) {
+                window.history.go(-1);
+            } else {
+                // Si ya está en el inicio y le da atrás, aquí sí podría cerrarse 
+                // o puedes mandarlo al Home siempre:
+                window.location.href = "/";
+            }
+            
+            // Mantenemos el estado para que no se salga de la app al siguiente clic
+            history.pushState(null, document.title, location.href);
+        });
+    })();
+</script>
+
 </body>
 </html>
+
