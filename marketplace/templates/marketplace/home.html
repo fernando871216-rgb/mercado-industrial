@@ -5,7 +5,6 @@
 
     <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366;">
         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-            
             <div style="flex: 2; min-width: 280px;">
                 <h2 style="color: #003366; margin: 0 0 10px 0; font-size: clamp(1.2rem, 4vw, 1.5rem);">
                     <i class="fas fa-handshake"></i> Comercio Directo y Seguro
@@ -51,8 +50,15 @@
         {% for product in products %}
             <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}">
                 
+                {% if product.ficha_tecnica %}
+                <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                    <span style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <i class="fas fa-file-pdf"></i> TÉCNICO
+                    </span>
+                </div>
+                {% endif %}
+                
                 <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
-                    
                     <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 10px;">
                         {% if product.image %}
                             <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
