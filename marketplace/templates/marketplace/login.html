@@ -15,6 +15,13 @@
             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">Usuario:</label>
             <input type="text" name="username" required 
                    style="width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+            
+            <div style="margin-top: 8px; display: flex; align-items: flex-start; gap: 6px;">
+                <i class="fas fa-exclamation-circle" style="color: #3498db; margin-top: 3px; font-size: 0.8rem;"></i>
+                <small style="color: #7f8c8d; font-size: 0.75rem; line-height: 1.2;">
+                    Nota: El nombre de usuario distingue entre mayúsculas y minúsculas.
+                </small>
+            </div>
         </div>
         
         <div style="margin-bottom: 25px;">
@@ -37,4 +44,11 @@
         </p>
     </div>
 </div>
+
+<style>
+    /* Efecto hover para el botón respetando tu color base */
+    button:hover {
+        background: #34495e !important;
+    }
+</style>
 {% endblock %}
