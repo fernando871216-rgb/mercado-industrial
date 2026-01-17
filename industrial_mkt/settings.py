@@ -11,12 +11,12 @@ ALLOWED_HOSTS = ["*"]
 
 # APLICACIONES
 INSTALLED_APPS = [
+    'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'cloudinary',
     'django.contrib.staticfiles',
     'marketplace',
@@ -88,7 +88,7 @@ CLOUDINARY_STORAGE = {
 }
 
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # CORREOS
 ADMIN_EMAIL = 'fernando871216@gmail.com'
@@ -106,3 +106,4 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
