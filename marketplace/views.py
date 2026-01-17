@@ -411,19 +411,22 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    ventas_aprobadas = Sale.objects.filter(status='approved')
+    # 1. Filtramos las ventas exitosas
+    ventas_exitosas = Sale.objects.filter(status='approved')
     
-    total_ventas_count = ventas_aprobadas.count()
-    total_monto = sum(v.amount for v in ventas_aprobadas)
-    ingresos_totales = float(total_monto) * 0.05
+    # 2. Contamos cuántas son
+    total_ventas_count = ventas_exitosas.count()
     
-    # SUMAMOS SOLO TU COMISIÓN NETA
-    from django.db.models import Sum
-    ingresos_totales = ventas_aprobadas.aggregate(Sum('ganancia_neta'))['ganancia_neta__sum'] or 0.00
+    # 3. Calculamos tu comisión del 5% sobre el monto total de productos
+    # Sumamos el campo 'amount' que sí existe en tu base de datos
+    total_monto = sum(float(v.amount) for v in ventas_exitosas)
+    ingresos_totales = total_monto * 0.05
     
+    # 4. Obtenemos todas las ventas para la tabla y los productos recientes
     ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
+    # 5. Enviamos todo al HTML
     context = {
         'ventas': ventas_todas,
         'total_ventas_count': total_ventas_count,
@@ -555,6 +558,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
