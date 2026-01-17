@@ -1,0 +1,58 @@
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 50px auto; font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+    
+    <div style="text-align: center; margin-bottom: 50px;">
+        <h1 style="color: #003366; font-weight: 800;">¿Cómo comprar en Mercado Industrial?</h1>
+        <p style="color: #666; font-size: 1.2rem;">Tu maquinaria segura, desde la selección hasta la entrega.</p>
+    </div>
+
+    <div style="display: grid; gap: 30px;">
+        <div style="display: flex; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: flex-start;">
+            <div style="background: #003366; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0;">1</div>
+            <div>
+                <h4 style="color: #003366; margin-top: 0;">Selecciona tu equipo</h4>
+                <p style="margin-bottom: 0;">Navega por nuestro catálogo de maquinaria industrial. Todos los precios mostrados son por el equipo puesto en la ubicación del vendedor.</p>
+            </div>
+        </div>
+
+        <div style="display: flex; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: flex-start;">
+            <div style="background: #003366; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0;">2</div>
+            <div>
+                <h4 style="color: #003366; margin-top: 0;">Pago Seguro</h4>
+                <p style="margin-bottom: 0;">Realiza tu pago a través de <strong>Mercado Pago</strong>. Tu dinero está protegido hasta que recibas el equipo o se confirme el despacho.</p>
+            </div>
+        </div>
+
+        <div style="display: flex; background: #e3f2fd; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: flex-start; border-left: 5px solid #007bff;">
+            <div style="background: #007bff; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0;">3</div>
+            <div>
+                <h4 style="color: #003366; margin-top: 0;">Gestión de Envío (Flete)</h4>
+                <p style="margin-bottom: 10px;">Una vez confirmada la compra, un asesor se pondrá en contacto contigo vía WhatsApp para:</p>
+                <ul style="margin-bottom: 0; padding-left: 20px;">
+                    <li>Cotizar el envío a tu código postal con las mejores paqueterías (SoloEnvíos).</li>
+                    <li>Coordinar detalles de carga y maniobras si el equipo lo requiere.</li>
+                    <li><strong>El costo del flete se paga por separado para garantizar la tarifa más baja.</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="display: flex; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: flex-start;">
+            <div style="background: #27ae60; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0;">4</div>
+            <div>
+                <h4 style="color: #27ae60; margin-top: 0;">Recepción y Confirmación</h4>
+                <p style="margin-bottom: 0;">Recibe tu maquinaria en tu planta o taller. Una vez verificado el estado, el proceso finaliza con éxito.</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; background: #f8f9fa; padding: 30px; border-radius: 15px;">
+        <h5 style="color: #003366;">¿Tienes dudas técnicas?</h5>
+        <p>Habla directamente con nosotros para asesoría personalizada.</p>
+        <a href="https://wa.me/522225858320" style="display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+            <i class="fab fa-whatsapp"></i> Contactar Soporte
+        </a>
+    </div>
+</div>
+{% endblock %}
