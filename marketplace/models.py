@@ -24,19 +24,27 @@ class IndustrialProduct(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
-    image = CloudinaryField('image', blank=True, null=True)
-    image2 = CloudinaryField('image', blank=True, null=True)
-    image3 = CloudinaryField('image', blank=True, null=True)
-    ficha_tecnica = CloudinaryField('raw', folder='fichas_tecnicas/')
+    
+    # Imágenes (Tipo 'image')
+    image = CloudinaryField('image', blank=True, null=True, folder='productos/')
+    image2 = CloudinaryField('image', blank=True, null=True, folder='productos/')
+    image3 = CloudinaryField('image', blank=True, null=True, folder='productos/')
+    
+    # FICHA TÉCNICA (CAMBIO CLAVE AQUÍ)
+    # Quitamos 'raw' para usar el almacenamiento por defecto que configuramos en settings
+    # Esto evita el error 401 al descargar
+    ficha_tecnica = models.FileField(upload_to='fichas_tecnicas/', blank=True, null=True)
+    
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Datos de envío
     peso = models.DecimalField(max_digits=6, decimal_places=2, default=5.0, help_text="Peso estimado en Kg")
     largo = models.IntegerField(default=30, help_text="Largo en cm")
     ancho = models.IntegerField(default=30, help_text="Ancho en cm")
     alto = models.IntegerField(default=30, help_text="Alto en cm")
     cp_origen = models.CharField(max_length=5, default="00000", help_text="Código Postal donde está el equipo")
-    
 
     def __str__(self):
         return self.title
@@ -57,7 +65,6 @@ class Profile(models.Model):
 class Sale(models.Model):
     product = models.ForeignKey(IndustrialProduct, on_delete=models.CASCADE)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='compras')
-    #metodo_entrega = models.CharField(max_length=20, default='recoleccion')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='pendiente')
@@ -71,10 +78,7 @@ class Sale(models.Model):
     def __str__(self):
         return f"Venta de {self.product.title}"
 
-    # --- FÓRMULAS FINANCIERAS PARA EL PANEL ---
-
     def get_gateway_cost(self):
-        """Calcula costo de Mercado Pago: 3.49% + $4.00 + IVA del costo"""
         comision_porcentaje = self.price * Decimal('0.0349')
         fijo = Decimal('4.00')
         iva = (comision_porcentaje + fijo) * Decimal('0.16')
@@ -82,14 +86,12 @@ class Sale(models.Model):
         return total.quantize(Decimal('0.01'))
 
     def get_platform_commission(self):
-        """Calcula la comisión de INITRE (5%)"""
         return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
 
     def get_net_amount(self):
-        """Calcula el monto final que recibe el vendedor"""
         return (self.price - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
 
-# --- SEÑALES (SIGNALS) ---
+# --- SEÑALES ---
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -101,17 +103,3 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
