@@ -559,9 +559,6 @@ def mercadopago_webhook(request):
 
     return HttpResponse(status=200)
 
-# 4. Pantalla de Éxito
-def pago_exitoso(request, producto_id):
-    producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
