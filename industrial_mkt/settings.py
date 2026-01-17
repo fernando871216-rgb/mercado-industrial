@@ -1,6 +1,7 @@
 import dj_database_url
 import os
 from pathlib import Path
+import cloudinary
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -107,6 +108,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
