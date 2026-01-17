@@ -8,23 +8,30 @@
             <h2 style="color: #003366; font-weight: 800; margin-bottom: 10px;">
                 <i class="fas fa-rocket" style="color: #f39c12;"></i> Publicar Nuevo Equipo
             </h2>
-            <p style="color: #7f8c8d; font-size: 1rem;">Optimiza tu venta completando la ficha técnica detallada</p>
+            <p style="color: #7f8c8d; font-size: 1rem;">Llega a más compradores con información detallada</p>
         </div>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="productForm">
             {% csrf_token %}
             
             <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px dashed #003366; margin-bottom: 25px;">
                 <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 15px; font-weight: 700;">
-                    <i class="fas fa-file-pdf"></i> Documentación
+                    <i class="fas fa-file-pdf"></i> Documentación del Equipo
                 </h4>
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">
-                    Ficha Técnica o Manual (Opcional - Formato PDF)
-                </label>
-                <div style="background: white; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
-                    {{ form.ficha_tecnica }}
+                
+                <div style="position: relative; background: white; border: 1px solid #dcdde1; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="fas fa-upload" style="color: #003366; margin-right: 15px; font-size: 1.2rem;"></i>
+                        <div>
+                            <span id="pdf-name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #2f3640;">Subir Ficha Técnica (PDF)</span>
+                            <small style="color: #7f8c8d;">Manuales, planos o especificaciones</small>
+                        </div>
+                    </div>
+                    
+                    <div class="custom-file-upload">
+                        {{ form.ficha_tecnica }}
+                    </div>
                 </div>
-                <small style="color: #7f8c8d; display: block; mt-2;">Esto permitirá a los compradores conocer las capacidades del equipo rápidamente.</small>
             </div>
 
             <div style="background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #edf2f7; margin-bottom: 25px;">
@@ -51,7 +58,7 @@
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 10px; color: #003366;">Precio de Venta Sugerido (MXN)</label>
-                    <input type="number" name="price" id="id_price" step="0.01" required class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 15px; border: 2px solid #3498db; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: #2c3e50;">
+                    <input type="number" name="price" id="id_price" step="0.01" required class="form-control" placeholder="Ej: 50000" style="width: 100%; padding: 15px; border: 2px solid #3498db; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: #2c3e50;">
                 </div>
 
                 <div id="desglose_comisiones" style="background: white; padding: 20px; border-radius: 12px; font-size: 0.95rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
@@ -75,7 +82,7 @@
                 <h4 style="font-size: 1.1rem; color: #a04000; margin-bottom: 10px; font-weight: 700;">
                     <i class="fas fa-truck-loading"></i> 3. Dimensiones para Flete
                 </h4>
-                <p style="font-size: 0.85rem; color: #856404; margin-bottom: 20px;">Indica medidas precisas para evitar ajustes de costo en paquetería.</p>
+                <p style="font-size: 0.85rem; color: #856404; margin-bottom: 20px;">Datos necesarios para calcular el envío automáticamente.</p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
@@ -134,7 +141,31 @@
     </div>
 </div>
 
+<style>
+    /* Estilo para que el input de Django sea invisible pero cliqueable */
+    .custom-file-upload input[type="file"] {
+        cursor: pointer;
+    }
+    
+    /* Mejoramos los campos de texto del form de Django */
+    input[type="text"], input[type="number"], select, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+    }
+
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+</style>
+
 <script>
+    // Lógica de Comisiones
     const priceInput = document.getElementById('id_price');
     const calcMp = document.getElementById('calc_mp');
     const calcInitre = document.getElementById('calc_initre');
@@ -154,6 +185,20 @@
         calcTotal.innerText = `$${(neto > 0 ? neto : 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     });
 
+    // Detectar cuando se sube el PDF para cambiar el texto
+    const pdfInput = document.querySelector('input[name="ficha_tecnica"]');
+    const pdfNameSpan = document.getElementById('pdf-name');
+
+    if (pdfInput) {
+        pdfInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                pdfNameSpan.innerText = "✅ " + this.files[0].name;
+                pdfNameSpan.style.color = "#27ae60";
+            }
+        });
+    }
+
+    // Previsualización de Fotos
     function previewUpload(input, boxId, txtId) {
         if (input.files && input.files[0]) {
             document.getElementById(boxId).style.borderColor = "#27ae60";
