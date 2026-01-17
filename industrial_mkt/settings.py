@@ -85,6 +85,7 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dkr9nywvb',
     'API_KEY': '159795361454715',
     'API_SECRET': 'R_pVI8FdS2aQ411SJ0pM_fehj74',
+    'RESOURCE_TYPES': ['image', 'raw', 'video'],
 }
 
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
@@ -106,4 +107,5 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
