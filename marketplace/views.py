@@ -28,6 +28,9 @@ from django.db.models import Sum
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
+def como_funciona(request):
+    return render(request, 'marketplace/como_funciona.html')
+
 @login_required
 def generar_preferencia_pago(request, producto_id):
     # Usamos producto_id (el que viene en la URL)
@@ -562,43 +565,4 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
