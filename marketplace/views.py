@@ -404,7 +404,7 @@ def procesar_pago(request, producto_id):
 def crear_intencion_compra(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
     Sale.objects.create(product=p, buyer=request.user, price=p.price, status='pendiente')
-    return redirect('mis_compras')
+    return redirect('mis_compras')    
 
 @login_required
 def panel_administrador(request):
@@ -413,20 +413,24 @@ def panel_administrador(request):
 
     # 1. Filtramos las ventas exitosas
     ventas_exitosas = Sale.objects.filter(status='approved')
-    
-    # 2. Contamos cuántas son
     total_ventas_count = ventas_exitosas.count()
     
-    # 3. Calculamos tu comisión del 5% sobre el monto total de productos
-    # Sumamos el campo 'amount' que sí existe en tu base de datos
-    total_monto = sum(float(v.amount) for v in ventas_exitosas)
+    # 2. Calculamos el monto total con una protección por si el campo no se llama 'amount'
+    total_monto = 0
+    for v in ventas_exitosas:
+        # Intentamos obtener el valor de 'amount', si no existe probamos con 'total' o 'price'
+        valor = getattr(v, 'amount', getattr(v, 'total', getattr(v, 'price', 0)))
+        try:
+            total_monto += float(valor)
+        except:
+            continue
+
     ingresos_totales = total_monto * 0.05
     
-    # 4. Obtenemos todas las ventas para la tabla y los productos recientes
+    # 3. El resto se queda igual
     ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
-    # 5. Enviamos todo al HTML
     context = {
         'ventas': ventas_todas,
         'total_ventas_count': total_ventas_count,
@@ -558,6 +562,7 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
 
 
