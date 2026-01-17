@@ -24,6 +24,7 @@ from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Sum
+from .utils import enviar_notificacion_venta
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -461,39 +462,35 @@ def pago_exitoso(request, producto_id):
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
     
-    # Capturamos el flete que ahora sí viene en la URL
     try:
         flete_con_comision = float(request.GET.get('envio', 0))
     except:
         flete_con_comision = 0
 
     if status_mp == 'approved':
-        # Cálculo de comisiones
-        # Ganancia del producto (5%)
         ganancia_prod = float(producto.price) * 0.05
-        # Ganancia del flete (tu 8% ya viene incluido en el flete_con_comision que calculamos antes)
-        # O si prefieres calcularlo sobre el flete bruto aquí:
-        ganancia_flete = flete_con_comision * 0.074 # (Este ajuste es porque el flete ya trae tu 8% encima)
-        
+        ganancia_flete = flete_con_comision * 0.074 
         total_ganancia_neta = ganancia_prod + ganancia_flete
 
         venta, created = Sale.objects.update_or_create(
-            payment_id=payment_id, # Buscamos por el ID de pago de MP
+            payment_id=payment_id,
             defaults={
                 'product': producto,
                 'buyer': request.user,
-                'seller': producto.user,
-                'amount': float(producto.price),
+                'price': float(producto.price) + flete_con_comision, # Guardamos el total real
                 'ganancia_neta': total_ganancia_neta,
                 'status': 'approved',
                 'created_at': timezone.now()
             }
         )
         
-        # Solo bajamos el stock si la venta es nueva
-        if created and producto.stock > 0:
-            producto.stock -= 1
-            producto.save()
+        if created:
+            if producto.stock > 0:
+                producto.stock -= 1
+                producto.save()
+            
+            # --- AQUÍ ENVIAMOS EL CORREO ---
+            enviar_notificacion_venta(venta)
 
         mostrar_contacto = True
     else:
@@ -552,6 +549,7 @@ def mercadopago_webhook(request):
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
+                                enviar_notificacion_venta(nueva_venta)
                             print(f"VENTA EXITOSA: Producto {producto_id} para usuario {comprador_id}")
                         else:
                             print("AVISO: Notificación duplicada detectada, no se crea otra venta.")
@@ -565,4 +563,5 @@ def mercadopago_webhook(request):
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     return render(request, 'marketplace/pago_exitoso.html', {'producto': producto})
+
 
