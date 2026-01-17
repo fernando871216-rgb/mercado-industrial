@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SEGURIDAD
 SECRET_KEY = 'django-insecure-htgh&@rqt_a!$7ats%a7r_i!ig5u$z$ifjr3&g^uk@mrkzfu#j'
-DEBUG = True # Cambia a False cuando ya no estés haciendo pruebas
+DEBUG = True 
 ALLOWED_HOSTS = ["*"]
 
 # APLICACIONES
@@ -60,7 +60,7 @@ DATABASES = {
     )
 }
 
-# CONFIGURACIÓN DE CSRF (Mercado Pago Webhooks)
+# CONFIGURACIÓN DE CSRF
 CSRF_TRUSTED_ORIGINS = [
     'https://mercado-industrial.onrender.com',
     'https://www.mercadopago.com.mx',
@@ -80,13 +80,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# CLOUDINARY (Imágenes)
+# CLOUDINARY (Configuración para Imágenes y PDFs)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dkr9nywvb',
     'API_KEY': '159795361454715',
     'API_SECRET': 'R_pVI8FdS2aQ411SJ0pM_fehj74',
 }
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 
 # CORREOS
 ADMIN_EMAIL = 'fernando871216@gmail.com'
@@ -99,10 +101,8 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Mercado Industrial <fernando871216@gmail.com>'
 
 # INTERNACIONALIZACIÓN
-LANGUAGE_CODE = 'es-mx' # Cambiado a español
-TIME_ZONE = 'America/Mexico_City' # Horario de CDMX
+LANGUAGE_CODE = 'es-mx'
+TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
