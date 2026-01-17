@@ -90,12 +90,7 @@ CLOUDINARY_STORAGE = {
 }
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-import cloudinary_storage.storage
-cloudinary_storage.storage.RAW_AS_ATTACHMENT = True
-
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 cloudinary.config(
     cloud_name = 'dkr9nywvb',
     api_key = '159795361454715',
@@ -117,6 +112,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
