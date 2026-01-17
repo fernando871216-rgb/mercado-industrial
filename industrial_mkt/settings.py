@@ -92,10 +92,12 @@ CLOUDINARY_STORAGE = {
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 cloudinary.config(
-    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'],
-    api_key = CLOUDINARY_STORAGE['API_KEY'],
-    api_secret = CLOUDINARY_STORAGE['API_SECRET']
+    cloud_name = 'dkr9nywvb',
+    api_key = '159795361454715',
+    api_secret = 'R_pVI8FdS2aQ411SJ0pM_fehj74'
 )
 # CORREOS
 ADMIN_EMAIL = 'fernando871216@gmail.com'
@@ -113,6 +115,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
