@@ -23,21 +23,43 @@
                 {% for p in products %}
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 15px; display: flex; align-items: center; gap: 10px;">
-                        {% if p.image %}
-                            <img src="{{ p.image.url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
-                        {% endif %}
-                        <span style="font-weight: 500;">{{ p.title }}</span>
+                        <div style="position: relative;">
+                            {% if p.image %}
+                                <img src="{{ p.image.url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                            {% else %}
+                                <div style="width: 50px; height: 50px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image" style="color: #ccc;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span style="font-weight: 500; display: block;">{{ p.title }}</span>
+                            {% if p.ficha_tecnica %}
+                                <span style="font-size: 0.7rem; color: #e74c3c; font-weight: bold;">
+                                    <i class="fas fa-file-pdf"></i> Ficha cargada
+                                </span>
+                            {% else %}
+                                <span style="font-size: 0.7rem; color: #95a5a6;">
+                                    Sin ficha técnica
+                                </span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td style="padding: 15px; color: #27ae60; font-weight: bold;">${{ p.price }}</td>
                     <td style="padding: 15px;">{{ p.stock }} unidades</td>
                     <td style="padding: 15px;">
-                        <a href="{% url 'editar_producto' p.pk %}" style="color: #3498db; margin-right: 15px; text-decoration: none;"><i class="fas fa-edit"></i> Editar</a>
-                        <form action="{% url 'borrar_producto' p.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" onclick="return confirm('¿Borrar este producto?')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-family: inherit; font-size: 1rem;">
-                                <i class="fas fa-trash"></i> Borrar
-                            </button>
-                        </form>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <a href="{% url 'editar_producto' p.pk %}" style="color: #3498db; text-decoration: none; font-size: 0.9rem;">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            
+                            <form action="{% url 'borrar_producto' p.pk %}" method="POST" style="display: inline; margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" onclick="return confirm('¿Borrar este producto?')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-family: inherit; font-size: 0.9rem; padding: 0;">
+                                    <i class="fas fa-trash"></i> Borrar
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
