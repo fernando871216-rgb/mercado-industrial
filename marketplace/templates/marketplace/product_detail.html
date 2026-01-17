@@ -30,8 +30,8 @@
             {% if product.ficha_tecnica %}
             <div style="margin-bottom: 20px; padding: 15px; background: #fff5f5; border: 2px dashed #e74c3c; border-radius: 10px; text-align: center;">
                 <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.95rem;"><i class="fas fa-file-pdf" style="color: #e74c3c;"></i> Documentación Técnica</h5>
-                <a href="{{ product.ficha_tecnica.url }}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #e74c3c; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
-                    <i class="fas fa-download"></i> DESCARGAR FICHA TÉCNICA
+                <a href="{{ product.ficha_tecnica.url }}" class="btn btn-outline-danger" target="_blank">
+                   Descargar Ficha Técnica
                 </a>
             </div>
             {% endif %}
@@ -173,3 +173,4 @@
     }
 </script>
 {% endblock %}
+
