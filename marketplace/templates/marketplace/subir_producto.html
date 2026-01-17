@@ -14,11 +14,19 @@
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Ficha Técnica (Opcional - Formato PDF)</label>
-                <input type="file" name="ficha_tecnica" accept=".pdf" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px dashed #003366; margin-bottom: 25px;">
+                <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 15px; font-weight: 700;">
+                    <i class="fas fa-file-pdf"></i> Documentación
+                </h4>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">
+                    Ficha Técnica o Manual (Opcional - Formato PDF)
+                </label>
+                <div style="background: white; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
+                    {{ form.ficha_tecnica }}
+                </div>
+                <small style="color: #7f8c8d; display: block; mt-2;">Esto permitirá a los compradores conocer las capacidades del equipo rápidamente.</small>
             </div>
-            
+
             <div style="background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #edf2f7; margin-bottom: 25px;">
                 <h4 style="font-size: 1.1rem; color: #003366; margin-bottom: 20px; border-left: 4px solid #f39c12; padding-left: 15px; font-weight: 700;">
                     1. Información del Producto
@@ -26,7 +34,7 @@
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     {% for field in form %}
-                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' and field.name != 'image' and field.name != 'image2' and field.name != 'image3' %}
+                        {% if field.name != 'peso' and field.name != 'largo' and field.name != 'ancho' and field.name != 'alto' and field.name != 'cp_origen' and field.name != 'price' and field.name != 'image' and field.name != 'image2' and field.name != 'image3' and field.name != 'ficha_tecnica' %}
                             <div style="{% if field.name == 'title' or field.name == 'description' %}grid-column: span 2;{% endif %}">
                                 <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 0.9rem;">{{ field.label }}</label>
                                 {{ field }}
@@ -43,7 +51,7 @@
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 10px; color: #003366;">Precio de Venta Sugerido (MXN)</label>
-                    <input type="number" name="price" id="id_price" step="0.01" class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 15px; border: 2px solid #3498db; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: #2c3e50;">
+                    <input type="number" name="price" id="id_price" step="0.01" required class="form-control" placeholder="Ej: 5000" style="width: 100%; padding: 15px; border: 2px solid #3498db; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: #2c3e50;">
                 </div>
 
                 <div id="desglose_comisiones" style="background: white; padding: 20px; border-radius: 12px; font-size: 0.95rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
@@ -127,7 +135,6 @@
 </div>
 
 <script>
-    // Tu lógica original de cálculos
     const priceInput = document.getElementById('id_price');
     const calcMp = document.getElementById('calc_mp');
     const calcInitre = document.getElementById('calc_initre');
@@ -147,7 +154,6 @@
         calcTotal.innerText = `$${(neto > 0 ? neto : 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     });
 
-    // Función estética para las fotos
     function previewUpload(input, boxId, txtId) {
         if (input.files && input.files[0]) {
             document.getElementById(boxId).style.borderColor = "#27ae60";
@@ -157,4 +163,3 @@
     }
 </script>
 {% endblock %}
-
