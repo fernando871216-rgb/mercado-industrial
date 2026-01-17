@@ -1,7 +1,7 @@
 import dj_database_url
 import os
 from pathlib import Path
-import cloudinary
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -91,7 +91,12 @@ CLOUDINARY_STORAGE = {
 
 # CAMBIO IMPORTANTE: Usamos RawMedia para que acepte PDFs sin errores
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
+import cloudinary
+cloudinary.config(
+    cloud_name = CLOUDINARY_STORAGE['dkr9nywvb'],
+    api_key = CLOUDINARY_STORAGE['159795361454715'],
+    api_secret = CLOUDINARY_STORAGE['R_pVI8FdS2aQ411SJ0pM_fehj74']
+)
 # CORREOS
 ADMIN_EMAIL = 'fernando871216@gmail.com'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -108,6 +113,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
