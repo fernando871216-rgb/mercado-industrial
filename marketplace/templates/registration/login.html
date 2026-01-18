@@ -6,11 +6,17 @@
     <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #edf2f7; text-align: center;">
         
         <div style="background: #f8f9fa; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-            <i class="fas fa-lock" style="font-size: 2rem; color: #2c3e50;"></i>
+            <i class="fas fa-lock" style="font-size: 2rem; color: #0056b3;"></i>
         </div>
 
-        <h2 style="color: #2c3e50; margin-bottom: 10px;">Iniciar Sesión</h2>
+        <h2 style="color: #2c3e50; margin-bottom: 10px; font-family: 'Montserrat', sans-serif; font-weight: 700;">Iniciar Sesión</h2>
         <p style="color: #7f8c8d; margin-bottom: 30px;">Accede a tu panel de Mercado Industrial</p>
+
+        {% if form.errors %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
+                <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos.
+            </div>
+        {% endif %}
 
         <form method="POST">
             {% csrf_token %}
@@ -18,14 +24,21 @@
             <div style="text-align: left; margin-bottom: 20px;">
                 <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Usuario</label>
                 {{ form.username }}
+                <div style="margin-top: 5px; display: flex; align-items: flex-start; gap: 5px;">
+                    <i class="fas fa-info-circle" style="color: #3498db; font-size: 0.75rem; margin-top: 3px;"></i>
+                    <small style="color: #7f8c8d; font-size: 0.75rem;">Sensible a mayúsculas/minúsculas.</small>
+                </div>
             </div>
 
-            <div style="text-align: left; margin-bottom: 30px;">
+            <div style="text-align: left; margin-bottom: 25px;">
                 <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">Contraseña</label>
                 {{ form.password }}
+                <div style="text-align: right; margin-top: 5px;">
+                    <a href="{% url 'password_reset' %}" style="color: #3498db; text-decoration: none; font-size: 0.75rem; font-weight: 600;">¿Olvidaste tu contraseña?</a>
+                </div>
             </div>
 
-            <button type="submit" style="width: 100%; background: #2c3e50; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
+            <button type="submit" style="width: 100%; background: #0056b3; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; font-family: 'Montserrat', sans-serif;">
                 Entrar al Sistema
             </button>
         </form>
@@ -39,6 +52,7 @@
 </div>
 
 <style>
+    /* Estilos para los campos automáticos de Django */
     input[type="text"], input[type="password"] {
         width: 100%;
         padding: 12px 15px;
@@ -46,12 +60,13 @@
         border: 1px solid #cbd5e0;
         font-size: 1rem;
         box-sizing: border-box;
+        transition: border 0.3s;
     }
     input:focus {
         outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        border-color: #0056b3;
+        box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
     }
-    button:hover { background: #1a252f !important; }
+    button:hover { background: #004494 !important; }
 </style>
 {% endblock %}
