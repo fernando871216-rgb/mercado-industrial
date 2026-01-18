@@ -33,6 +33,12 @@
         <button type="submit" style="width: 100%; padding: 14px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
             Entrar al Panel
         </button>
+
+        {% if form.errors %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb; margin-bottom: 20px; font-size: 0.9rem; text-align: center;">
+            <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.
+            </div>
+        {% endif %}
     </form>
     
     <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
@@ -52,3 +58,4 @@
     }
 </style>
 {% endblock %}
+
