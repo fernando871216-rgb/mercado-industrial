@@ -7,13 +7,15 @@
     <title>Mercado Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    
     <style>
         /* Estilos Base Originales */
         html, body { height: 100%; margin: 0; }
         body { 
             display: flex; 
             flex-direction: column; 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6; 
         }
         
@@ -46,7 +48,15 @@
             margin-right: 10px;
             object-fit: contain;
         }
-        .logo-text { font-weight: bold; font-size: 1.1rem; }
+
+        /* AJUSTE DE TIPOGRAFÍA INITRE */
+        .logo-text { 
+            font-family: 'Montserrat', sans-serif; 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+        }
 
         /* BUSCADOR */
         .search-container {
@@ -149,6 +159,7 @@
                 box-shadow: 0 10px 10px rgba(0,0,0,0.2);
             }
             .nav-links.active { display: flex; }
+            .logo-text { font-size: 0.9rem; } /* Texto un poco más chico en móvil para que no se amontone */
         }
     </style>
 </head>
@@ -253,27 +264,19 @@
     </script>
 
     <script>
-    // Este código evita que la App se cierre al dar "atrás"
+    // Control del botón "atrás" para APK/Webview
     (function() {
-        // Creamos un estado en el historial para "atrapar" el primer clic atrás
         history.pushState(null, document.title, location.href);
-        
         window.addEventListener('popstate', function (event) {
-            // Si el usuario puede ir atrás en el historial de la web
             if (document.referrer.includes(window.location.hostname)) {
                 window.history.go(-1);
             } else {
-                // Si ya está en el inicio y le da atrás, aquí sí podría cerrarse 
-                // o puedes mandarlo al Home siempre:
                 window.location.href = "/";
             }
-            
-            // Mantenemos el estado para que no se salga de la app al siguiente clic
             history.pushState(null, document.title, location.href);
         });
     })();
-</script>
+    </script>
 
 </body>
 </html>
-
