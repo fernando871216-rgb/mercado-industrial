@@ -34,6 +34,12 @@
             Entrar al Panel
         </button>
 
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="{% url 'password_reset' %}" style="color: #7f8c8d; text-decoration: none; font-size: 0.85rem;">
+                ¿Olvidaste tu contraseña?
+            </div>
+        </div>
+
         {% if form.errors %}
             <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb; margin-bottom: 20px; font-size: 0.9rem; text-align: center;">
             <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.
@@ -58,4 +64,5 @@
     }
 </style>
 {% endblock %}
+
 
