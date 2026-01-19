@@ -58,6 +58,8 @@ def generar_preferencia_pago(request, producto_id):
                 "quantity": 1,
                 "unit_price": total_pagar_final,
                 "currency_id": "MXN",
+                "auto_return": "approved", # Esto es clave
+                "binary_mode": True,
             }
         ],
         "back_urls": {
@@ -552,6 +554,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
