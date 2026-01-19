@@ -114,7 +114,7 @@
         const bricksBuilder = mp.bricks();
         if (walletBrickController) walletBrickController.unmount();
         walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { preferenceId: preferenceId, redirectMode: "self" },
+            initialization: { preferenceId: preferenceId, redirectMode: "modal" },
             callbacks: {
             onReady: () => {
                 console.log("Brick listo");
@@ -126,7 +126,7 @@
                 console.error("Error en Brick:", error);
             }
         } // <-- Esta es la llave que faltaba
-    });
+    });    
 }
 
     renderMP("{{ preference_id }}");
@@ -184,6 +184,7 @@
     }
 </script>
 {% endblock %}
+
 
 
 
