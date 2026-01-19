@@ -165,6 +165,21 @@
 </head>
 <body>
 
+    <div style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60vw; /* Tamaño del logo en el fondo */
+        height: auto;
+        z-index: -1000; /* Lo manda al fondo de todo */
+        opacity: 0.05; /* Muy sutil para que no estorbe la lectura */
+        pointer-events: none; /* Para que no interfiera con los clics */
+        user-select: none;
+    ">
+        <img src="/static/INITRELOGO.jpg" alt="INITRE Background" style="width: 100%; filter: grayscale(100%);">
+    </div>
+
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
@@ -280,4 +295,5 @@
 
 </body>
 </html>
+
 
