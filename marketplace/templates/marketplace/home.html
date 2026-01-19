@@ -3,32 +3,43 @@
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
-    <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366;">
-        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 2; min-width: 280px;">
+    <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+            
+            <div style="flex: 1.5; min-width: 280px;">
                 <h2 style="color: #003366; margin: 0 0 10px 0; font-size: clamp(1.2rem, 4vw, 1.5rem);">
                     <i class="fas fa-handshake"></i> Comercio Directo y Seguro
                 </h2>
-                <p style="color: #4a5568; line-height: 1.5; margin: 0; font-size: 0.95rem;">
+                <p style="color: #4a5568; line-height: 1.6; margin: 0 0 15px 0; font-size: 1rem;">
                     Nuestra plataforma facilita el contacto y el pago seguro entre profesionales. 
                     <strong>Vendedor y comprador acuerdan libremente</strong> la entrega o envío del equipo. 
                 </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div style="text-align: center; background: white; padding: 10px; border-radius: 10px; border: 1px solid #dce3eb;">
+                        <i class="fas fa-search" style="color: #3498db; font-size: 1rem;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Busca</span>
+                    </div>
+                    <div style="text-align: center; background: white; padding: 10px; border-radius: 10px; border: 1px solid #dce3eb;">
+                        <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1rem;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Contacta</span>
+                    </div>
+                    <div style="text-align: center; background: white; padding: 10px; border-radius: 10px; border: 1px solid #dce3eb;">
+                        <i class="fas fa-truck" style="color: #2c3e50; font-size: 1rem;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
+                    </div>
+                </div>
             </div>
             
-            <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-width: 280px;">
-                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <i class="fas fa-search" style="color: #3498db; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Busca</span>
-                </div>
-                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Contacta</span>
-                </div>
-                <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                    <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
+            <div style="flex: 1; min-width: 300px; text-align: center;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.15); background: #000;">
+                    <video autoplay loop muted playsinline style="width: 100%; display: block;">
+                        <source src="/static/video_promo_initre.mp4" type="video/mp4">
+                        Tu navegador no soporta video.
+                    </video>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -41,60 +52,13 @@
             </button>
         </form>
     </div>
+    
+    ```
 
-    <h3 style="color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">
-        {% if query %} Resultados para "{{ query }}" {% else %} Equipos Recientes {% endif %}
-    </h3>
+### Instrucciones para que funcione:
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
-        {% for product in products %}
-            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}">
-                
-                {% if product.ficha_tecnica %}
-                <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                    <span style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                        <i class="fas fa-file-pdf"></i> TÉCNICO
-                    </span>
-                </div>
-                {% endif %}
-                
-                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
-                    <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 10px;">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        {% else %}
-                            <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
-                        {% endif %}
-                    </div>
-                    
-                    <div style="padding: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="color: #3498db; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
-                            
-                            {% if product.stock > 0 %}
-                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-                                    En Stock: {{ product.stock }}
-                                </span>
-                            {% else %}
-                                <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-                                    Agotado
-                                </span>
-                            {% endif %}
-                        </div>
+1.  **Sube tu video:** Debes guardar el archivo de video en tu carpeta de archivos estáticos (usualmente `marketplace/static/`) con el nombre `video_promo_initre.mp4`.
+2.  **Atributos clave:** He dejado los atributos `autoplay loop muted playsinline`. El `muted` es **vital**; sin él, Google Chrome no dejará que el video empiece solo.
+3.  **Responsividad:** Si el usuario ve la página desde un celular, el video se pondrá automáticamente debajo del texto gracias al `flex-wrap: wrap`, manteniendo la estética limpia.
 
-                        <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #2c3e50; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            {{ product.title }}
-                        </h4>
-
-                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
-                            ${{ product.price }} <span style="font-size: 0.75rem; font-weight: normal; color: #95a5a6;">MXN</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        {% empty %}
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
-        {% endfor %} 
-    </div>
-</div>
-{% endblock %}
+**¿Te gustaría que le ponga un pequeño borde azul o un "overlay" transparente con el logo de INITRE encima del video para que se vea aún más personalizado?**
