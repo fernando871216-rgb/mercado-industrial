@@ -34,7 +34,7 @@ def como_funciona(request):
 
 @login_required
 def generar_preferencia_pago(request, producto_id):
-    # Usamos producto_id (el que viene en la URL)
+    
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
@@ -53,7 +53,8 @@ def generar_preferencia_pago(request, producto_id):
     total_unificado = precio_base + comision_prod + flete_final_con_comision
     
     # 4. Sumamos comisión de Mercado Pago
-    total_pagar_final = round(total_unificado / (1 - 0.045), 2)
+    comision_mp = total_unificado * 0.045
+    total_pagar_final = round(total_unificado + comision_mp, 2)
 
     # 5. CONFIGURACIÓN DE MERCADO PAGO
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -559,6 +560,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
