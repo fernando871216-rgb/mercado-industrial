@@ -34,7 +34,6 @@ def como_funciona(request):
 
 @login_required
 def generar_preferencia_pago(request, producto_id):
-    
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
@@ -42,13 +41,12 @@ def generar_preferencia_pago(request, producto_id):
     except (TypeError, ValueError):
         flete_bruto = 0
 
-    # 2. CALCULAMOS TUS COMISIONES
+    # 1. CALCULAMOS COMISIONES (Tu 8% de gestión de flete)
     flete_final_con_comision = flete_bruto * 1.08
     precio_base = float(producto.price)
-   
     total_pagar_final = round(precio_base + flete_final_con_comision, 2)
 
-    # 5. CONFIGURACIÓN DE MERCADO PAGO
+    # 2. CONFIGURACIÓN DE MERCADO PAGO
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
     preference_data = {
@@ -58,20 +56,15 @@ def generar_preferencia_pago(request, producto_id):
                 "quantity": 1,
                 "unit_price": total_pagar_final,
                 "currency_id": "MXN",
-                "auto_return": "approved", # Esto es clave
-                "binary_mode": True,
             }
         ],
         "back_urls": {
-            # --- CORRECCIÓN AQUÍ ---
-            # Antes decía 'product.id', debe decir 'producto.id' (con 'o' al final)
             "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/'),
-        "auto_return": "approved",
         },
-        
-        
+        "auto_return": "approved", # VA AQUÍ (Afuera de back_urls e items)
+        "binary_mode": True,       # VA AQUÍ (Afuera de items)
     }
 
     preference_response = sdk.preference().create(preference_data)
@@ -555,6 +548,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
