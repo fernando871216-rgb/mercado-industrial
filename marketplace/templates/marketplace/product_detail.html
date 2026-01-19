@@ -107,7 +107,7 @@
         event.target.style.borderColor = '#003366';
     }
 
-    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
+    const mp = new MercadoPago('{{ APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9 }}', { locale: 'es-MX' });
     let walletBrickController = null;
 
     async function renderMP(preferenceId) {
@@ -183,5 +183,6 @@
     }
 </script>
 {% endblock %}
+
 
 
