@@ -43,7 +43,7 @@ def generar_preferencia_pago(request, producto_id):
         flete_bruto = 0
 
     # 2. CALCULAMOS TUS COMISIONES
-    flete_final_con_comision = flete_bruto * 0.08
+    flete_final_con_comision = flete_bruto * 1.08
     precio_base = float(producto.price)
    
     total_pagar_final = round(precio_base + flete_final_con_comision, 2)
@@ -552,6 +552,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
