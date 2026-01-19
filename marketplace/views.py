@@ -68,9 +68,10 @@ def generar_preferencia_pago(request, producto_id):
             "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/'),
-        },
         "auto_return": "approved",
-        "binary_mode": True,
+        },
+        
+        
     }
 
     preference_response = sdk.preference().create(preference_data)
@@ -554,6 +555,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
