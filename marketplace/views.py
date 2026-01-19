@@ -43,18 +43,10 @@ def generar_preferencia_pago(request, producto_id):
         flete_bruto = 0
 
     # 2. CALCULAMOS TUS COMISIONES
-    ganancia_flete_initre = flete_bruto * 0.08
-    flete_final_con_comision = flete_bruto + ganancia_flete_initre
-
+    flete_final_con_comision = flete_bruto * 0.08
     precio_base = float(producto.price)
-    comision_prod = precio_base * 0.05
-    
-    # 3. UNIFICAMOS TODO (Subtotal)
-    total_unificado = precio_base + comision_prod + flete_final_con_comision
-    
-    # 4. Sumamos comisión de Mercado Pago
-    comision_mp = total_unificado * 0.045
-    total_pagar_final = round(total_unificado + comision_mp, 2)
+   
+    total_pagar_final = round(precio_base + flete_final_con_comision, 2)
 
     # 5. CONFIGURACIÓN DE MERCADO PAGO
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
@@ -560,6 +552,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
