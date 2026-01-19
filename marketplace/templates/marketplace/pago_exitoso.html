@@ -130,12 +130,12 @@
 
     <script>
         // Contador único y preciso
-        let seconds = 10;
+        let seconds = 5;
         const display = document.getElementById('count');
         
         const countdown = setInterval(() => {
             seconds--;
-            display.textContent = seconds;
+            if (display) display.textContent = seconds;
             if (seconds <= 0) {
                 clearInterval(countdown);
                 window.location.href = "{% url 'mis_compras' %}";
@@ -145,3 +145,4 @@
 
 </body>
 </html>
+
