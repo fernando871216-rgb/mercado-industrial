@@ -39,7 +39,6 @@
                     </video>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -52,13 +51,60 @@
             </button>
         </form>
     </div>
-    
-    ```
 
-### Instrucciones para que funcione:
+    <h3 style="color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">
+        {% if query %} Resultados para "{{ query }}" {% else %} Equipos Recientes {% endif %}
+    </h3>
 
-1.  **Sube tu video:** Debes guardar el archivo de video en tu carpeta de archivos estáticos (usualmente `marketplace/static/`) con el nombre `video_promo_initre.mp4`.
-2.  **Atributos clave:** He dejado los atributos `autoplay loop muted playsinline`. El `muted` es **vital**; sin él, Google Chrome no dejará que el video empiece solo.
-3.  **Responsividad:** Si el usuario ve la página desde un celular, el video se pondrá automáticamente debajo del texto gracias al `flex-wrap: wrap`, manteniendo la estética limpia.
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+        {% for product in products %}
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}">
+                
+                {% if product.ficha_tecnica %}
+                <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                    <span style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <i class="fas fa-file-pdf"></i> TÉCNICO
+                    </span>
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
+                    <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        {% else %}
+                            <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #3498db; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
+                            
+                            {% if product.stock > 0 %}
+                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+                                    En Stock: {{ product.stock }}
+                                </span>
+                            {% else %}
+                                <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+                                    Agotado
+                                </span>
+                            {% endif %}
+                        </div>
 
-**¿Te gustaría que le ponga un pequeño borde azul o un "overlay" transparente con el logo de INITRE encima del video para que se vea aún más personalizado?**
+                        <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #2c3e50; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ product.title }}
+                        </h4>
+
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
+                            ${{ product.price }} <span style="font-size: 0.75rem; font-weight: normal; color: #95a5a6;">MXN</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
+        {% endfor %} 
+    </div>
+</div>
+{% endblock %}
