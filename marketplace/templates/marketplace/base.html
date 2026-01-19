@@ -6,20 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
-        /* Estilos Base Originales */
         html, body { height: 100%; margin: 0; }
         body { 
             display: flex; 
             flex-direction: column; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6; 
+            position: relative;
         }
         
-        .main-content { flex: 1; }
+        /* Fondo con Logo Sutil */
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60vw;
+            z-index: -1; /* Corregido para no tapar el contenido */
+            opacity: 0.05;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .main-content { flex: 1; position: relative; z-index: 10; }
 
         /* Barra de Navegación */
         .navbar {
@@ -36,191 +48,42 @@
             min-height: 60px;
         }
 
-        .logo-container { 
-            display: flex; 
-            align-items: center; 
-            text-decoration: none; 
-            color: white; 
-        }
-        .logo-img { 
-            height: 45px;
-            width: auto;
-            margin-right: 10px;
-            object-fit: contain;
-        }
+        .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
+        .logo-img { height: 45px; width: auto; margin-right: 10px; object-fit: contain; }
+        .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; }
 
-        /* AJUSTE DE TIPOGRAFÍA INITRE */
-        .logo-text { 
-            font-family: 'Montserrat', sans-serif; 
-            font-weight: 900; 
-            font-size: 1.1rem; 
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-        }
-
-        /* BUSCADOR */
-        .search-container {
-            flex: 1;
-            max-width: 350px;
-            margin: 0 15px;
-        }
-        .search-form {
-            display: flex;
-            background: rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 4px 15px;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .search-input {
-            background: none;
-            border: none;
-            color: white;
-            padding: 6px;
-            width: 100%;
-            outline: none;
-            font-size: 0.85rem;
-        }
-        .search-input::placeholder { color: rgba(255,255,255,0.7); }
-        .search-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Enlaces de Navegación */
         .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a, .logout-btn { 
-            color: white; 
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 500; 
-            transition: 0.3s; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 0; 
-            font-family: inherit; 
-        }
-        .nav-links a:hover, .logout-btn:hover { color: #f39c12; }
+        .nav-links a, .logout-btn { color: white; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: 0.3s; background: none; border: none; cursor: pointer; }
+        .nav-links a:hover { color: #f39c12; }
         
-        /* ESTILO ESPECIAL PARA "¿CÓMO FUNCIONA?" */
-        .btn-como-funciona {
-            color: #ffcc00 !important;
-            border: 1px solid #ffcc00;
-            padding: 5px 12px !important;
-            border-radius: 20px;
-            font-weight: bold !important;
-        }
-        .btn-como-funciona:hover {
-            background: #ffcc00;
-            color: #0056b3 !important;
-        }
+        .btn-como-funciona { color: #ffcc00 !important; border: 1px solid #ffcc00; padding: 5px 12px; border-radius: 20px; font-weight: bold; }
+        .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold; }
 
-        .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
-        
-        /* Menu Hamburguesa Móvil */
-        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
-
-        /* Footer */
-        footer {
-            background-color: #002244;
-            color: #bdc3c7;
-            padding: 30px 20px;
-            text-align: center;
-            margin-top: 40px;
-        }
-        .footer-links { margin-bottom: 15px; }
+        footer { background-color: #002244; color: #bdc3c7; padding: 30px 20px; text-align: center; margin-top: 40px; position: relative; z-index: 10; }
         .footer-links a { color: #ffffff; text-decoration: none; margin: 0 10px; font-size: 0.85rem; opacity: 0.8; }
-        .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
 
-        /* WHATSAPP FLOAT */
-        .whatsapp-float:hover {
-            background-color: #128C7E;
-            color: white;
-            transform: scale(1.1);
-            transition: all 0.3s ease;
-        }
-
-        /* Responsivo */
         @media (max-width: 992px) {
-            .search-container { display: none; }
-            .menu-toggle { display: block; }
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: #0056b3;
-                padding: 20px 0;
-                gap: 20px;
-                box-shadow: 0 10px 10px rgba(0,0,0,0.2);
-            }
-            .nav-links.active { display: flex; }
-            .logo-text { font-size: 0.9rem; } /* Texto un poco más chico en móvil para que no se amontone */
+            .nav-links { display: none; }
+            .nav-links.active { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; width: 100%; background: #0056b3; padding: 20px 0; }
         }
     </style>
 </head>
 <body>
-
-    <div style="
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 60vw; /* Tamaño del logo en el fondo */
-        height: auto;
-        z-index: -1000; /* Lo manda al fondo de todo */
-        opacity: 0.05; /* Muy sutil para que no estorbe la lectura */
-        pointer-events: none; /* Para que no interfiera con los clics */
-        user-select: none;
-    ">
-        <img src="/static/INITRELOGO.jpg" alt="INITRE Background" style="width: 100%; filter: grayscale(100%);">
-    </div>
+    <img src="{% static 'INITRELOGO.jpg' %}" class="bg-watermark" alt="INITRE Background">
 
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
             <span class="logo-text">MERCADO INDUSTRIAL INITRE</span>
         </a>
-
-        <div class="search-container">
-            <form action="{% url 'home' %}" method="GET" class="search-form">
-                <input type="text" name="q" class="search-input" placeholder="Buscar equipo..." value="{{ request.GET.q|default:'' }}">
-                <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-        </div>
-
-        <div class="menu-toggle" id="mobile-menu">
-            <i class="fas fa-bars"></i>
-        </div>
-
         <div class="nav-links" id="nav-content">
-            <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
-            
-            <a href="{% url 'como_funciona' %}" class="btn-como-funciona">
-                <i class="fas fa-question-circle"></i> ¿Cómo funciona?
-            </a>
-            
+            <a href="{% url 'home' %}">Catálogo</a>
+            <a href="{% url 'como_funciona' %}" class="btn-como-funciona">¿Cómo funciona?</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}">Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
-                <a href="{% url 'mis_compras' %}">Mis Compras</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Perfil / Pagos</a>
-
-                {% if user.is_staff %}
-                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
-                {% endif %}
-
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil">Perfil / Pagos</a>
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
+                    {% csrf_token %}<button type="submit" class="logout-btn">Salir</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Ingresar</a>
@@ -229,71 +92,16 @@
         </div>
     </nav>
 
-    {% if messages %}
-    <div style="padding: 10px 20px;">
-        {% for message in messages %}
-            <div style="padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <div class="main-content">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </div>
 
     <footer>
         <div class="footer-links">
             <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
-            <a href="{% url 'terminos' %}">Aviso de Privacidad</a>
             <a href="{% url 'terminos' %}">Términos y Condiciones</a>
         </div>
-        <div class="copyright">
-            &copy; 2026 Mercado Industrial INITRE. Todos los derechos reservados.
-        </div>
+        <div class="copyright">&copy; 2026 Mercado Industrial INITRE.</div>
     </footer>
-
-    <a href="https://wa.me/522225858320?text=Hola,%20necesito%20ayuda%20con%20un%20equipo%20en%20Mercado%20Industrial" 
-       class="whatsapp-float" 
-       target="_blank" 
-       style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 3px #999; z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-
-    <script>
-        const menuToggle = document.getElementById('mobile-menu');
-        const navContent = document.getElementById('nav-content');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => {
-                navContent.classList.toggle('active');
-                const icon = menuToggle.querySelector('i');
-                if (icon.classList.contains('fa-bars')) {
-                    icon.classList.replace('fa-bars', 'fa-times');
-                } else {
-                    icon.classList.replace('fa-times', 'fa-bars');
-                }
-            });
-        }
-    </script>
-
-    <script>
-    // Control del botón "atrás" para APK/Webview
-    (function() {
-        history.pushState(null, document.title, location.href);
-        window.addEventListener('popstate', function (event) {
-            if (document.referrer.includes(window.location.hostname)) {
-                window.history.go(-1);
-            } else {
-                window.location.href = "/";
-            }
-            history.pushState(null, document.title, location.href);
-        });
-    })();
-    </script>
-
 </body>
 </html>
-
-
