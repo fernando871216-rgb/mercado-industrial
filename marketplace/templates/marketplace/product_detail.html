@@ -89,26 +89,9 @@
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // Solo inicializamos MP si hay stock
-    {% if product.stock > 0 %}
-    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
-    let walletBrickController = null;
-
-    async function renderMP(preferenceId) {
-        const bricksBuilder = mp.bricks();
-        if (walletBrickController) walletBrickController.unmount();
-        walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { preferenceId: preferenceId, redirectMode: "modal" },
-            callbacks: {
-                onReady: () => { console.log("Brick listo"); },
-                onError: (error) => { console.error("Error en Brick:", error); }
-            }
-        });
-    }
-    renderMP("{{ preference_id }}");
-    {% endif %}
-
+    // 1. CAMBIO DE IMÁGENES
     function changeImage(src) {
         const mainImg = document.getElementById('mainImage');
         mainImg.style.opacity = '0';
@@ -118,36 +101,46 @@
         }, 200);
     }
 
-    // (La función cotizarFlete y seleccionarTarifa se mantienen igual si hay stock)
+    // 2. CONFIGURACIÓN MERCADO PAGO
+    {% if product.stock > 0 %}
+    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
+    let walletBrickController = null;
 
     async function renderMP(preferenceId) {
         const bricksBuilder = mp.bricks();
-        if (walletBrickController) walletBrickController.unmount();
+        if (walletBrickController) {
+            await walletBrickController.unmount();
+        }
         walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { preferenceId: preferenceId, redirectMode: "modal" },
+            initialization: { 
+                preferenceId: preferenceId, 
+                redirectMode: "modal" 
+            },
             callbacks: {
-            onReady: () => {
-                console.log("Brick listo");
-            },
-            onSubmit: () => {
-                // Opcional: mostrar un cargando
-            },
-            onError: (error) => {
-                console.error("Error en Brick:", error);
+                onReady: () => { console.log("Brick de Mercado Pago listo"); },
+                onError: (error) => { console.error("Error en Brick:", error); }
             }
-        } // <-- Esta es la llave que faltaba
-    });    
-}
+        });
+    }
 
+    // Render inicial con la preferencia base
     renderMP("{{ preference_id }}");
+    {% endif %}
 
+    // 3. COTIZADOR DE FLETE (SOLO ENVIOS)
     function cotizarFlete() {
         const cp = document.getElementById('cp_destino').value;
         const btn = document.getElementById('btn-cotizar');
         const lista = document.getElementById('lista-tarifas');
-        if (!cp || cp.length < 5) return alert("Por favor ingresa un código postal válido");
+
+        if (!cp || cp.length < 5) {
+            return alert("Por favor ingresa un código postal válido");
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
+
+        // Asegúrate que esta URL coincida con tu urls.py
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => {
@@ -168,8 +161,12 @@
                     });
                     lista.style.display = 'block';
                 } else {
-                    alert("No hay tarifas disponibles para este CP.");
+                    alert("No hay tarifas disponibles para este CP o error en la API.");
                 }
+            })
+            .catch(err => {
+                console.error("Error en la petición:", err);
+                alert("Hubo un error al conectar con el servidor.");
             })
             .finally(() => {
                 btn.disabled = false;
@@ -177,6 +174,7 @@
             });
     }
 
+    // 4. SELECCIÓN DE TARIFA Y ACTUALIZACIÓN DE PAGO
     function seleccionarTarifa(elemento, precio) {
         const filas = document.getElementById('lista-tarifas').children;
         for(let f of filas) {
@@ -185,15 +183,19 @@
         }
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "4px solid #38a169";
+
+        // Llamada para actualizar la preferencia de Mercado Pago con el flete incluido
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
             .then(res => res.json())
             .then(data => {
-                if (data.preference_id) renderMP(data.preference_id);
+                if (data.preference_id) {
+                    renderMP(data.preference_id);
+                }
             })
-            .catch(error => console.error("Error:", error));
+            .catch(error => console.error("Error actualizando preferencia:", error));
     }
-
 </script>
 {% endblock %}
+
 
 
