@@ -41,6 +41,7 @@
                     <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
                     <span><strong>Alto:</strong> {{ product.alto }} cm</span>
                     <span><strong>Largo:</strong> {{ product.largo }} cm</span>
+                    <span style="grid-column: span 2;"><strong>Origen (CP):</strong> {{ product.cp_origen }}</span>
                 </div>
             </div>
         </div>
@@ -120,3 +121,4 @@
     // (La función cotizarFlete y seleccionarTarifa se mantienen igual si hay stock)
 </script>
 {% endblock %}
+
