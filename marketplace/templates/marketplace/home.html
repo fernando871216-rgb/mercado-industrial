@@ -93,5 +93,31 @@
             <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
         {% endfor %} 
     </div>
-</div>
-{% endblock %}
+            <a href="{% static 'app_initre.apk' %}" 
+               download="INITRE_Mercado_Industrial.apk"
+               style="
+                    position: fixed; 
+                    bottom: 95px; /* Un poco más arriba para no tapar el de WhatsApp */
+                    right: 20px; 
+                    background-color: #3DDC84; 
+                    color: white; 
+                    padding: 12px 20px; 
+                    border-radius: 30px; 
+                    text-decoration: none; 
+                    font-weight: bold; 
+                    font-size: 0.9rem;
+                    display: flex; 
+                    align-items: center; 
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                    z-index: 1000;
+                    transition: all 0.3s ease;
+               "
+               onmouseover="this.style.backgroundColor='#34B776'; this.style.transform='scale(1.05)';"
+               onmouseout="this.style.backgroundColor='#3DDC84'; this.style.transform='scale(1)';"
+            >
+                <i class="fab fa-android" style="margin-right: 10px; font-size: 1.3rem;"></i>
+                Instalar App Android
+            </a>
+        </div>
+    {% endblock %}
+
