@@ -15,7 +15,6 @@ import time
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-# IMPORTANTE: Solo importamos lo que existe en tu models.py
 from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
@@ -27,20 +26,31 @@ from django.db.models import Sum
 from .utils import enviar_notificacion_venta
 from django.http import FileResponse
 from django.conf import settings
+from django.contrib.staticfiles import finders
+from django.http import FileResponse, Http404
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
 def descargar_apk(request):
-    ruta_apk = os.path.join(settings.BASE_DIR, 'marketplace', 'static', 'app_initre.apk')
-    # Forzamos el tipo de contenido para que el móvil lo reconozca
-    response = FileResponse(open(ruta_apk, 'rb'), content_type='application/vnd.android.package-archive')
-    response['Content-Disposition'] = 'attachment; filename="app_initre.apk"'
-    return response
+    # Buscamos el archivo en las carpetas estáticas configuradas
+    # Solo ponemos el nombre del archivo si está en la raíz de static
+    nombre_archivo = 'app_initre.apk'
+    ruta_apk = finders.find(nombre_archivo)
 
+    if not ruta_apk:
+        # Si no lo encuentra con finders, intentamos ruta manual relativa
+        # Ajusta esto si tu archivo está dentro de una subcarpeta como static/app/
+        from django.conf import settings
+        ruta_apk = os.path.join(settings.BASE_DIR, 'static', nombre_archivo)
 
-def como_funciona(request):
-    return render(request, 'marketplace/como_funciona.html')
+    if os.path.exists(ruta_apk):
+        response = FileResponse(open(ruta_apk, 'rb'), content_type='application/vnd.android.package-archive')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+        return response
+    else:
+        # Si después de todo no existe, lanzamos un 404 controlado en lugar de un Error 500
+        raise Http404("El archivo APK no se encuentra en el servidor. Verifica que fue subido a la carpeta static.")
 
 @login_required
 def generar_preferencia_pago(request, producto_id):
@@ -558,6 +568,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
