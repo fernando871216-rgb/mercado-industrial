@@ -25,9 +25,19 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Sum
 from .utils import enviar_notificacion_venta
+from django.http import FileResponse
+from django.conf import settings
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SDK = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
+
+def descargar_apk(request):
+    ruta_apk = os.path.join(settings.BASE_DIR, 'marketplace', 'static', 'app_initre.apk')
+    # Forzamos el tipo de contenido para que el móvil lo reconozca
+    response = FileResponse(open(ruta_apk, 'rb'), content_type='application/vnd.android.package-archive')
+    response['Content-Disposition'] = 'attachment; filename="app_initre.apk"'
+    return response
+
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html')
@@ -548,6 +558,7 @@ def mercadopago_webhook(request):
             print(f"Error en webhook: {e}")
 
     return HttpResponse(status=200)
+
 
 
 
