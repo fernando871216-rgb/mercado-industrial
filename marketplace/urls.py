@@ -10,6 +10,7 @@ urlpatterns = [
     path('producto/<int:product_id>/', views.detalle_producto, name='detalle_producto'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
     path('como-funciona/', views.como_funciona, name='como_funciona'),
+    path('descargar-app/', views.descargar_apk, name='descargar_app'),
     
     # --- CUENTA Y PERFIL ---
     path('registro/', views.registro, name='registro'),
@@ -53,6 +54,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
