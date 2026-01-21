@@ -93,7 +93,7 @@
             <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
         {% endfor %} 
     </div>
-            <a href="{% static 'app_initre.apk' %}" 
+            <a href="{% url 'descargar_app' %}" download="app_initre.apk" ... >
                download="INITRE_Mercado_Industrial.apk"
                style="
                     position: fixed; 
@@ -120,6 +120,7 @@
             </a>
         </div>
     {% endblock %}
+
 
 
 
