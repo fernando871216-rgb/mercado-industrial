@@ -569,6 +569,12 @@ def mercadopago_webhook(request):
 
     return HttpResponse(status=200)
 
+# marketplace/views.py
+
+def como_funciona(request):
+    return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
+
 
 
 
