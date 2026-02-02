@@ -94,33 +94,31 @@
         {% endfor %} 
     </div> 
 
-    <a href="{% url 'descargar_app' %}" 
+    <div style="text-align: center; margin: 40px 0;"> <a href="{% url 'descargar_app' %}" 
        download="INITRE_Mercado_Industrial.apk"
        style="
-            position: fixed; 
-            bottom: 95px; 
-            left: 20px; 
+            display: inline-flex; /* Cambiado de flex a inline-flex */
+            align-items: center; 
             background-color: #3DDC84; 
             color: white; 
-            padding: 12px 20px; 
+            padding: 15px 30px; 
             border-radius: 30px; 
             text-decoration: none; 
             font-weight: bold; 
-            font-size: 0.9rem;
-            display: flex; 
-            align-items: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+            /* Eliminamos position: fixed, bottom y left */
        "
        onmouseover="this.style.backgroundColor='#34B776'; this.style.transform='scale(1.05)';"
        onmouseout="this.style.backgroundColor='#3DDC84'; this.style.transform='scale(1)';"
     >
         <i class="fab fa-android" style="margin-right: 10px; font-size: 1.3rem;"></i>
-        Instalar App Android
+        Descargar App Oficial INITRE
     </a>
-
+</div>
 </div> {% endblock %}
+
 
 
 
