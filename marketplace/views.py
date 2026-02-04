@@ -19,7 +19,6 @@ from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Sum
@@ -573,6 +572,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
