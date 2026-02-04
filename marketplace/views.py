@@ -535,44 +535,44 @@ def mercadopago_webhook(request):
                         producto_id = parts[0]
                         comprador_id = parts[1]
                         
-                        try:
-                            producto = IndustrialProduct.objects.get(id=producto_id)
-                            comprador = User.objects.get(id=comprador_id)
-                            monto = Decimal(str(data.get('transaction_amount')))
+                        producto = IndustrialProduct.objects.get(id=producto_id)
+                        comprador = User.objects.get(id=comprador_id)
+                        monto = Decimal(str(data.get('transaction_amount')))
+                        
+                        # EL CANDADO MAESTRO: update_or_create
+                        # Si ya existe una venta con este payment_id, la actualiza. Si no, la crea.
+                        venta, created = Sale.objects.update_or_create(
+                            payment_id=payment_id,
+                            defaults={
+                                'product': producto,
+                                'buyer': comprador,
+                                'price': monto,
+                                'status': 'approved'
+                            }
+                        )
+
+                        # Acciones que SOLO ocurren la primera vez que se registra el pago
+                        if created:
+                            if producto.stock > 0:
+                                producto.stock -= 1
+                                producto.save()
                             
-                            # USAMOS update_or_create: El payment_id es nuestro escudo contra duplicados
-                            # Esto busca si ya existe una venta con ese ID, si no existe la crea.
-                            venta, created = Sale.objects.update_or_create(
-                                payment_id=payment_id, # Buscamos por este ID único de Mercado Pago
-                                defaults={
-                                    'product': producto,
-                                    'buyer': comprador,
-                                    'price': monto,
-                                    'status': 'approved',
-                                }
-                            )
+                            enviar_notificacion_venta(venta)
+                            print(f"WEBHOOK: Venta nueva creada con éxito. ID: {payment_id}")
+                        else:
+                            print(f"WEBHOOK: Pago ya registrado anteriormente. ID: {payment_id}")
+            
+        except Exception as e:
+            print(f"Error crítico en el webhook: {e}")
 
-                            if created:
-                                # Solo si la venta es NUEVA ejecutamos acciones de inventario y correo
-                                if producto.stock > 0:
-                                    producto.stock -= 1
-                                    producto.save()
-                                
-                                enviar_notificacion_venta(venta)
-                                print(f"VENTA CREADA POR WEBHOOK: ID Pago {payment_id}")
-                            else:
-                                # Si ya existía, update_or_create solo actualizó los campos en defaults
-                                print(f"AVISO: Venta ya registrada anteriormente (ID Pago {payment_id}). No se duplicó.")
-                                
-                        except (IndustrialProduct.DoesNotExist, User.DoesNotExist) as e:
-                            print(f"Error: Producto o Usuario no encontrado en Webhook. {e}")
-
+    # Siempre respondemos 200 a Mercado Pago para que no siga intentando
     return HttpResponse(status=200)
 
 # marketplace/views.py
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
