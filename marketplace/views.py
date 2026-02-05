@@ -439,30 +439,20 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    # 1. Filtramos las ventas exitosas
-    ventas_exitosas = Sale.objects.filter(status='approved')
+    estados_exitosos = ['approved', 'enviado', 'entregado']
+    ventas_exitosas = Sale.objects.filter(status__in=estados_exitosos)
+    
     total_ventas_count = ventas_exitosas.count()
     
-    # 2. Calculamos el monto total con una protección por si el campo no se llama 'amount'
-    total_monto = 0
-    for v in ventas_exitosas:
-        # Intentamos obtener el valor de 'amount', si no existe probamos con 'total' o 'price'
-        valor = getattr(v, 'amount', getattr(v, 'total', getattr(v, 'price', 0)))
-        try:
-            total_monto += float(valor)
-        except:
-            continue
-
-    ingresos_totales = total_monto * 0.05
+    total_ganancia_acumulada = ventas_exitosas.aggregate(Sum('ganancia_neta'))['ganancia_neta__sum'] or 0
     
-    # 3. El resto se queda igual
     ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
         'ventas': ventas_todas,
         'total_ventas_count': total_ventas_count,
-        'ingresos_totales': ingresos_totales,
+        'ingresos_totales': total_ganancia_acumulada, # Esta es la variable que lee tu HTML
         'productos_recientes': productos_recientes,
     }
     
@@ -587,6 +577,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
