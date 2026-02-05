@@ -482,39 +482,51 @@ def pago_exitoso(request, producto_id):
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
     
+    # 1. Intentamos obtener el flete de la URL de forma segura
     try:
         flete_con_comision = float(request.GET.get('envio', 0))
-    except:
+    except (TypeError, ValueError):
         flete_con_comision = 0
 
-    if status_mp == 'approved':
-        ganancia_prod = float(producto.price) * 0.05
-        ganancia_flete = flete_con_comision * 0.074 
-        total_ganancia_neta = ganancia_prod + ganancia_flete
+    mostrar_contacto = False
 
+    if status_mp == 'approved':
+        # 2. CONGELAMOS LOS VALORES: Usamos Decimal para evitar errores de centavos
+        precio_producto_momento = Decimal(str(producto.price))
+        flete_decimal = Decimal(str(flete_con_comision))
+        
+        # 3. CÁLCULO DE GANANCIAS (5% producto + 7.4% sobre el flete)
+        ganancia_prod = precio_producto_momento * Decimal('0.05')
+        ganancia_flete = flete_decimal * Decimal('0.074')
+        total_ganancia_neta = (ganancia_prod + ganancia_flete).quantize(Decimal('0.01'))
+
+        # 4. GUARDADO HISTÓRICO
+        # Guardamos 'price' como el total pagado (producto + flete)
         venta, created = Sale.objects.update_or_create(
             payment_id=payment_id,
             defaults={
                 'product': producto,
                 'buyer': request.user,
-                'price': float(producto.price) + flete_con_comision, # Guardamos el total real
+                'price': precio_producto_momento + flete_decimal, 
                 'ganancia_neta': total_ganancia_neta,
                 'status': 'approved',
-                'created_at': timezone.now()
+                # Quitamos created_at de aquí para que no se resetee si recargan la página
             }
         )
         
         if created:
+            # Solo descontamos stock y enviamos correo la PRIMERA vez que se registra el pago
             if producto.stock > 0:
                 producto.stock -= 1
                 producto.save()
             
-            # --- AQUÍ ENVIAMOS EL CORREO ---
             enviar_notificacion_venta(venta)
+            print(f"VENTA REGISTRADA: ID {payment_id} - Ganancia: {total_ganancia_neta}")
 
         mostrar_contacto = True
     else:
-        mostrar_contacto = Sale.objects.filter(product=producto, buyer=request.user, status='approved').exists()
+        # Si el pago no fue aprobado ahora, verificamos si ya existe uno aprobado antes
+        mostrar_contacto = Sale.objects.filter(payment_id=payment_id, status='approved').exists()
 
     return render(request, 'marketplace/pago_exitoso.html', {
         'producto': producto,
@@ -583,6 +595,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
