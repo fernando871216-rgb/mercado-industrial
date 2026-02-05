@@ -60,28 +60,38 @@
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
             {% if product.stock > 0 %}
-                <div style="background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e0e6ed; margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                    <h4 style="margin: 0 0 12px 0; color: #003366; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizador de Flete</h4>
-                    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                        <input type="text" id="cp_destino" placeholder="C.P. de destino" style="flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px;">
-                        <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">COTIZAR</button>
+                
+                {% if perfil_incompleto %}
+                    <div style="background: #fff9db; border: 1px solid #fcc419; color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h5 style="margin-top: 0; font-size: 1.1rem;"><i class="fas fa-exclamation-triangle"></i> Perfil Incompleto</h5>
+                        <p style="font-size: 0.9rem; margin-bottom: 15px;">Para poder cotizar envíos y comprar este equipo, necesitamos tu número de teléfono y dirección de entrega.</p>
+                        <a href="{% url 'editar_perfil' %}" class="btn btn-warning btn-sm" style="font-weight: bold; color: #000;">Configurar mi perfil ahora</a>
                     </div>
-                    <div id="lista-tarifas" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 8px; background: #fdfdfd;"></div>
-                </div>
+                {% else %}
+                    <div style="background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e0e6ed; margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                        <h4 style="margin: 0 0 12px 0; color: #003366; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizador de Flete</h4>
+                        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                            <input type="text" id="cp_destino" placeholder="C.P. de destino" style="flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px;">
+                            <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">COTIZAR</button>
+                        </div>
+                        <div id="lista-tarifas" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 8px; background: #fdfdfd;"></div>
+                    </div>
 
-                <div id="wallet_container" style="min-height: 50px;"></div>
+                    <div id="wallet_container" style="min-height: 50px;"></div>
+                {% endif %}
+
             {% else %}
                 <div style="background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fas fa-info-circle fa-2x" style="margin-bottom: 10px;"></i>
                     <h4 style="margin: 0;">Producto No Disponible</h4>
-                    <p style="font-size: 0.9rem; margin: 10px 0 0 0;">Este equipo no tiene stock actualmente. Por favor, contacta al vendedor para consultar disponibilidad futura.</p>
+                    <p style="font-size: 0.9rem; margin: 10px 0 0 0;">Este equipo no tiene stock actualmente.</p>
                 </div>
             {% endif %}
 
             <div style="margin-top: 20px; padding: 15px; background-color: #f0f7ff; border: 1px solid #d0e3ff; border-radius: 10px; display: flex; align-items: flex-start; gap: 12px;">
                 <i class="fas fa-info-circle" style="color: #0056b3; margin-top: 3px;"></i>
                 <p style="margin: 0; font-size: 0.88rem; color: #004085; line-height: 1.4;">
-                    <strong>Importante:</strong> Puedes acordar la logistica directamente con el vendedor si prefieres no usar el sistema de flete automático INITRE. Las cotizaciones son de parte de <strong>SoloEnvios.com</strong>. Si se usa el servicio de FLETE dentro de la pagina <strong>INITRE</strong> genera un <strong>8%</strong> de <strong>comision</strong> sobre el monto del FLETE cotizado por <strong>SoloEnvios.com</strong>.
+                    <strong>Importante:</strong> Puedes acordar la logística directamente con el vendedor. Las cotizaciones son vía <strong>SoloEnvios.com</strong> + <strong>8%</strong> de comisión INITRE.
                 </p>
             </div>
         </div>
@@ -90,7 +100,6 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // 1. CAMBIO DE IMÁGENES
     function changeImage(src) {
         const mainImg = document.getElementById('mainImage');
         mainImg.style.opacity = '0';
@@ -100,8 +109,7 @@
         }, 200);
     }
 
-    // 2. CONFIGURACIÓN MERCADO PAGO
-    {% if product.stock > 0 %}
+    {% if product.stock > 0 and not perfil_incompleto %}
     const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
     let walletBrickController = null;
 
@@ -116,30 +124,23 @@
                 redirectMode: "modal" 
             },
             callbacks: {
-                onReady: () => { console.log("Brick de Mercado Pago listo"); },
-                onError: (error) => { console.error("Error en Brick:", error); }
+                onReady: () => { console.log("Brick listo"); },
+                onError: (error) => { console.error("Error:", error); }
             }
         });
     }
-
-    // Render inicial con la preferencia base
     renderMP("{{ preference_id }}");
-    {% endif %}
 
-    // 3. COTIZADOR DE FLETE (SOLO ENVIOS)
     function cotizarFlete() {
         const cp = document.getElementById('cp_destino').value;
         const btn = document.getElementById('btn-cotizar');
         const lista = document.getElementById('lista-tarifas');
 
-        if (!cp || cp.length < 5) {
-            return alert("Por favor ingresa un código postal válido");
-        }
+        if (!cp || cp.length < 5) return alert("C.P. inválido");
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
 
-        // Asegúrate que esta URL coincida con tu urls.py
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => {
@@ -160,12 +161,8 @@
                     });
                     lista.style.display = 'block';
                 } else {
-                    alert("No hay tarifas disponibles para este CP o error en la API.");
+                    alert("No hay tarifas disponibles.");
                 }
-            })
-            .catch(err => {
-                console.error("Error en la petición:", err);
-                alert("Hubo un error al conectar con el servidor.");
             })
             .finally(() => {
                 btn.disabled = false;
@@ -173,33 +170,16 @@
             });
     }
 
-    // 4. SELECCIÓN DE TARIFA Y ACTUALIZACIÓN DE PAGO
     function seleccionarTarifa(elemento, precio) {
         const filas = document.getElementById('lista-tarifas').children;
-        for(let f of filas) {
-            f.style.backgroundColor = "transparent";
-            f.style.borderLeft = "none";
-        }
+        for(let f of filas) { f.style.backgroundColor = "transparent"; f.style.borderLeft = "none"; }
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "4px solid #38a169";
 
-        // Llamada para actualizar la preferencia de Mercado Pago con el flete incluido
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
             .then(res => res.json())
-            .then(data => {
-                if (data.preference_id) {
-                    renderMP(data.preference_id);
-                }
-            })
-            .catch(error => console.error("Error actualizando preferencia:", error));
+            .then(data => { if (data.preference_id) renderMP(data.preference_id); });
     }
+    {% endif %}
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
