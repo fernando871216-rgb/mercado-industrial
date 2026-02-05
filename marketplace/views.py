@@ -295,10 +295,16 @@ def home(request):
         products = IndustrialProduct.objects.filter(
             Q(title__icontains=query) | Q(part_number__icontains=query)| 
             Q(brand__icontains=query)
+    
         )
     else:
         products = IndustrialProduct.objects.all()
-    
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        if profile:
+            # Verificamos si faltan campos clave
+            if not profile.phone or not profile.address:
+                messages.warning(request, "⚠️ Tu perfil está incompleto. Agrega tu teléfono y dirección para poder comprar o vender.")
     return render(request, 'marketplace/home.html', {'products': products})
 
 def detalle_producto(request, product_id):
@@ -572,6 +578,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
