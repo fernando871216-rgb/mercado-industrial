@@ -439,25 +439,31 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    estados_exitosos = ['approved', 'enviado', 'entregado']
-    ventas_exitosas = Sale.objects.filter(status__in=estados_exitosos)
+    # 1. Definimos qué estados significan que la plata ya entró
+    # Consideramos 'approved' (recién pagado), 'enviado' y 'entregado'
+    estados_validos = ['approved', 'enviado', 'entregado']
     
+    # 2. Filtramos las ventas exitosas
+    ventas_exitosas = Sale.objects.filter(status__in=estados_validos)
     total_ventas_count = ventas_exitosas.count()
     
-    total_ganancia_acumulada = ventas_exitosas.aggregate(Sum('ganancia_neta'))['ganancia_neta__sum'] or 0
-    
+    # 3. Sumamos la ganancia_neta de todas esas ventas
+    # Usamos aggregate para que la base de datos haga la suma rápido
+    resultado_ganancia = ventas_exitosas.aggregate(total=Sum('ganancia_neta'))
+    ingresos_totales = resultado_ganancia['total'] or 0
+
+    # 4. Traemos todas las ventas para la tabla (sin filtrar estado para ver el historial completo)
     ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
         'ventas': ventas_todas,
         'total_ventas_count': total_ventas_count,
-        'ingresos_totales': total_ganancia_acumulada, # Esta es la variable que lee tu HTML
+        'ingresos_totales': ingresos_totales,
         'productos_recientes': productos_recientes,
     }
     
     return render(request, 'marketplace/panel_admin.html', context)
-
 @staff_member_required
 def marcar_como_pagado(request, venta_id):
     if request.method == 'POST':
@@ -577,6 +583,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
