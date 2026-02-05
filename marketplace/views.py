@@ -308,10 +308,19 @@ def home(request):
     return render(request, 'marketplace/home.html', {'products': products})
 
 def detalle_producto(request, product_id):
-    # Aquí definimos 'product'
     product = get_object_or_404(IndustrialProduct, id=product_id)
     
-    # ID del usuario para el external_reference
+    # --- VALIDACIÓN DE PERFIL INCOMPLETO ---
+    perfil_incompleto = False
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        if profile:
+            # Si le falta teléfono O dirección, marcamos como incompleto
+            if not profile.phone or not profile.address:
+                perfil_incompleto = True
+                messages.warning(request, "⚠️ Completa tu teléfono y dirección en tu perfil para poder comprar.")
+    # ---------------------------------------
+
     user_id = request.user.id if request.user.is_authenticated else 0
     
     pref_data = {
@@ -322,7 +331,6 @@ def detalle_producto(request, product_id):
             "unit_price": float(product.price), 
             "currency_id": "MXN"
         }],
-        # CORRECCIÓN: Usamos product.id (antes decía producto.id)
         "external_reference": f"{product.id}-{user_id}",
     }
     
@@ -336,7 +344,8 @@ def detalle_producto(request, product_id):
     return render(request, 'marketplace/product_detail.html', {
         'product': product, 
         'preference_id': preference_id,
-        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9"
+        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9",
+        'perfil_incompleto': perfil_incompleto  # Enviamos la variable al HTML
     })
     
 def category_detail(request, category_id):
@@ -578,6 +587,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
