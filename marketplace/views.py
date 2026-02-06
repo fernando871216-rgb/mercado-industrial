@@ -437,10 +437,43 @@ def confirmar_recepcion(request, venta_id):
 @login_required
 def actualizar_guia(request, venta_id):
     if request.method == 'POST':
+        # 1. Buscamos la venta (asegurándonos que el usuario es el dueño del producto)
         v = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+        
+        # 2. Capturamos los datos del formulario
         v.shipping_company = request.POST.get('shipping_company')
         v.tracking_number = request.POST.get('tracking_number')
-        v.status = 'enviado'; v.save()
+        v.status = 'enviado'
+        v.save()
+
+        # --- AQUÍ AGREGAMOS EL ENVÍO DEL CORREO AL COMPRADOR ---
+        try:
+            subject = f"🚀 ¡Tu pedido de {v.product.title} va en camino!"
+            message = (
+                f"Hola {v.buyer.username},\n\n"
+                f"¡Buenas noticias! El vendedor ha enviado tu producto.\n\n"
+                f"DETALLES DEL ENVÍO:\n"
+                f"------------------------------------------\n"
+                f"Producto: {v.product.title}\n"
+                f"Paquetería: {v.shipping_company}\n"
+                f"Número de Guía: {v.tracking_number}\n"
+                f"------------------------------------------\n\n"
+                f"Puedes rastrear tu paquete en el sitio oficial de la paquetería con el número de guía proporcionado.\n\n"
+                f"¡Gracias por comprar en INITRE!"
+            )
+            
+            send_mail(
+                subject,
+                message,
+                'tu-correo-de-soporte@initre.com', # Reemplaza con tu correo configurado
+                [v.buyer.email],
+                fail_silently=False,
+            )
+            messages.success(request, f"Guía actualizada y correo enviado a {v.buyer.username}")
+        except Exception as e:
+            messages.warning(request, f"Guía guardada, pero hubo un error al enviar el correo: {e}")
+        # -------------------------------------------------------
+
     return redirect('mis_ventas')    
 
 def procesar_pago(request, producto_id):
@@ -698,6 +731,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
