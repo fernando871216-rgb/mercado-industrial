@@ -164,23 +164,21 @@ def obtener_token_soloenvios():
         return f"ERROR_CONEXION_{str(e)}"
 
 def cotizar_soloenvios(request):
-    # 1. Obtenemos el ID del producto que viene del HTML
     product_id = request.GET.get('product_id')
     
     try:
-        # Buscamos en IndustrialProduct que es el modelo que usas
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         cp_origen = str(producto.cp_origen).strip().zfill(5)
-        peso_db = producto.peso
-        largo_db = producto.largo
-        ancho_db = producto.ancho
-        alto_db = producto.alto
+        # Convertimos a float desde el inicio para evitar errores de JSON
+        peso_db = float(producto.peso or 1)
+        largo_db = float(producto.largo or 20)
+        ancho_db = float(producto.ancho or 20)
+        alto_db = float(producto.alto or 20)
     except Exception as e:
         print(f"Error cargando producto: {e}")
         cp_origen = "72460"
-        peso_db, largo_db, ancho_db, alto_db = 1, 20, 20, 20
+        peso_db, largo_db, ancho_db, alto_db = 1.0, 20.0, 20.0, 20.0
 
-    # 2. Datos que vienen del formulario (por si el usuario los ajusta)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token = obtener_token_soloenvios()
@@ -188,18 +186,19 @@ def cotizar_soloenvios(request):
         return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
 
     try:
-        def limpiar_valor(val, default_val):
+        def limpiar_valor_float(val, default_val):
             try:
-                num = int(float(val))
-                return num if num > 0 else default_val
+                if val is None or val == '': return float(default_val)
+                num = float(val)
+                return num if num > 0 else float(default_val)
             except:
-                return default_val
+                return float(default_val)
 
-        # Priorizamos lo que venga del request, si no, lo de la DB
-        peso = limpiar_valor(request.GET.get('peso'), peso_db)
-        largo = limpiar_valor(request.GET.get('largo'), largo_db)
-        ancho = limpiar_valor(request.GET.get('ancho'), ancho_db)
-        alto = limpiar_valor(request.GET.get('alto'), alto_db)
+        # Aseguramos que todos sean float antes de entrar al JSON
+        peso = limpiar_valor_float(request.GET.get('peso'), peso_db)
+        largo = limpiar_valor_float(request.GET.get('largo'), largo_db)
+        ancho = limpiar_valor_float(request.GET.get('ancho'), ancho_db)
+        alto = limpiar_valor_float(request.GET.get('alto'), alto_db)
 
         url = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
@@ -219,27 +218,33 @@ def cotizar_soloenvios(request):
                     "area_level1": "Destino", "area_level2": "Ciudad", "area_level3": "Colonia"
                 },
                 "parcels": [{
-                    "length": largo, "width": ancho, "height": alto, "weight": peso,
-                    "package_protected": False, "declared_value": 100
+                    "length": largo, 
+                    "width": ancho, 
+                    "height": alto, 
+                    "weight": peso,
+                    "package_protected": False, 
+                    "declared_value": 100
                 }]
             }
         }
         
-        res = requests.post(url, json=payload, headers=headers, timeout=25)
+        # Enviamos la petición
+        res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
         if res.status_code in [200, 201]:
-            cotizacion_id = res.json().get('id')
-            time.sleep(2.5) # Espera para que las paqueterías respondan
+            data_id = res.json().get('id')
+            time.sleep(2.5) # Pausa para que SoloEnvíos recoja las tarifas de las paqueterías
             
-            res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
+            res_final = requests.get(f"{url}/{data_id}", headers=headers, verify=False)
             data = res_final.json()
             
             tarifas = []
             for t in data.get('rates', []):
-                if t.get('total') and float(t.get('total')) > 0:
+                monto_api = t.get('total')
+                if monto_api and float(monto_api) > 0:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        'precio_final': round(float(t.get('total')) * 1.08, 2),
+                        'precio_final': round(float(monto_api) * 1.08, 2), # Tu 8% de gestión
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             return JsonResponse({'tarifas': tarifas})
@@ -682,6 +687,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
