@@ -24,7 +24,7 @@
         <table id="adminTable" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES / VENDEDOR / ENVÍO</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">PRODUCTO / LOGÍSTICA</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">COBRADO TOTAL</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">COSTO FLETE</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU GANANCIA</th>
@@ -37,12 +37,37 @@
                 {% for venta in ventas %}
                 <tr style="border-bottom: 1px solid #f1f1f1;">
                     <td style="padding: 20px;">
-                        <strong style="display: block; color: #2c3e50; font-size: 1rem;">{{ venta.product.title }}</strong>
-                        <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: <strong>{{ venta.product.user.username }}</strong></span>
+                        <strong style="display: block; color: #2c3e50; font-size: 1.1rem; margin-bottom: 5px;">{{ venta.product.title }}</strong>
                         
+                        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee;">
+                            <span style="font-size: 0.85rem; color: #7f8c8d; display: block; margin-bottom: 5px;">
+                                <i class="fas fa-store"></i> Vendedor: <strong>{{ venta.product.user.username }}</strong>
+                            </span>
+                            {% if venta.product.user.profile.phone %}
+                                <a href="https://wa.me/52{{ venta.product.user.profile.phone }}?text=Hola%20{{ venta.product.user.username }},%20soy%20el%20administrador%20de%20INITRE.%20Aquí%20tienes%20la%20guía%20para%20tu%20venta%20de%20{{ venta.product.title }}.%20CP%20Destino:%20{{ venta.shipping_cp }}" 
+                                   target="_blank" 
+                                   style="display: inline-flex; align-items: center; gap: 5px; background: #25D366; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
+                                    <i class="fab fa-whatsapp"></i> ENVIAR GUÍA (VENDEDOR)
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <span style="font-size: 0.85rem; color: #7f8c8d; display: block; margin-bottom: 5px;">
+                                <i class="fas fa-user"></i> Comprador: <strong>{{ venta.buyer.username }}</strong>
+                            </span>
+                            {% if venta.buyer.profile.phone %}
+                                <a href="https://wa.me/52{{ venta.buyer.profile.phone }}?text=Hola%20{{ venta.buyer.username }},%20soy%20el%20administrador%20de%20INITRE.%20Te%20contacto%20sobre%20tu%20compra%20de%20{{ venta.product.title }}." 
+                                   target="_blank" 
+                                   style="display: inline-flex; align-items: center; gap: 5px; background: #3498db; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
+                                    <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
+                                </a>
+                            {% endif %}
+                        </div>
+
                         {% if venta.is_delivery %}
-                        <div style="margin-top: 5px; font-size: 0.8rem; color: #e67e22; font-weight: bold;">
-                            <i class="fas fa-map-marker-alt"></i> Destino CP: {{ venta.shipping_cp|default:"Sin registro" }}
+                        <div style="font-size: 0.85rem; color: #e67e22; font-weight: bold;">
+                            <i class="fas fa-map-marker-alt"></i> Destino CP: {{ venta.shipping_cp|default:"00000" }}
                         </div>
                         {% endif %}
 
@@ -55,8 +80,8 @@
 
                     <td style="padding: 20px;">
                         <div style="font-weight: bold; color: #2c3e50;">${{ venta.price|floatformat:2 }}</div>
-                        <small style="color: #e74c3c; background: #fdf2f2; padding: 2px 5px; border-radius: 4px;">
-                            MP: -${{ venta.costo_mp|floatformat:2 }}
+                        <small style="color: #e74c3c; background: #fdf2f2; padding: 2px 5px; border-radius: 4px; font-size: 0.75rem;">
+                            Costo MP: -${{ venta.costo_mp|floatformat:2 }}
                         </small>
                     </td>
 
@@ -115,6 +140,7 @@
 </div>
 
 <script>
+    // Buscador en tiempo real
     document.getElementById('adminSearch').addEventListener('keyup', function() {
         let filter = this.value.toUpperCase();
         let rows = document.querySelector("#adminTable tbody").rows;
