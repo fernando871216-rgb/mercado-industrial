@@ -40,7 +40,7 @@
                                 <a href="https://wa.me/52{{ v.buyer.profile.phone }}?text=Hola%20{{ v.buyer.username }},%20soy%20el%20vendedor%20de%20{{ v.product.title }}%20en%20Mercado%20Industrial." 
                                    target="_blank" 
                                    style="display: inline-flex; align-items: center; gap: 5px; background: #25D366; color: white; text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">
-                                    <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
+                                     <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
                                 </a>
                             </div>
 
@@ -49,8 +49,8 @@
                     </div>
 
                     <div style="text-align: right; background: #f8fafc; padding: 15px; border-radius: 12px; min-width: 200px;">
-                        <div style="font-size: 0.8rem; color: #718096; text-transform: uppercase; letter-spacing: 0.5px;">Ganancia Neta</div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: #27ae60;">${{ v.get_net_amount }}</div>
+                        <div style="font-size: 0.8rem; color: #718096; text-transform: uppercase; letter-spacing: 0.5px;">A recibir (Solo Producto)</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #27ae60;">${{ v.monto_limpio_vendedor|floatformat:2 }}</div>
                         <span style="font-size: 0.7rem; color: #fff; background: #4a5568; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: bold;">
                             {{ v.status }}
                         </span>
@@ -96,7 +96,7 @@
                                 </div>
                             {% else %}
                                 <div style="background: #fef3c7; color: #92400e; padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold;">
-                                    <i class="fas fa-hourglass-half"></i> EN RETENCIÓN
+                                    <i class="fas fa-hourglass-half"></i> EN ESPERA DE LIQUIDACIÓN
                                 </div>
                             {% endif %}
                         </div>
@@ -113,4 +113,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
