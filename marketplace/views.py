@@ -58,7 +58,7 @@ def generar_preferencia_pago(request, producto_id):
     
     try:
         flete_bruto = float(request.GET.get('envio', 0))
-        cp_destino = request.GET.get('cp_destino', '00000') # Capturamos el CP
+        cp_destino = request.GET.get('cp_destino') or request.GET.get('cp') or '00000'
     except (TypeError, ValueError):
         flete_bruto = 0
         cp_destino = '00000'
@@ -698,6 +698,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
