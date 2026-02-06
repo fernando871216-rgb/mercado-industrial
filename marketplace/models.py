@@ -81,6 +81,7 @@ class Sale(models.Model):
     tracking_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Número de Guía")
     shipping_company = models.CharField(max_length=50, blank=True, null=True, verbose_name="Paquetería")
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    shipping_cp = models.CharField(max_digits=10, blank=True, null=True)
     is_delivery = models.BooleanField(default=False)
 
     def __str__(self):
@@ -111,6 +112,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
