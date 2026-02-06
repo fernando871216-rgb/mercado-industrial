@@ -44,7 +44,6 @@
                     <td style="padding: 20px;">
                         <strong style="display: block; color: #2c3e50; font-size: 1rem;">{{ venta.product.title }}</strong>
                         <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: <strong>{{ venta.product.user.username }}</strong></span>
-                        
                         <div style="margin-top: 10px; padding: 6px 10px; background: #ebf5ff; border-radius: 6px; border-left: 3px solid #3498db; display: inline-block; width: 100%;">
                             <small style="color: #2c3e50; font-family: 'Courier New', Courier, monospace; font-weight: bold;">
                                 <i class="fas fa-university"></i> CLABE: 
@@ -78,7 +77,12 @@
                     </td>
 
                     <td style="padding: 20px; color: #3498db; font-weight: bold;">
-                        +${{ venta.ganancia_neta|floatformat:2 }}
+                        {# Si la ganancia neta es 0, mostramos un cálculo manual del 5% del producto solo para vista #}
+                        {% if venta.ganancia_neta > 0 %}
+                            +${{ venta.ganancia_neta|floatformat:2 }}
+                        {% else %}
+                             <span title="Cálculo automático (5%)">+${{ venta.price|floatformat:2 }}*</span>
+                        {% endif %}
                     </td>
 
                     <td style="padding: 20px; color: #27ae60; font-weight: bold; background: #f9fffb;">
