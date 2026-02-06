@@ -6,7 +6,7 @@
     <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div>
             <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrativo</h2>
-            <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de Liquidaciones Protegidas</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Control de Ventas y Logística de Envío</p>
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Netas INITRE</span>
@@ -16,7 +16,7 @@
 
     <div style="margin-bottom: 20px; position: relative;">
         <i class="fas fa-search" style="position: absolute; left: 15px; top: 15px; color: #95a5a6;"></i>
-        <input type="text" id="adminSearch" placeholder="Buscar por producto, vendedor o ID de pago..." 
+        <input type="text" id="adminSearch" placeholder="Buscar por producto, vendedor, CP o estado..." 
             style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); outline: none;">
     </div>
 
@@ -24,9 +24,9 @@
         <table id="adminTable" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES / VENDEDOR</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES / VENDEDOR / ENVÍO</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">COBRADO TOTAL</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">ENVÍO</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">COSTO FLETE</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU GANANCIA</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">AL VENDEDOR</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">ESTADO</th>
@@ -40,6 +40,12 @@
                         <strong style="display: block; color: #2c3e50; font-size: 1rem;">{{ venta.product.title }}</strong>
                         <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: <strong>{{ venta.product.user.username }}</strong></span>
                         
+                        {% if venta.is_delivery %}
+                        <div style="margin-top: 5px; font-size: 0.8rem; color: #e67e22; font-weight: bold;">
+                            <i class="fas fa-map-marker-alt"></i> Destino CP: {{ venta.shipping_cp|default:"Sin registro" }}
+                        </div>
+                        {% endif %}
+
                         <div style="margin-top: 8px; padding: 6px 10px; background: #ebf5ff; border-radius: 6px; border-left: 3px solid #3498db; width: fit-content;">
                             <small style="color: #2c3e50; font-family: monospace; font-weight: bold;">
                                 <i class="fas fa-university"></i> CLABE: {{ venta.product.user.profile.clabe|default:"No registrada" }}
@@ -57,10 +63,12 @@
                     <td style="padding: 20px;">
                         {% if venta.is_delivery %}
                             <div style="color: #2980b9; font-size: 0.85rem;">
-                                <i class="fas fa-truck"></i> <strong>Flete:</strong><br>${{ venta.shipping_cost|floatformat:2 }}
+                                <i class="fas fa-truck"></i> <strong>Flete Pagado:</strong><br>${{ venta.shipping_cost|floatformat:2 }}
                             </div>
                         {% else %}
-                            <span style="color: #7f8c8d; font-size: 0.85rem;"><i class="fas fa-handshake"></i> Local</span>
+                            <div style="color: #7f8c8d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake"></i> <strong>Recolección</strong><br>Local
+                            </div>
                         {% endif %}
                     </td>
 
@@ -86,7 +94,7 @@
                         {% if not venta.pagado_a_vendedor %}
                             <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
                                 {% csrf_token %}
-                                <button type="submit" onclick="return confirm('¿Confirmas la transferencia al vendedor?')" 
+                                <button type="submit" onclick="return confirm('¿Ya transferiste los fondos al vendedor?')" 
                                     style="background: #f39c12; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
                                     LIQUIDAR
                                 </button>
@@ -112,13 +120,8 @@
         let rows = document.querySelector("#adminTable tbody").rows;
         
         for (let i = 0; i < rows.length; i++) {
-            let col1 = rows[i].cells[0].textContent.toUpperCase();
-            let col5 = rows[i].cells[5].textContent.toUpperCase();
-            if (col1.indexOf(filter) > -1 || col5.indexOf(filter) > -1) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
-            }      
+            let text = rows[i].innerText.toUpperCase();
+            rows[i].style.display = text.indexOf(filter) > -1 ? "" : "none";
         }
     });
 </script>
