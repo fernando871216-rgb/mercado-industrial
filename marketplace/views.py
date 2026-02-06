@@ -225,7 +225,7 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
+        res = requests.post(url, json=payload, headers=headers, timeout=25)
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
@@ -682,6 +682,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
