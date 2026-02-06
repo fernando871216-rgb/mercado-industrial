@@ -1,58 +1,40 @@
+# marketplace/utils.py
 from django.core.mail import send_mail
 from django.conf import settings
 
 def enviar_notificacion_venta(venta):
-    # Correo para el VENDEDOR
-    asunto_vendedor = f"¡Felicidades! Vendiste {venta.product.title}"
-    mensaje_vendedor = f"""
-    Hola {venta.product.user.username},
-    
-    Has recibido una nueva venta en Mercado Industrial.
-    
-    Producto: {venta.product.title}
-    Precio: ${venta.price}
-    Comprador: {venta.buyer.username}
-    
-    Por favor, revisa tu panel para gestionar el envío.
-    """
-    
-    # Correo para el COMPRADOR
-    asunto_comprador = f"Tu compra de {venta.product.title} ha sido confirmada"
-    mensaje_comprador = f"""
-    Hola {venta.buyer.username},
-    
-    Tu pago por el producto {venta.product.title} ha sido procesado con éxito.
-    
-    Vendedor: {venta.product.user.username}
-    Total pagado: ${venta.price}
-    
-    El vendedor se pondrá en contacto contigo para el envío. 
-    Gracias por confiar en Mercado Industrial.
-    """
-    subject_admin = f"📢 NUEVA VENTA EN PLATAFORMA: {venta.product.title}"
-    message_admin = (
-        f"Se ha registrado una nueva venta.\n\n"
+    # 1. NOTIFICACIÓN PARA EL VENDEDOR
+    subject_vendedor = f"✅ ¡Vendiste tu producto!: {venta.product.title}"
+    message_vendedor = (
+        f"Hola {venta.product.user.username},\n\n"
+        f"¡Felicidades! Has realizado una venta.\n\n"
         f"Producto: {venta.product.title}\n"
-        f"Vendedor: {venta.product.user.email}\n"
-        f"Comprador: {venta.buyer.email}\n"
-        f"Monto Total: ${venta.price}\n"
-        f"CP Destino: {venta.shipping_cp}\n"
-        f"Ganancia Neta Admin: ${venta.ganancia_neta}\n"
+        f"Precio: ${venta.product.price}\n\n"
+        f"El administrador te enviará la guía de envío a la brevedad.\n"
+        f"¡Gracias por vender en INITRE!"
     )
     
-    send_mail(
-        subject_admin,
-        message_admin,
-        settings.DEFAULT_FROM_EMAIL,
-        [settings.ADMIN_EMAIL], # Esto enviará el correo a fernando871216@gmail.com
-        fail_silently=False,
+    # 2. NOTIFICACIÓN PARA TI (ADMINISTRADOR)
+    subject_admin = f"💰 NUEVA VENTA REGISTRADA - ID: {venta.payment_id}"
+    message_admin = (
+        f"Se ha completado una venta en la plataforma.\n\n"
+        f"DETALLES:\n"
+        f"--------------------------\n"
+        f"Producto: {venta.product.title}\n"
+        f"Vendedor: {venta.product.user.username} ({venta.product.user.email})\n"
+        f"Comprador: {venta.buyer.username} ({venta.buyer.email})\n"
+        f"Monto Cobrado: ${venta.price}\n"
+        f"CP Destino: {venta.shipping_cp}\n"
+        f"--------------------------\n\n"
+        f"Ya puedes generar la guía en SoloEnvíos y contactar al vendedor desde el panel."
     )
 
     try:
-        # Enviar al vendedor
-        send_mail(asunto_vendedor, mensaje_vendedor, settings.DEFAULT_FROM_EMAIL, [venta.product.user.email])
-        # Enviar al comprador
-        send_mail(asunto_comprador, mensaje_comprador, settings.DEFAULT_FROM_EMAIL, [venta.buyer.email])
+        # Enviamos al Vendedor
+        send_mail(subject_vendedor, message_vendedor, settings.DEFAULT_FROM_EMAIL, [venta.product.user.email])
+        
+        # Enviamos al Administrador (A ti)
+        send_mail(subject_admin, message_admin, settings.DEFAULT_FROM_EMAIL, [settings.ADMIN_EMAIL])
+        
     except Exception as e:
-
-        print(f"Error enviando correo: {e}")
+        print(f"Error enviando notificaciones: {e}")
