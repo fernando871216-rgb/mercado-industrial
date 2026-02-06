@@ -78,13 +78,17 @@ def generar_preferencia_pago(request, producto_id):
                 "currency_id": "MXN",
             }
         ],
+        # EL EXTERNAL REFERENCE ES EL "DNI" DE LA VENTA PARA EL WEBHOOK
+        # Guardamos: ID Producto - ID Comprador - Monto Flete
+        "external_reference": f"{producto.id}-{request.user.id}-{flete_final_con_comision}",
+        
         "back_urls": {
             "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/'),
         },
-        "auto_return": "approved", # VA AQUÍ (Afuera de back_urls e items)
-        "binary_mode": True,       # VA AQUÍ (Afuera de items)
+        "auto_return": "approved",
+        "binary_mode": True,
     }
 
     preference_response = sdk.preference().create(preference_data)
@@ -613,49 +617,58 @@ def mercadopago_webhook(request):
                 
                 if data.get('status') == 'approved':
                     ref_data = str(data.get('external_reference', ''))
+                    # Ahora dividimos la cadena: [producto_id, comprador_id, flete]
                     parts = ref_data.strip().split('-')
                     
                     if len(parts) >= 2:
                         producto_id = parts[0]
                         comprador_id = parts[1]
+                        # Leemos el flete si existe, si no, es 0
+                        flete_pagado = Decimal(parts[2]) if len(parts) >= 3 else Decimal('0.00')
                         
                         producto = IndustrialProduct.objects.get(id=producto_id)
                         comprador = User.objects.get(id=comprador_id)
-                        monto = Decimal(str(data.get('transaction_amount')))
+                        monto_total_cobrado = Decimal(str(data.get('transaction_amount')))
                         
-                        # EL CANDADO MAESTRO: update_or_create
-                        # Si ya existe una venta con este payment_id, la actualiza. Si no, la crea.
+                        # Calculamos la ganancia neta igual que en pago_exitoso
+                        # (5% del producto + 7.4% del flete)
+                        precio_base = Decimal(str(producto.price))
+                        ganancia_prod = precio_base * Decimal('0.05')
+                        ganancia_flete = flete_pagado * Decimal('0.074')
+                        total_ganancia_neta = (ganancia_prod + ganancia_flete).quantize(Decimal('0.01'))
+
+                        # Guardamos o actualizamos la venta
                         venta, created = Sale.objects.update_or_create(
                             payment_id=payment_id,
                             defaults={
                                 'product': producto,
                                 'buyer': comprador,
-                                'price': monto,
+                                'price': monto_total_cobrado,
+                                'shipping_cost': flete_pagado,
+                                'is_delivery': flete_pagado > 0,
+                                'ganancia_neta': total_ganancia_neta,
                                 'status': 'approved'
                             }
                         )
 
-                        # Acciones que SOLO ocurren la primera vez que se registra el pago
                         if created:
                             if producto.stock > 0:
                                 producto.stock -= 1
                                 producto.save()
                             
                             enviar_notificacion_venta(venta)
-                            print(f"WEBHOOK: Venta nueva creada con éxito. ID: {payment_id}")
-                        else:
-                            print(f"WEBHOOK: Pago ya registrado anteriormente. ID: {payment_id}")
-            
+                            print(f"WEBHOOK: Venta exitosa con flete ${flete_pagado}")
+                            
         except Exception as e:
             print(f"Error crítico en el webhook: {e}")
 
-    # Siempre respondemos 200 a Mercado Pago para que no siga intentando
     return HttpResponse(status=200)
 
 # marketplace/views.py
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
