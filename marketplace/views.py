@@ -456,8 +456,10 @@ def panel_administrador(request):
     # --- CÁLCULO DE LIQUIDACIÓN PARA LA TABLA ---
     for venta in ventas_todas:
         if venta.status in estados_validos:
-            # A. COMISIÓN MERCADO PAGO (Ejemplo: 3.49% + $4 + IVA)
-            # Calculamos sobre el precio total que pagó el cliente
+            # 1. Aseguramos tu ganancia (si es 0 en BD, calculamos el 5% manual)
+            ganancia_initre = venta.ganancia_neta if venta.ganancia_neta > 0 else (venta.price * Decimal('0.05'))
+            
+            # A. COMISIÓN MERCADO PAGO (3.49% + $4 + IVA)
             monto_total = Decimal(str(venta.price))
             comision_mp_porcentaje = monto_total * Decimal('0.0349')
             comision_mp_fija = Decimal('4.00')
@@ -466,14 +468,17 @@ def panel_administrador(request):
             total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
             
             # B. MONTO NETO AL VENDEDOR
-            # Es el Total - Lo que se queda MP - Lo que te quedas tú (ganancia_neta)
-            venta.monto_vendedor = monto_total - total_mp - Decimal(str(venta.ganancia_neta))
+            # IMPORTANTE: Restamos ganancia_initre (la que ya verificamos arriba)
+            venta.monto_vendedor = monto_total - total_mp - ganancia_initre
             
-            # C. Guardamos también cuánto cobró MP para mostrarlo opcionalmente
+            # C. Guardamos datos para el HTML
             venta.costo_mp = total_mp
+            # Pasamos la ganancia real calculada al objeto para que el HTML la muestre bien
+            venta.ganancia_calculada = ganancia_initre 
         else:
             venta.monto_vendedor = 0
             venta.costo_mp = 0
+            venta.ganancia_calculada = 0
 
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
@@ -651,6 +656,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
