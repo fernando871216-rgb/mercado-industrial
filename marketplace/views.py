@@ -465,34 +465,26 @@ def panel_administrador(request):
     # --- CÁLCULO DE LIQUIDACIÓN PARA LA TABLA ---
     for venta in ventas_todas:
         if venta.status in estados_validos:
-            # 1. Datos base
+            # 1. Datos base del producto
             precio_prod = Decimal(str(venta.product.price))
-            monto_total_cliente = Decimal(str(venta.price))
-            monto_flete = Decimal(str(venta.shipping_cost or 0))
-
-            # 2. COMISIÓN MP TOTAL (Lo que realmente te quitan a ti)
-            com_porc_total = monto_total_cliente * Decimal('0.0349')
-            com_fija = Decimal('4.00')
-            iva_total = (com_porc_total + com_fija) * Decimal('0.16')
-            venta.costo_mp = com_porc_total + com_fija + iva_total
-
-            # 3. COMISIÓN MP SOLO PRODUCTO (Para el desglose del vendedor)
-            com_porc_prod = precio_prod * Decimal('0.0349')
-            iva_prod = (com_porc_prod + com_fija) * Decimal('0.16')
-            venta.comision_mp_solo_producto = com_porc_prod + com_fija + iva_prod
-
-            # 4. GANANCIAS INITRE
-            # Ganancia total (para tu panel)
-            venta.ganancia_calculada = venta.ganancia_neta if venta.ganancia_neta > 0 else (precio_prod * Decimal('0.05'))
-            # Ganancia solo del producto (5% para el desglose del vendedor)
-            venta.comision_initre_solo_producto = precio_prod * Decimal('0.05')
-
-            # 5. MONTO NETO AL VENDEDOR (Protegido)
-            # El vendedor recibe: Precio Producto - MP del Producto - 5% de INITRE
-            venta.monto_vendedor = precio_prod - venta.comision_mp_solo_producto - (precio_prod * Decimal('0.05'))
             
-            # Pasamos el flete para el modal
-            venta.monto_flete = monto_flete
+            # 2. Tu comisión fija (5%)
+            comision_initre = precio_prod * Decimal('0.05')
+            
+            # 3. Comisión MP solo sobre el precio del producto
+            # (3.49% + $4 + IVA)
+            com_porc_prod = precio_prod * Decimal('0.0349')
+            com_fija = Decimal('4.00')
+            iva_prod = (com_porc_prod + com_fija) * Decimal('0.16')
+            mp_solo_producto = com_porc_prod + com_fija + iva_prod
+
+            # 4. CÁLCULO FINAL PROTEGIDO
+            # El vendedor recibe: $1000 - $50 (Initre) - $45.12 (MP) = $904.88
+            venta.monto_vendedor = precio_prod - comision_initre - mp_solo_producto
+            
+            # Datos para las columnas de la tabla
+            venta.ganancia_calculada = comision_initre
+            venta.costo_mp = mp_solo_producto
         else:
             # Valores en cero para ventas no aprobadas
             venta.monto_vendedor = 0
@@ -521,37 +513,50 @@ def marcar_como_pagado(request, venta_id):
         venta.pagado_a_vendedor = True
         venta.save()
 
-        # Cálculo protegido para el correo
-        precio_prod = Decimal(str(venta.product.price))
+        # --- LÓGICA DE PRECISIÓN PARA EL VENDEDOR ---
+        precio_producto = Decimal(str(venta.product.price))
         
-        # Comisión MP exclusiva del producto
-        com_porc = precio_prod * Decimal('0.0349')
+        # 1. Tu Comisión de Plataforma (5%)
+        comision_initre = precio_producto * Decimal('0.05')
+        
+        # 2. Comisión Mercado Pago sobre el PRODUCTO (3.49% + $4 + IVA)
+        # Calculamos esto para que el vendedor vea su costo real de pasarela
+        com_porc_prod = precio_producto * Decimal('0.0349')
         com_fija = Decimal('4.00')
-        iva_mp = (com_porc + com_fija) * Decimal('0.16')
-        mp_producto = com_porc + com_fija + iva_mp
+        iva_mp_prod = (com_porc_prod + com_fija) * Decimal('0.16')
+        total_mp_producto = com_porc_prod + com_fija + iva_mp_prod
         
-        # Comisión plataforma (5%)
-        initre_prod = precio_prod * Decimal('0.05')
-        
-        monto_final = precio_prod - mp_producto - initre_prod
+        # 3. MONTO FINAL PROMETIDO AL VENDEDOR
+        # $1000 - $50 - $45.12 = $904.88
+        monto_vendedor_final = precio_producto - comision_initre - total_mp_producto
 
         try:
-            subject = f"✅ Liquidación exitosa: {venta.product.title}"
+            subject = f"✅ ¡Pago enviado! Tu venta en INITRE: {venta.product.title}"
             message = (
                 f"Hola {venta.product.user.username},\n\n"
-                f"Hemos procesado la transferencia de tu venta '{venta.product.title}'.\n\n"
-                f"DETALLE DE TU GANANCIA:\n"
-                f"Precio Producto:  ${precio_prod:.2f}\n"
-                f"Comisión MP:     -${mp_producto:.2f}\n"
-                f"Comisión INITRE: -${initre_prod:.2f}\n"
-                f"----------------------------------\n"
-                f"MONTO TRANSFERIDO: ${monto_final:.2f}\n\n"
-                f"Gracias por vender en INITRE."
+                f"Te informamos que hemos realizado la transferencia por tu venta '{venta.product.title}'.\n\n"
+                f"DETALLE DE LA LIQUIDACIÓN (Solo Producto):\n"
+                f"------------------------------------------\n"
+                f"Precio de venta:          ${precio_producto:.2f}\n"
+                f"Comisión Pasarela (MP):   -${total_mp_producto:.2f}\n"
+                f"Comisión Plataforma (5%): -${comision_initre:.2f}\n"
+                f"------------------------------------------\n"
+                f"TOTAL TRANSFERIDO:        ${monto_vendedor_final:.2f}\n\n"
+                f"Nota: Los costos de procesamiento del envío fueron cubiertos por el comprador.\n\n"
+                f"La transferencia se envió a la CLABE registrada en tu perfil.\n"
+                f"¡Gracias por vender en INITRE!"
             )
-            send_mail(subject, message, 'soporte@initre.com', [venta.product.user.email])
-            messages.success(request, "Vendedor liquidado con éxito.")
-        except:
-            messages.warning(request, "Pago registrado, pero no se pudo enviar el correo.")
+            
+            send_mail(
+                subject,
+                message,
+                'tu-correo-de-soporte@initre.com', # Cambia por tu correo
+                [venta.product.user.email],
+                fail_silently=False,
+            )
+            messages.success(request, f"Venta {venta.payment_id} liquidada con éxito por ${monto_vendedor_final:.2f}")
+        except Exception as e:
+            messages.warning(request, f"Pago marcado, pero el correo falló: {e}")
 
     return redirect('panel_administrador')
     
@@ -688,6 +693,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
