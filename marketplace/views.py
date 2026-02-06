@@ -454,7 +454,7 @@ def panel_administrador(request):
     ingresos_totales = resultado_ganancia['total'] or 0
 
     # 4. Traemos todas las ventas para la tabla (sin filtrar estado para ver el historial completo)
-    ventas_todas = Sale.objects.select_related('product', 'buyer').all().order_by('-created_at')
+    ventas_todas = Sale.objects.select_related('product__user__profile', 'buyer').all().order_by('-created_at')
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
@@ -627,6 +627,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
