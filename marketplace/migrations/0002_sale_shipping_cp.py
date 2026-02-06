@@ -1,9 +1,9 @@
 from django.db import migrations, models
 
-class Migration(migrations.Migration): # <-- El error estaba aquí, faltaba el .Migration
+class Migration(migrations.Migration):
 
     dependencies = [
-        ('marketplace', '0001_initial'), 
+        # Dejamos esto vacío para que no busque el archivo 0001
     ]
 
     operations = [
