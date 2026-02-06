@@ -510,48 +510,50 @@ def marcar_como_pagado(request, venta_id):
         venta.pagado_a_vendedor = True
         venta.save()
 
-        # --- CÁLCULOS REALES PARA EL CORREO ---
-        monto_total_cobrado = Decimal(str(venta.price))
+        # --- LÓGICA DE TRANSPARENCIA ---
+        precio_producto = Decimal(str(venta.product.price))
         monto_flete = Decimal(str(venta.shipping_cost or 0))
+        monto_total_cobrado = Decimal(str(venta.price))
         
-        # 1. Tu Ganancia (5% base si no hay dato guardado)
-        ganancia_initre = venta.ganancia_neta if venta.ganancia_neta > 0 else (monto_total_cobrado * Decimal('0.05'))
+        # 1. Comisión MP del PRODUCTO SOLAMENTE
+        # Esto asegura que el flete no le reste dinero al vendedor
+        com_porc_prod = precio_producto * Decimal('0.0349')
+        com_fija = Decimal('4.00')
+        iva_com_prod = (com_porc_prod + com_fija) * Decimal('0.16')
+        total_mp_producto = com_porc_prod + com_fija + iva_com_prod
         
-        # 2. Comisión Mercado Pago (3.49% + $4 + IVA)
-        comision_mp_porcentaje = monto_total_cobrado * Decimal('0.0349')
-        comision_mp_fija = Decimal('4.00')
-        iva_comision_mp = (comision_mp_porcentaje + comision_mp_fija) * Decimal('0.16')
-        total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
+        # 2. Comisión INITRE (Solo el 5% del producto)
+        total_initre_producto = precio_producto * Decimal('0.05')
         
-        # 3. MONTO FINAL AL VENDEDOR (Restamos flete y comisiones)
-        monto_vendedor_final = monto_total_cobrado - total_mp - ganancia_initre - monto_flete
+        # 3. MONTO NETO FINAL
+        monto_vendedor_final = precio_producto - total_mp_producto - total_initre_producto
 
         try:
-            subject = f"✅ Pago enviado: {venta.product.title}"
+            subject = f"✅ Liquidación exitosa: {venta.product.title}"
             message = (
                 f"Hola {venta.product.user.username},\n\n"
-                f"Te informamos que el pago de tu venta '{venta.product.title}' ha sido procesado.\n\n"
-                f"Detalles de la liquidación:\n"
+                f"Hemos procesado el pago de tu venta. Para tu tranquilidad, "
+                f"en INITRE las comisiones de Mercado Pago generadas por el envío "
+                f"son cubiertas por el comprador, protegiendo así tu ganancia.\n\n"
+                f"DESGLOSE DE TU PRODUCTO:\n"
+                f"Precio del artículo:      ${precio_producto:.2f}\n"
+                f"Comisión Pasarela (MP):   -${total_mp_producto:.2f}\n"
+                f"Comisión Plataforma (5%): -${total_initre_producto:.2f}\n"
                 f"------------------------------------------\n"
-                f"Monto Total Pagado por Cliente: ${monto_total_cobrado:.2f}\n"
-                f"Costo de Envío (SoloEnvíos):    -${monto_flete:.2f}\n"
-                f"Comisión Pasarela (MP):         -${total_mp:.2f}\n"
-                f"Comisión Plataforma:            -${ganancia_initre:.2f}\n"
-                f"------------------------------------------\n"
-                f"TOTAL TRANSFERIDO A TU CUENTA:  ${monto_vendedor_final:.2f}\n\n"
-                f"El depósito se ha realizado a la CLABE: {venta.product.user.profile.clabe or 'No registrada'}.\n"
-                f"Gracias por formar parte de INITRE."
+                f"TOTAL A TU CUENTA:        ${monto_vendedor_final:.2f}\n\n"
+                f"Depósito enviado a la CLABE: {venta.product.user.profile.clabe or 'No registrada'}.\n"
+                f"Gracias por confiar en INITRE."
             )
             send_mail(
                 subject,
                 message,
-                'tu-correo@gmail.com', # Cambia esto por tu correo de soporte
+                'tu-soporte@initre.com',
                 [venta.product.user.email],
                 fail_silently=False,
             )
-            messages.success(request, f"Venta {venta.payment_id} liquidada. Vendedor notificado con el desglose correcto.")
+            messages.success(request, f"Venta liquidada. Vendedor notificado con el desglose del producto.")
         except Exception as e:
-            messages.warning(request, f"Venta marcada como pagada, pero el correo falló: {e}")
+            messages.warning(request, f"Venta pagada, pero el correo falló: {e}")
 
     return redirect('panel_administrador')
     
@@ -688,6 +690,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
