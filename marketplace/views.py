@@ -504,12 +504,14 @@ def marcar_como_pagado(request, venta_id):
                 f"Hola {venta.product.user.username},\n\n"
                 f"Te informamos que el pago de tu venta '{venta.product.title}' ha sido procesado.\n\n"
                 f"Detalles de la liquidación:\n"
-                f"- ID de Venta: {venta.payment_id}\n"
-                f"- Monto total: ${venta.price}\n"
-                f"- Comisión plataforma: -${venta.ganancia_neta}\n"
-                f"- Estado: LIQUIDADO\n\n"
-                f"El depósito debería verse reflejado en tu cuenta en breve según los tiempos de tu banco.\n\n"
-                f"Gracias por confiar en INITRE."
+                f"------------------------------------------\n"
+                f"Monto Pagado por Cliente: ${venta.price:.2f}\n"
+                f"Comisión Pasarela (MP):   -${venta.costo_mp:.2f}\n"
+                f"Comisión Plataforma:      -${venta.ganancia_neta:.2f}\n"
+                f"------------------------------------------\n"
+                f"TOTAL A TU CUENTA:        ${venta.monto_vendedor:.2f}\n\n"
+                f"El depósito se ha realizado a la CLABE: {venta.product.user.profile.clabe or 'No registrada'}.\n"
+                f"Gracias por formar parte de INITRE."
             )
             send_mail(
                 subject,
@@ -649,6 +651,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
