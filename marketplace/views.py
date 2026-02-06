@@ -491,28 +491,33 @@ def pago_exitoso(request, producto_id):
     mostrar_contacto = False
 
     if status_mp == 'approved':
-        # 2. CONGELAMOS LOS VALORES: Usamos Decimal para evitar errores de centavos
-        precio_producto_momento = Decimal(str(producto.price))
-        flete_decimal = Decimal(str(flete_con_comision))
-        
-        # 3. CÁLCULO DE GANANCIAS (5% producto + 7.4% sobre el flete)
-        ganancia_prod = precio_producto_momento * Decimal('0.05')
-        ganancia_flete = flete_decimal * Decimal('0.074')
-        total_ganancia_neta = (ganancia_prod + ganancia_flete).quantize(Decimal('0.01'))
+    # 1. Obtenemos el flete. Si es 0 o no viene, asumimos "Acordar con vendedor"
+    try:
+        flete_con_comision = Decimal(str(request.GET.get('envio', 0)))
+    except:
+        flete_con_comision = Decimal('0.00')
 
-        # 4. GUARDADO HISTÓRICO
-        # Guardamos 'price' como el total pagado (producto + flete)
-        venta, created = Sale.objects.update_or_create(
-            payment_id=payment_id,
-            defaults={
-                'product': producto,
-                'buyer': request.user,
-                'price': precio_producto_momento + flete_decimal, 
-                'ganancia_neta': total_ganancia_neta,
-                'status': 'approved',
-                # Quitamos created_at de aquí para que no se resetee si recargan la página
-            }
-        )
+    tiene_envio = flete_con_comision > 0
+    precio_base = Decimal(str(producto.price))
+
+    # 2. Cálculo de Ganancia diferenciado
+    ganancia_prod = precio_base * Decimal('0.05')
+    ganancia_flete = flete_con_comision * Decimal('0.074') # Tu comisión por gestionar el flete
+    total_ganancia_neta = (ganancia_prod + ganancia_flete).quantize(Decimal('0.01'))
+
+    # 3. Guardado con distinción
+    venta, created = Sale.objects.update_or_create(
+        payment_id=payment_id,
+        defaults={
+            'product': producto,
+            'buyer': request.user,
+            'price': precio_base + flete_con_comision, # Total cobrado en MP
+            'shipping_cost': flete_con_comision,      # Guardamos el flete por separado
+            'is_delivery': tiene_envio,              # Marcamos si es envío o retiro
+            'ganancia_neta': total_ganancia_neta,
+            'status': 'approved',
+        }
+    )
         
         if created:
             # Solo descontamos stock y enviamos correo la PRIMERA vez que se registra el pago
@@ -595,6 +600,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
