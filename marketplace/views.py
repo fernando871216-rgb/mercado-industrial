@@ -489,7 +489,7 @@ def panel_administrador(request):
 
             # 5. MONTO NETO AL VENDEDOR (Protegido)
             # El vendedor recibe: Precio Producto - MP del Producto - 5% de INITRE
-            venta.monto_vendedor = precio_prod - venta.comision_mp_solo_producto - venta.comision_initre_solo_producto
+            venta.monto_vendedor = precio_prod - venta.comision_mp_solo_producto - (precio_prod * Decimal('0.05'))
             
             # Pasamos el flete para el modal
             venta.monto_flete = monto_flete
@@ -688,6 +688,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
