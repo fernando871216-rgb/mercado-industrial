@@ -171,15 +171,24 @@
     }
 
     function seleccionarTarifa(elemento, precio) {
-        const filas = document.getElementById('lista-tarifas').children;
-        for(let f of filas) { f.style.backgroundColor = "transparent"; f.style.borderLeft = "none"; }
-        elemento.style.backgroundColor = "#f0fff4";
-        elemento.style.borderLeft = "4px solid #38a169";
+    const filas = document.getElementById('lista-tarifas').children;
+    const cp = document.getElementById('cp_destino').value; // <-- CAPTURAMOS EL CP AQUÍ
 
-        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
-            .then(res => res.json())
-            .then(data => { if (data.preference_id) renderMP(data.preference_id); });
+    for(let f of filas) { 
+        f.style.backgroundColor = "transparent"; 
+        f.style.borderLeft = "none"; 
     }
+    elemento.style.backgroundColor = "#f0fff4";
+    elemento.style.borderLeft = "4px solid #38a169";
+
+    // AGREGAMOS &cp_destino=${cp} A LA URL
+    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+        .then(res => res.json())
+        .then(data => { 
+            if (data.preference_id) renderMP(data.preference_id); 
+        });
+}
     {% endif %}
 </script>
 {% endblock %}
+
