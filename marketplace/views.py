@@ -513,22 +513,24 @@ def marcar_como_pagado(request, venta_id):
         venta.pagado_a_vendedor = True
         venta.save()
 
-        # --- LÓGICA DE PRECISIÓN PARA EL VENDEDOR ---
-        precio_producto = Decimal(str(venta.product.price))
+        # --- LÓGICA DE PRECISIÓN CORREGIDA ---
+        # 1. Calculamos el precio real del producto restando el flete del total pagado
+        # Esto asegura que si el flete fue de $300, el cálculo sea sobre los $1000 restantes.
+        total_pagado_mp = Decimal(str(venta.price))
+        costo_envio = Decimal(str(venta.shipping_cost))
+        precio_producto_neto = total_pagado_mp - costo_envio
         
-        # 1. Tu Comisión de Plataforma (5%)
-        comision_initre = precio_producto * Decimal('0.05')
+        # 2. Tu Comisión de Plataforma (5% sobre el neto del producto)
+        comision_initre = precio_producto_neto * Decimal('0.05')
         
-        # 2. Comisión Mercado Pago sobre el PRODUCTO (3.49% + $4 + IVA)
-        # Calculamos esto para que el vendedor vea su costo real de pasarela
-        com_porc_prod = precio_producto * Decimal('0.0349')
+        # 3. Comisión Mercado Pago sobre el PRODUCTO (3.49% + $4 + IVA)
+        com_porc_prod = precio_producto_neto * Decimal('0.0349')
         com_fija = Decimal('4.00')
         iva_mp_prod = (com_porc_prod + com_fija) * Decimal('0.16')
         total_mp_producto = com_porc_prod + com_fija + iva_mp_prod
         
-        # 3. MONTO FINAL PROMETIDO AL VENDEDOR
-        # $1000 - $50 - $45.12 = $904.88
-        monto_vendedor_final = precio_producto - comision_initre - total_mp_producto
+        # 4. MONTO FINAL PROMETIDO AL VENDEDOR ($1000 - $50 - $45.12 = $904.88)
+        monto_vendedor_final = precio_producto_neto - comision_initre - total_mp_producto
 
         try:
             subject = f"✅ ¡Pago enviado! Tu venta en INITRE: {venta.product.title}"
@@ -537,11 +539,11 @@ def marcar_como_pagado(request, venta_id):
                 f"Te informamos que hemos realizado la transferencia por tu venta '{venta.product.title}'.\n\n"
                 f"DETALLE DE LA LIQUIDACIÓN (Solo Producto):\n"
                 f"------------------------------------------\n"
-                f"Precio de venta:          ${precio_producto:.2f}\n"
+                f"Precio de venta:           ${precio_producto_neto:.2f}\n"
                 f"Comisión Pasarela (MP):   -${total_mp_producto:.2f}\n"
                 f"Comisión Plataforma (5%): -${comision_initre:.2f}\n"
                 f"------------------------------------------\n"
-                f"TOTAL TRANSFERIDO:        ${monto_vendedor_final:.2f}\n\n"
+                f"TOTAL TRANSFERIDO:         ${monto_vendedor_final:.2f}\n\n"
                 f"Nota: Los costos de procesamiento del envío fueron cubiertos por el comprador.\n\n"
                 f"La transferencia se envió a la CLABE registrada en tu perfil.\n"
                 f"¡Gracias por vender en INITRE!"
@@ -550,7 +552,7 @@ def marcar_como_pagado(request, venta_id):
             send_mail(
                 subject,
                 message,
-                'tu-correo-de-soporte@initre.com', # Cambia por tu correo
+                'tu-correo-de-soporte@initre.com', 
                 [venta.product.user.email],
                 fail_silently=False,
             )
@@ -686,4 +688,5 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
