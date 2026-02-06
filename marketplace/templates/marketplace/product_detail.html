@@ -182,14 +182,15 @@
     elemento.style.borderLeft = "4px solid #38a169";
 
     // AGREGAMOS &cp_destino=${cp} A LA URL
-    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
-        .then(res => res.json())
-        .then(data => { 
-            if (data.preference_id) renderMP(data.preference_id); 
-        });
+        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+            .then(res => res.json())
+            .then(data => { 
+                if (data.preference_id) renderMP(data.preference_id); 
+            });
 }
     {% endif %}
 </script>
 {% endblock %}
+
 
 
