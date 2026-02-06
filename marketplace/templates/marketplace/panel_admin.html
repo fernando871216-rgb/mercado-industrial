@@ -58,8 +58,13 @@
                         <small style="display: block; margin-top: 5px; color: #bdc3c7;">ID Pago: {{ venta.payment_id }}</small>
                     </td>
 
-                    <td style="padding: 20px; font-weight: bold; color: #2c3e50; font-size: 1.1rem;">
-                        ${{ venta.price|floatformat:2 }}
+                    <td style="padding: 20px;">
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 1.1rem;">
+                            ${{ venta.price|floatformat:2 }}
+                        </div>
+                        <div style="margin-top: 5px; font-size: 0.7rem; color: #e74c3c; background: #fdf2f2; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                            <i class="fas fa-minus-circle"></i> MP: ${{ venta.costo_mp|floatformat:2 }}
+                        </div>
                     </td>
 
                     <td style="padding: 20px;">
@@ -76,8 +81,7 @@
                         +${{ venta.ganancia_neta|floatformat:2 }}
                     </td>
 
-                    <td style="padding: 20px; color: #27ae60; font-weight: bold;">
-                        {# AQUÍ USAMOS LA VARIABLE CALCULADA EN VIEWS.PY #}
+                    <td style="padding: 20px; color: #27ae60; font-weight: bold; background: #f9fffb;">
                         <span style="font-size: 1.1rem;">${{ venta.monto_vendedor|floatformat:2 }}</span>
                         <br>
                         <small style="font-weight: normal; color: #95a5a6; font-size: 0.7rem;">(Neto a transferir)</small>
