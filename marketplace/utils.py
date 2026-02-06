@@ -29,6 +29,24 @@ def enviar_notificacion_venta(venta):
     El vendedor se pondrá en contacto contigo para el envío. 
     Gracias por confiar en Mercado Industrial.
     """
+    subject_admin = f"📢 NUEVA VENTA EN PLATAFORMA: {venta.product.title}"
+    message_admin = (
+        f"Se ha registrado una nueva venta.\n\n"
+        f"Producto: {venta.product.title}\n"
+        f"Vendedor: {venta.product.user.email}\n"
+        f"Comprador: {venta.buyer.email}\n"
+        f"Monto Total: ${venta.price}\n"
+        f"CP Destino: {venta.shipping_cp}\n"
+        f"Ganancia Neta Admin: ${venta.ganancia_neta}\n"
+    )
+    
+    send_mail(
+        subject_admin,
+        message_admin,
+        settings.DEFAULT_FROM_EMAIL,
+        [settings.ADMIN_EMAIL], # Esto enviará el correo a fernando871216@gmail.com
+        fail_silently=False,
+    )
 
     try:
         # Enviar al vendedor
@@ -36,4 +54,5 @@ def enviar_notificacion_venta(venta):
         # Enviar al comprador
         send_mail(asunto_comprador, mensaje_comprador, settings.DEFAULT_FROM_EMAIL, [venta.buyer.email])
     except Exception as e:
+
         print(f"Error enviando correo: {e}")
