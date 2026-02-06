@@ -58,32 +58,32 @@ def generar_preferencia_pago(request, producto_id):
     
     try:
         flete_bruto = float(request.GET.get('envio', 0))
+        cp_destino = request.GET.get('cp_destino', '00000') # Capturamos el CP
     except (TypeError, ValueError):
         flete_bruto = 0
+        cp_destino = '00000'
 
-    # 1. CALCULAMOS COMISIONES (Tu 8% de gestión de flete)
     flete_final_con_comision = flete_bruto * 1.08
     precio_base = float(producto.price)
     total_pagar_final = round(precio_base + flete_final_con_comision, 2)
 
-    # 2. CONFIGURACIÓN DE MERCADO PAGO
     sdk = mercadopago.SDK("APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817")
 
     preference_data = {
         "items": [
             {
-                "title": f"{producto.title} (Incluye gestión y flete)",
+                "title": f"{producto.title} (Incluye flete a CP {cp_destino})",
                 "quantity": 1,
                 "unit_price": total_pagar_final,
                 "currency_id": "MXN",
             }
         ],
-        # EL EXTERNAL REFERENCE ES EL "DNI" DE LA VENTA PARA EL WEBHOOK
-        # Guardamos: ID Producto - ID Comprador - Monto Flete
-        "external_reference": f"{producto.id}-{request.user.id}-{flete_final_con_comision}",
+        # Guardamos: ID Producto - ID Comprador - Monto Flete - CP Destino
+        "external_reference": f"{producto.id}-{request.user.id}-{flete_final_con_comision}-{cp_destino}",
         
         "back_urls": {
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}'),
+            # Agregamos &cp={cp_destino} al final de la URL de éxito
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final_con_comision}&cp={cp_destino}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/'),
         },
@@ -565,18 +565,9 @@ def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     status_mp = request.GET.get('collection_status') or request.GET.get('status')
     payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
-    
-    # 1. Intentamos obtener el flete de la URL de forma segura
-    try:
-        flete_con_comision = float(request.GET.get('envio', 0))
-    except (TypeError, ValueError):
-        flete_con_comision = 0
-
-    mostrar_contacto = False
+    cp_url = request.GET.get('cp', '00000') # Recibimos el CP de la URL
 
     if status_mp == 'approved':
-        # --- TODO ESTE BLOQUE ESTABA MAL ALINEADO ---
-        # 1. Obtenemos el flete. Si es 0 o no viene, asumimos "Acordar con vendedor"
         try:
             flete_con_comision = Decimal(str(request.GET.get('envio', 0)))
         except:
@@ -585,20 +576,21 @@ def pago_exitoso(request, producto_id):
         tiene_envio = flete_con_comision > 0
         precio_base = Decimal(str(producto.price))
 
-        # 2. Cálculo de Ganancia diferenciado
+        # Cálculos de ganancia...
         ganancia_prod = precio_base * Decimal('0.05')
-        ganancia_flete = flete_con_comision * Decimal('0.074') # Tu comisión por gestionar el flete
+        ganancia_flete = flete_con_comision * Decimal('0.074')
         total_ganancia_neta = (ganancia_prod + ganancia_flete).quantize(Decimal('0.01'))
 
-        # 3. Guardado con distinción
+        # GUARDADO EN BASE DE DATOS
         venta, created = Sale.objects.update_or_create(
             payment_id=payment_id,
             defaults={
                 'product': producto,
                 'buyer': request.user,
-                'price': precio_base + flete_con_comision, # Total cobrado en MP
-                'shipping_cost': flete_con_comision,      # Guardamos el flete por separado
-                'is_delivery': tiene_envio,              # Marcamos si es envío o retiro
+                'price': precio_base + flete_con_comision,
+                'shipping_cost': flete_con_comision,
+                'shipping_cp': cp_url, # <--- SE GUARDA EL CP AQUÍ
+                'is_delivery': tiene_envio,
                 'ganancia_neta': total_ganancia_neta,
                 'status': 'approved',
             }
@@ -648,8 +640,8 @@ def mercadopago_webhook(request):
                     if len(parts) >= 2:
                         producto_id = parts[0]
                         comprador_id = parts[1]
-                        # Leemos el flete si existe, si no, es 0
-                        flete_pagado = Decimal(parts[2]) if len(parts) >= 3 else Decimal('0.00')
+                        flete_pagado = Decimal(parts[2])
+                        cp_destino = parts[3]
                         
                         producto = IndustrialProduct.objects.get(id=producto_id)
                         comprador = User.objects.get(id=comprador_id)
@@ -670,6 +662,7 @@ def mercadopago_webhook(request):
                                 'buyer': comprador,
                                 'price': monto_total_cobrado,
                                 'shipping_cost': flete_pagado,
+                                'shipping_cp': cp_destino,
                                 'is_delivery': flete_pagado > 0,
                                 'ganancia_neta': total_ganancia_neta,
                                 'status': 'approved'
@@ -693,50 +686,3 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
