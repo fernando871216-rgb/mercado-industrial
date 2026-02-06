@@ -376,6 +376,16 @@ def registro(request):
 def mis_ventas(request):
     # Traemos las ventas de los productos que pertenecen al usuario actual
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    for v in ventas:
+        precio_prod = Decimal(str(v.price)) - Decimal(str(v.shipping_cost))
+        comision_initre = precio_prod * Decimal('0.05')
+        
+        # Comisión MP (3.49% + $4 + IVA)
+        com_porc_prod = precio_prod * Decimal('0.0349')
+        com_fija = Decimal('4.00')
+        iva_prod = (com_porc_prod + com_fija) * Decimal('0.16')
+        mp_solo_producto = com_porc_prod + com_fija + iva_prod
+        v.monto_limpio_vendedor = precio_prod - comision_initre - mp_solo_producto
     
     if request.method == 'POST':
         venta_id = request.POST.get('venta_id')
@@ -688,5 +698,6 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
