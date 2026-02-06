@@ -506,7 +506,21 @@ def marcar_como_pagado(request, venta_id):
         venta.pagado_a_vendedor = True
         venta.save()
 
-        # Enviar correo al vendedor
+        # --- RE-CALCULAMOS LOS VALORES PARA EL CORREO ---
+        monto_total = Decimal(str(venta.price))
+        
+        # 1. Tu Ganancia (5% si es 0 en BD)
+        ganancia_initre = venta.ganancia_neta if venta.ganancia_neta > 0 else (monto_total * Decimal('0.05'))
+        
+        # 2. Comisión Mercado Pago (3.49% + $4 + IVA)
+        comision_mp_porcentaje = monto_total * Decimal('0.0349')
+        comision_mp_fija = Decimal('4.00')
+        iva_comision_mp = (comision_mp_porcentaje + comision_mp_fija) * Decimal('0.16')
+        total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
+        
+        # 3. Monto Final que recibe el vendedor
+        monto_vendedor_final = monto_total - total_mp - ganancia_initre
+
         try:
             subject = f"✅ Pago enviado: {venta.product.title}"
             message = (
@@ -514,24 +528,24 @@ def marcar_como_pagado(request, venta_id):
                 f"Te informamos que el pago de tu venta '{venta.product.title}' ha sido procesado.\n\n"
                 f"Detalles de la liquidación:\n"
                 f"------------------------------------------\n"
-                f"Monto Pagado por Cliente: ${venta.price:.2f}\n"
-                f"Comisión Pasarela (MP):   -${venta.costo_mp:.2f}\n"
-                f"Comisión Plataforma:      -${venta.ganancia_neta:.2f}\n"
+                f"Monto Pagado por Cliente: ${monto_total:.2f}\n"
+                f"Comisión Pasarela (MP):   -${total_mp:.2f}\n"
+                f"Comisión Plataforma:      -${ganancia_initre:.2f}\n"
                 f"------------------------------------------\n"
-                f"TOTAL A TU CUENTA:        ${venta.monto_vendedor:.2f}\n\n"
+                f"TOTAL A TU CUENTA:        ${monto_vendedor_final:.2f}\n\n"
                 f"El depósito se ha realizado a la CLABE: {venta.product.user.profile.clabe or 'No registrada'}.\n"
                 f"Gracias por formar parte de INITRE."
             )
             send_mail(
                 subject,
                 message,
-                'tu-correo@gmail.com', # Cambia por tu correo configurado
+                'tu-correo@gmail.com',
                 [venta.product.user.email],
                 fail_silently=False,
             )
-            messages.success(request, f"Venta {venta.payment_id} liquidada y vendedor notificado.")
+            messages.success(request, f"Venta liquidada y correo enviado exitosamente.")
         except Exception as e:
-            messages.warning(request, f"Venta marcada como pagada, pero el correo no pudo enviarse: {e}")
+            messages.warning(request, f"Venta marcada como pagada, pero hubo un detalle con el correo: {e}")
 
     return redirect('panel_administrador')
     
@@ -668,6 +682,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
