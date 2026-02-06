@@ -171,12 +171,12 @@
     }
 
     function seleccionarTarifa(elemento, precio) {
-    const filas = document.getElementById('lista-tarifas').children;
-    const cp = document.getElementById('cp_destino').value; // <-- CAPTURAMOS EL CP AQUÍ
+        const filas = document.getElementById('lista-tarifas').children;
+        const cp = document.getElementById('cp_destino').value; // <-- CAPTURAMOS EL CP AQUÍ
 
-    for(let f of filas) { 
-        f.style.backgroundColor = "transparent"; 
-        f.style.borderLeft = "none"; 
+        for(let f of filas) { 
+            f.style.backgroundColor = "transparent"; 
+            f.style.borderLeft = "none"; 
     }
     elemento.style.backgroundColor = "#f0fff4";
     elemento.style.borderLeft = "4px solid #38a169";
@@ -191,4 +191,5 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
