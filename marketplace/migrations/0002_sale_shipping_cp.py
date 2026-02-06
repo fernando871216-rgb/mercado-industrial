@@ -3,7 +3,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        # Dejamos esto vacío para que no busque el archivo 0001
+        ('marketplace', '0001_initial'), # Ahora sí encontrará a su padre
     ]
 
     operations = [
