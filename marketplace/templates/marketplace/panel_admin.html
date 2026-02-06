@@ -1,9 +1,32 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
+<style>
+    /* Estilos específicos para que la tabla se vea bien en celular */
+    .tabla-responsiva {
+        width: 100%;
+        overflow-x: auto; /* Activa el scroll horizontal */
+        -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/Android */
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    @media (max-width: 768px) {
+        #adminTable th, #adminTable td {
+            white-space: nowrap; /* Evita que el texto se rompa en varias líneas */
+            min-width: 150px;    /* Asegura que las columnas tengan un ancho mínimo */
+        }
+        /* La primera columna (Producto) puede ser un poco más ancha */
+        #adminTable td:first-child {
+            min-width: 200px;
+        }
+    }
+</style>
+
 <div class="container" style="max-width: 1200px; margin: 30px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     
-    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 15px;">
         <div>
             <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrativo</h2>
             <p style="margin: 5px 0 0 0; opacity: 0.8;">Control de Ventas y Logística de Envío</p>
@@ -20,7 +43,7 @@
             style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); outline: none;">
     </div>
 
-    <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+    <div class="tabla-responsiva">
         <table id="adminTable" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
@@ -47,7 +70,7 @@
                                 <a href="https://wa.me/52{{ venta.product.user.profile.phone }}?text=Hola%20{{ venta.product.user.username }},%20soy%20el%20administrador%20de%20INITRE.%20Aquí%20tienes%20la%20guía%20para%20tu%20venta%20de%20{{ venta.product.title }}.%20CP%20Destino:%20{{ venta.shipping_cp }}" 
                                    target="_blank" 
                                    style="display: inline-flex; align-items: center; gap: 5px; background: #25D366; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
-                                    <i class="fab fa-whatsapp"></i> ENVIAR GUÍA (VENDEDOR)
+                                     <i class="fab fa-whatsapp"></i> ENVIAR GUÍA (VENDEDOR)
                                 </a>
                             {% endif %}
                         </div>
@@ -60,7 +83,7 @@
                                 <a href="https://wa.me/52{{ venta.buyer.profile.phone }}?text=Hola%20{{ venta.buyer.username }},%20soy%20el%20administrador%20de%20INITRE.%20Te%20contacto%20sobre%20tu%20compra%20de%20{{ venta.product.title }}." 
                                    target="_blank" 
                                    style="display: inline-flex; align-items: center; gap: 5px; background: #3498db; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
-                                    <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
+                                     <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
                                 </a>
                             {% endif %}
                         </div>
