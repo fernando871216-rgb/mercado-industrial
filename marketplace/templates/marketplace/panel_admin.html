@@ -96,4 +96,29 @@
                         {% if not venta.pagado_a_vendedor %}
                             <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" onsubmit="return confirm('¿Confirmas que ya transferiste los fondos al vendedor?')">
                                 {% csrf_token %}
-                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight
+                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.3s; width: 100%;">
+                                    <i class="fas fa-hand-holding-usd"></i> LIQUIDAR
+                                </button>
+                            </form>
+                        {% else %}
+                            <div style="background: #ebf9f1; color: #1e7e4a; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; text-align: center;">
+                                <span style="font-weight: bold; font-size: 0.75rem;">
+                                    <i class="fas fa-check-double"></i> PAGADO
+                                </span>
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 80px 20px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px; color: #ecf0f1; display: block;"></i>
+                        <p style="font-size: 1.1rem;">Aún no hay transacciones para gestionar.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
