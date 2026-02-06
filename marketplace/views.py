@@ -521,10 +521,10 @@ def pago_exitoso(request, producto_id):
 
     if status_mp == 'approved':
     # 1. Obtenemos el flete. Si es 0 o no viene, asumimos "Acordar con vendedor"
-    try:
-        flete_con_comision = Decimal(str(request.GET.get('envio', 0)))
-    except:
-        flete_con_comision = Decimal('0.00')
+        try:
+            flete_con_comision = Decimal(str(request.GET.get('envio', 0)))
+        except:
+            flete_con_comision = Decimal('0.00')
 
     tiene_envio = flete_con_comision > 0
     precio_base = Decimal(str(producto.price))
@@ -629,6 +629,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
