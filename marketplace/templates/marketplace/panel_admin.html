@@ -102,8 +102,8 @@
                         {% if not venta.pagado_a_vendedor %}
                             <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" onsubmit="return confirm('¿Confirmas que ya transferiste los fondos al vendedor?')">
                                 {% csrf_token %}
-                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.3s; width: 100%;">
-                                    <i class="fas fa-hand_holding_usd"></i> LIQUIDAR
+                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <i class="fas fa-hand-holding-usd"></i> LIQUIDAR
                                 </button>
                             </form>
                         {% else %}
@@ -116,20 +116,16 @@
                     </td>
                 </tr>
 
-                <div class="modal fade" id="modalVenta{{ venta.id }}" tabindex="-1" aria-labelledby="modalLabel{{ venta.id }}" aria-hidden="true">
+                <div class="modal fade" id="modalVenta{{ venta.id }}" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div class="modal-content" style="border-radius: 15px; border: none;">
                       <div class="modal-header" style="background: #2c3e50; color: white; border-radius: 15px 15px 0 0;">
-                        <h5 class="modal-title" id="modalLabel{{ venta.id }}"><i class="fas fa-file-invoice-dollar"></i> Desglose de Liquidación</h5>
+                        <h5 class="modal-title"><i class="fas fa-file-invoice-dollar"></i> Desglose de Liquidación</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body" style="padding: 25px;">
-                        <div style="margin-bottom: 20px; text-align: center;">
-                            <strong style="font-size: 1.1rem; color: #2c3e50;">{{ venta.product.title }}</strong>
-                        </div>
-                        
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span>Precio Lista Producto:</span>
+                            <span>Precio Producto:</span>
                             <span style="font-weight: bold;">${{ venta.product.price|floatformat:2 }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #2980b9;">
@@ -137,13 +133,13 @@
                             <span style="font-weight: bold;">+${{ venta.shipping_cost|floatformat:2 }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee;">
-                            <strong>Total que pagó el cliente:</strong>
-                            <strong style="color: #2c3e50;">${{ venta.price|floatformat:2 }}</strong>
+                            <strong>Total en Mercado Pago:</strong>
+                            <strong>${{ venta.price|floatformat:2 }}</strong>
                         </div>
 
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #e74c3c; font-size: 0.9rem;">
-                                <span><i class="fas fa-university"></i> Comisión Mercado Pago:</span>
+                                <span><i class="fas fa-minus-circle"></i> Comisión Mercado Pago:</span>
                                 <span>-${{ venta.costo_mp|floatformat:2 }}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #3498db; font-size: 0.9rem;">
@@ -159,13 +155,9 @@
                         </div>
 
                         <div style="margin-top: 20px; background: #27ae60; color: white; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <strong>A TRANSFERIR AL VENDEDOR:</strong>
+                            <strong>NETO AL VENDEDOR:</strong>
                             <strong style="font-size: 1.3rem;">${{ venta.monto_vendedor|floatformat:2 }}</strong>
                         </div>
-                        
-                        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 15px; text-align: center;">
-                            * Este cálculo ya descuenta el flete porque INITRE gestiona la guía.
-                        </p>
                       </div>
                     </div>
                   </div>
