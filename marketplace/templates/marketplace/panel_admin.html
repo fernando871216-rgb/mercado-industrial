@@ -6,7 +6,7 @@
     <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div>
             <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrativo</h2>
-            <p style="margin: 5px 0 0 0; opacity: 0.8;">Liquidaciones y Gestión de Ventas</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales e ingresos de plataforma</p>
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Netas INITRE</span>
@@ -14,13 +14,24 @@
         </div>
     </div>
 
-    <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid #f39c12;">
+            <span style="color: #7f8c8d; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Por Liquidar</span>
+            <h3 style="margin: 5px 0 0 0; color: #2c3e50;">{{ ventas_pendientes_pago|default:"0" }} <small style="font-size: 0.9rem; font-weight: normal;">Ventas</small></h3>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid #2ecc71;">
+            <span style="color: #7f8c8d; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Ventas Totales</span>
+            <h3 style="margin: 5px 0 0 0; color: #2c3e50;">{{ total_ventas_count|default:"0" }}</h3>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 1050px;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES / VENDEDOR</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">DETALLES Y PAGO VENDEDOR</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TOTAL COBRADO</th>
-                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">ENVÍO</th>
+                    <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TIPO ENVÍO</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">TU GANANCIA</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d;">AL VENDEDOR</th>
                     <th style="padding: 15px; font-size: 0.85rem; color: #7f8c8d; text-align: center;">ESTADO</th>
@@ -29,22 +40,29 @@
             </thead>
             <tbody>
                 {% for venta in ventas %}
-                <tr style="border-bottom: 1px solid #f1f1f1;">
+                <tr style="border-bottom: 1px solid #f1f1f1; transition: background 0.3s;" onmouseover="this.style.background='#fcfdfd'" onmouseout="this.style.background='transparent'">
                     <td style="padding: 20px;">
-                        <strong style="display: block; color: #2c3e50;">{{ venta.product.title }}</strong>
-                        <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: {{ venta.product.user.username }}</span>
-                        
-                        <div style="margin-top: 8px; padding: 6px 10px; background: #ebf5ff; border-radius: 6px; border-left: 3px solid #3498db;">
+                        <strong style="display: block; color: #2c3e50; font-size: 1rem;">{{ venta.product.title }}</strong>
+                        <span style="font-size: 0.8rem; color: #95a5a6;">Vendedor: <strong>{{ venta.product.user.username }}</strong></span>
+                        <div style="margin-top: 10px; padding: 6px 10px; background: #ebf5ff; border-radius: 6px; border-left: 3px solid #3498db; display: inline-block; width: 100%;">
                             <small style="color: #2c3e50; font-family: 'Courier New', Courier, monospace; font-weight: bold;">
-                                <i class="fas fa-university"></i> CLABE: {{ venta.product.user.profile.clabe|default:"No registrada" }}
+                                <i class="fas fa-university"></i> CLABE: 
+                                {% if venta.product.user.profile.clabe %}
+                                    {{ venta.product.user.profile.clabe }}
+                                {% else %}
+                                    <span style="color: #e74c3c;">No registrada</span>
+                                {% endif %}
                             </small>
                         </div>
+                        <small style="display: block; margin-top: 5px; color: #bdc3c7;">ID Pago: {{ venta.payment_id }}</small>
                     </td>
 
                     <td style="padding: 20px;">
-                        <div style="font-weight: bold;">${{ venta.price|floatformat:2 }}</div>
-                        <div style="font-size: 0.7rem; color: #e74c3c; background: #fdf2f2; padding: 2px 6px; border-radius: 4px; display: inline-block;">
-                            MP: -${{ venta.costo_mp|floatformat:2 }}
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 1.1rem;">
+                            ${{ venta.price|floatformat:2 }}
+                        </div>
+                        <div style="margin-top: 5px; font-size: 0.7rem; color: #e74c3c; background: #fdf2f2; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                            <i class="fas fa-minus-circle"></i> MP: ${{ venta.costo_mp|floatformat:2 }}
                         </div>
                     </td>
 
@@ -54,7 +72,7 @@
                                 <i class="fas fa-truck"></i> <strong>Flete:</strong><br>${{ venta.shipping_cost|floatformat:2 }}
                             </div>
                         {% else %}
-                            <span style="color: #7f8c8d; font-size: 0.85rem;"><i class="fas fa-handshake"></i> Local</span>
+                            <span style="color: #7f8c8d; font-size: 0.85rem;"><i class="fas fa-handshake"></i> Recolección</span>
                         {% endif %}
                     </td>
 
@@ -62,9 +80,12 @@
                         +${{ venta.ganancia_calculada|floatformat:2 }}
                     </td>
 
-                    <td style="padding: 20px; background: #f9fffb;">
-                        <strong style="color: #27ae60; font-size: 1.1rem;">${{ venta.monto_vendedor|floatformat:2 }}</strong><br>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalVenta{{ venta.id }}" style="font-size: 0.7rem; text-decoration: none;">Ver Desglose</a>
+                    <td style="padding: 20px; color: #27ae60; font-weight: bold; background: #f9fffb;">
+                        <span style="font-size: 1.1rem;">${{ venta.monto_vendedor|floatformat:2 }}</span>
+                        <br>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalVenta{{ venta.id }}" style="text-decoration: none; font-size: 0.7rem; color: #3498db; font-weight: normal;">
+                            <i class="fas fa-calculator"></i> Ver desglose
+                        </a>
                     </td>
 
                     <td style="padding: 20px; text-align: center;">
@@ -79,47 +100,84 @@
 
                     <td style="padding: 20px; text-align: center;">
                         {% if not venta.pagado_a_vendedor %}
-                            <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
+                            <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" onsubmit="return confirm('¿Confirmas que ya transferiste los fondos al vendedor?')">
                                 {% csrf_token %}
-                                <button type="submit" onclick="return confirm('¿Confirmas la transferencia?')" style="background: #f39c12; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
-                                    LIQUIDAR
+                                <button type="submit" style="background: #f39c12; color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.3s; width: 100%;">
+                                    <i class="fas fa-hand_holding_usd"></i> LIQUIDAR
                                 </button>
                             </form>
                         {% else %}
-                            <span style="color: #27ae60; font-weight: bold;"><i class="fas fa-check-double"></i> PAGADO</span>
+                            <div style="background: #ebf9f1; color: #1e7e4a; border: 1px solid #c3e6cb; padding: 10px; border-radius: 8px; text-align: center;">
+                                <span style="font-weight: bold; font-size: 0.75rem;">
+                                    <i class="fas fa-check-double"></i> PAGADO
+                                </span>
+                            </div>
                         {% endif %}
                     </td>
                 </tr>
 
-                <div class="modal fade" id="modalVenta{{ venta.id }}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content" style="border-radius: 15px; border: none;">
-                            <div class="modal-header" style="background: #2c3e50; color: white;">
-                                <h5 class="modal-title">Desglose de Liquidación</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <span>Precio del Producto:</span>
-                                    <strong>${{ venta.product.price|floatformat:2 }}</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; color: #e74c3c; font-size: 0.9rem;">
-                                    <span>- Comisión MP (Solo Producto):</span>
-                                    <span>-${{ venta.comision_mp_solo_producto|floatformat:2 }}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; color: #3498db; font-size: 0.9rem;">
-                                    <span>- Comisión INITRE (5%):</span>
-                                    <span>-${{ venta.comision_initre_solo_producto|floatformat:2 }}</span>
-                                </div>
-                                <hr>
-                                <div style="background: #27ae60; color: white; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                                    <strong>NETO A VENDEDOR:</strong>
-                                    <strong style="font-size: 1.4rem;">${{ venta.monto_vendedor|floatformat:2 }}</strong>
-                                </div>
-                            </div>
+                <div class="modal fade" id="modalVenta{{ venta.id }}" tabindex="-1" aria-labelledby="modalLabel{{ venta.id }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                      <div class="modal-header" style="background: #2c3e50; color: white; border-radius: 15px 15px 0 0;">
+                        <h5 class="modal-title" id="modalLabel{{ venta.id }}"><i class="fas fa-file-invoice-dollar"></i> Desglose de Liquidación</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body" style="padding: 25px;">
+                        <div style="margin-bottom: 20px; text-align: center;">
+                            <strong style="font-size: 1.1rem; color: #2c3e50;">{{ venta.product.title }}</strong>
                         </div>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Precio Lista Producto:</span>
+                            <span style="font-weight: bold;">${{ venta.product.price|floatformat:2 }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #2980b9;">
+                            <span>Flete Cobrado (+8%):</span>
+                            <span style="font-weight: bold;">+${{ venta.shipping_cost|floatformat:2 }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+                            <strong>Total que pagó el cliente:</strong>
+                            <strong style="color: #2c3e50;">${{ venta.price|floatformat:2 }}</strong>
+                        </div>
+
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #e74c3c; font-size: 0.9rem;">
+                                <span><i class="fas fa-university"></i> Comisión Mercado Pago:</span>
+                                <span>-${{ venta.costo_mp|floatformat:2 }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #3498db; font-size: 0.9rem;">
+                                <span><i class="fas fa-shield-alt"></i> Comisión INITRE:</span>
+                                <span>-${{ venta.ganancia_calculada|floatformat:2 }}</span>
+                            </div>
+                            {% if venta.is_delivery %}
+                            <div style="display: flex; justify-content: space-between; color: #f39c12; font-size: 0.9rem;">
+                                <span><i class="fas fa-truck"></i> Reserva para Guía:</span>
+                                <span>-${{ venta.shipping_cost|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="margin-top: 20px; background: #27ae60; color: white; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <strong>A TRANSFERIR AL VENDEDOR:</strong>
+                            <strong style="font-size: 1.3rem;">${{ venta.monto_vendedor|floatformat:2 }}</strong>
+                        </div>
+                        
+                        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 15px; text-align: center;">
+                            * Este cálculo ya descuenta el flete porque INITRE gestiona la guía.
+                        </p>
+                      </div>
                     </div>
+                  </div>
                 </div>
+
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 80px 20px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px; color: #ecf0f1; display: block;"></i>
+                        <p style="font-size: 1.1rem;">Aún no hay transacciones para gestionar.</p>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
