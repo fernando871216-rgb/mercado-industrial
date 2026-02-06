@@ -458,7 +458,7 @@ def actualizar_guia(request, venta_id):
             send_mail(
                 subject,
                 message,
-                'soporte@initre.com', # Asegúrate que este sea el correo de tu settings.py
+                settings.DEFAULT_FROM_EMAIL,
                 [v.buyer.email],
                 fail_silently=False,
             )
@@ -725,6 +725,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
