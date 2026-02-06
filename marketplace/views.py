@@ -465,25 +465,36 @@ def panel_administrador(request):
     # --- CÁLCULO DE LIQUIDACIÓN PARA LA TABLA ---
     for venta in ventas_todas:
         if venta.status in estados_validos:
-            # 1. Aseguramos tu ganancia (si es 0 en BD, calculamos el 5% manual)
-            ganancia_initre = venta.ganancia_neta if venta.ganancia_neta > 0 else (venta.price * Decimal('0.05'))
-            
-            monto_total = Decimal(str(venta.price))
+            # 1. Datos base
+            precio_prod = Decimal(str(venta.product.price))
+            monto_total_cliente = Decimal(str(venta.price))
             monto_flete = Decimal(str(venta.shipping_cost or 0))
+
+            # 2. COMISIÓN MP TOTAL (Lo que realmente te quitan a ti)
+            com_porc_total = monto_total_cliente * Decimal('0.0349')
+            com_fija = Decimal('4.00')
+            iva_total = (com_porc_total + com_fija) * Decimal('0.16')
+            venta.costo_mp = com_porc_total + com_fija + iva_total
+
+            # 3. COMISIÓN MP SOLO PRODUCTO (Para el desglose del vendedor)
+            com_porc_prod = precio_prod * Decimal('0.0349')
+            iva_prod = (com_porc_prod + com_fija) * Decimal('0.16')
+            venta.comision_mp_solo_producto = com_porc_prod + com_fija + iva_prod
+
+            # 4. GANANCIAS INITRE
+            # Ganancia total (para tu panel)
+            venta.ganancia_calculada = venta.ganancia_neta if venta.ganancia_neta > 0 else (precio_prod * Decimal('0.05'))
+            # Ganancia solo del producto (5% para el desglose del vendedor)
+            venta.comision_initre_solo_producto = precio_prod * Decimal('0.05')
+
+            # 5. MONTO NETO AL VENDEDOR (Protegido)
+            # El vendedor recibe: Precio Producto - MP del Producto - 5% de INITRE
+            venta.monto_vendedor = precio_prod - venta.comision_mp_solo_producto - venta.comision_initre_solo_producto
+            
+            # Pasamos el flete para el modal
             venta.monto_flete = monto_flete
-            comision_mp_porcentaje = monto_total * Decimal('0.0349')
-            comision_mp_fija = Decimal('4.00')
-            iva_comision_mp = (comision_mp_porcentaje + comision_mp_fija) * Decimal('0.16')
-            
-            total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
-            
-            venta.monto_vendedor = monto_total - total_mp - ganancia_initre - monto_flete
-            
-            # C. Guardamos datos para el HTML
-            venta.costo_mp = total_mp
-            # Pasamos la ganancia real calculada al objeto para que el HTML la muestre bien
-            venta.ganancia_calculada = ganancia_initre 
         else:
+            # Valores en cero para ventas no aprobadas
             venta.monto_vendedor = 0
             venta.costo_mp = 0
             venta.ganancia_calculada = 0
@@ -690,6 +701,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
