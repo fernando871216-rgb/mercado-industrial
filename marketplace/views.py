@@ -470,6 +470,7 @@ def panel_administrador(request):
             
             monto_total = Decimal(str(venta.price))
             monto_flete = Decimal(str(venta.shipping_cost or 0))
+            venta.monto_flete = monto_flete
             comision_mp_porcentaje = monto_total * Decimal('0.0349')
             comision_mp_fija = Decimal('4.00')
             iva_comision_mp = (comision_mp_porcentaje + comision_mp_fija) * Decimal('0.16')
@@ -687,6 +688,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
