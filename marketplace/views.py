@@ -466,7 +466,7 @@ def panel_administrador(request):
     for venta in ventas_todas:
         if venta.status in estados_validos:
             # 1. Datos base del producto
-            precio_prod = Decimal(str(venta.product.price))
+            precio_prod = Decimal(str(venta.price)) - Decimal(str(venta.shipping_cost))
             
             # 2. Tu comisión fija (5%)
             comision_initre = precio_prod * Decimal('0.05')
@@ -686,3 +686,4 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
