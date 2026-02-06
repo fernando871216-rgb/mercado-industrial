@@ -478,7 +478,8 @@ def panel_administrador(request):
             
             # B. MONTO NETO AL VENDEDOR
             # IMPORTANTE: Restamos ganancia_initre (la que ya verificamos arriba)
-            venta.monto_vendedor = monto_total - total_mp - ganancia_initre
+            flete = Decimal(str(venta.shipping_cost or 0))
+            venta.monto_vendedor = monto_total - total_mp - ganancia_initre - flete
             
             # C. Guardamos datos para el HTML
             venta.costo_mp = total_mp
@@ -524,8 +525,8 @@ def marcar_como_pagado(request, venta_id):
         total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
         
         # 3. Monto Final que recibe el vendedor
-        monto_vendedor_final = monto_total - total_mp - ganancia_initre
-
+        flete = Decimal(str(venta.shipping_cost or 0))
+        monto_vendedor_final = monto_total - total_mp - ganancia_initre - flete
         try:
             subject = f"✅ Pago enviado: {venta.product.title}"
             message = (
@@ -687,6 +688,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
