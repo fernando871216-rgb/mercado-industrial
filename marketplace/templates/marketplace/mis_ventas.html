@@ -64,9 +64,8 @@
                         <div style="display: flex; align-items: center; gap: 10px; color: #e67e22; margin-bottom: 15px; font-weight: 700; font-size: 0.95rem;">
                             <i class="fas fa-truck"></i> GESTIÓN DE ENTREGA
                         </div>
-                        <form method="POST" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <form method="POST" action="{% url 'actualizar_guia' v.id %}" style="display: flex; gap: 12px; flex-wrap: wrap;">
                             {% csrf_token %}
-                            <input type="hidden" name="venta_id" value="{{ v.id }}">
                             <div style="flex: 1; min-width: 200px;">
                                 <input type="text" name="shipping_company" placeholder="Empresa (ej. FedEx, DHL o Personal)" required 
                                        style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none;">
