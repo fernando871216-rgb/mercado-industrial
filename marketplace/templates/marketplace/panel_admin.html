@@ -9,7 +9,7 @@
             <p style="margin: 5px 0 0 0; opacity: 0.8;">Gestión de ventas globales e ingresos de plataforma</p>
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
-            <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Netas INITRE (Comisiones)</span>
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancias Netas INITRE</span>
             <strong style="font-size: 1.8rem; color: #2ecc71;">${{ ingresos_totales|default:"0.00"|floatformat:2 }}</strong>
         </div>
     </div>
@@ -57,11 +57,11 @@
                         </div>
                         <small style="display: block; margin-top: 5px; color: #bdc3c7;">ID Pago: {{ venta.payment_id }}</small>
                     </td>
-                    
+
                     <td style="padding: 20px; font-weight: bold; color: #2c3e50; font-size: 1.1rem;">
                         ${{ venta.price|floatformat:2 }}
                     </td>
-                    
+
                     <td style="padding: 20px;">
                         {% if venta.is_delivery %}
                             <div style="color: #2980b9; font-size: 0.85rem;">
@@ -71,17 +71,18 @@
                             <span style="color: #7f8c8d; font-size: 0.85rem;"><i class="fas fa-handshake"></i> Recolección</span>
                         {% endif %}
                     </td>
-                    
+
                     <td style="padding: 20px; color: #3498db; font-weight: bold;">
                         +${{ venta.ganancia_neta|floatformat:2 }}
                     </td>
-                    
+
                     <td style="padding: 20px; color: #27ae60; font-weight: bold;">
-                        {# Monto sugerido a transferir al vendedor #}
-                        <span style="font-size: 1.1rem;">${{ venta.price|add:"-0"|floatformat:2 }}</span>
-                        <br><small style="font-weight: normal; color: #95a5a6; font-size: 0.7rem;">(A liquidar)</small>
+                        {# AQUÍ USAMOS LA VARIABLE CALCULADA EN VIEWS.PY #}
+                        <span style="font-size: 1.1rem;">${{ venta.monto_vendedor|floatformat:2 }}</span>
+                        <br>
+                        <small style="font-weight: normal; color: #95a5a6; font-size: 0.7rem;">(Neto a transferir)</small>
                     </td>
-                    
+
                     <td style="padding: 20px; text-align: center;">
                         <span style="padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
                             {% if venta.status == 'approved' or venta.status == 'entregado' %} background: #e8f5e9; color: #2e7d32;
@@ -91,7 +92,7 @@
                             {{ venta.status }}
                         </span>
                     </td>
-                    
+
                     <td style="padding: 20px; text-align: center;">
                         {% if not venta.pagado_a_vendedor %}
                             <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" onsubmit="return confirm('¿Confirmas que ya transferiste los fondos al vendedor?')">
