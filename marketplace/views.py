@@ -11,6 +11,7 @@ from django.contrib import messages
 import base64
 import uuid
 import os
+from .models import Sale
 import time
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
@@ -464,16 +465,42 @@ def panel_administrador(request):
     }
     
     return render(request, 'marketplace/panel_admin.html', context)
-@staff_member_required
+
+@login_required
 def marcar_como_pagado(request, venta_id):
-    if request.method == 'POST':
-        # Buscamos la venta por el ID que viene en la URL
+    if not request.user.is_staff:
+        return redirect('home')
+
+    if request.method == "POST":
         venta = get_object_or_404(Sale, id=venta_id)
         venta.pagado_a_vendedor = True
         venta.save()
-        messages.success(request, f"Venta {venta.id} liquidada con éxito.")
-    
-    # Después de pagar, regresamos al panel
+
+        # Enviar correo al vendedor
+        try:
+            subject = f"✅ Pago enviado: {venta.product.title}"
+            message = (
+                f"Hola {venta.product.user.username},\n\n"
+                f"Te informamos que el pago de tu venta '{venta.product.title}' ha sido procesado.\n\n"
+                f"Detalles de la liquidación:\n"
+                f"- ID de Venta: {venta.payment_id}\n"
+                f"- Monto total: ${venta.price}\n"
+                f"- Comisión plataforma: -${venta.ganancia_neta}\n"
+                f"- Estado: LIQUIDADO\n\n"
+                f"El depósito debería verse reflejado en tu cuenta en breve según los tiempos de tu banco.\n\n"
+                f"Gracias por confiar en INITRE."
+            )
+            send_mail(
+                subject,
+                message,
+                'tu-correo@gmail.com', # Cambia por tu correo configurado
+                [venta.product.user.email],
+                fail_silently=False,
+            )
+            messages.success(request, f"Venta {venta.payment_id} liquidada y vendedor notificado.")
+        except Exception as e:
+            messages.warning(request, f"Venta marcada como pagada, pero el correo no pudo enviarse: {e}")
+
     return redirect('panel_administrador')
     
 @login_required
@@ -600,6 +627,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
