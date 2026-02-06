@@ -97,12 +97,12 @@ cloudinary.config(
     api_secret = 'R_pVI8FdS2aQ411SJ0pM_fehj74'
 )
 # CORREOS
-ADMIN_EMAIL = 'fernando871216@gmail.com'
+ADMIN_EMAIL = 'iniestaedgar875@gmail.com'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'iniestaedgar875@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Mercado Industrial INITRE <iniestaedgar875@gmail.com>'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -113,6 +113,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
