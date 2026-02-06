@@ -292,9 +292,26 @@
         });
     })();
     </script>
-
+<script>
+    // Manejo inteligente del botón "Atrás" para APKs WebView
+    (function() {
+        // Agregamos un estado al historial al cargar la página
+        if (window.history && window.history.pushState) {
+            
+            window.onpopstate = function(event) {
+                // Si el usuario presiona atrás y NO estamos en la página principal
+                if (window.location.pathname !== "/") {
+                    // Evitamos que la app se cierre y lo mandamos al home
+                    window.location.href = "/";
+                }
+                // Si ya estamos en "/", el navegador permitirá la acción por defecto (salir)
+            };
+        }
+    })();
+</script>
 </body>
 </html>
+
 
 
 
