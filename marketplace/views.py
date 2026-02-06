@@ -440,21 +440,41 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    # 1. Definimos qué estados significan que la plata ya entró
-    # Consideramos 'approved' (recién pagado), 'enviado' y 'entregado'
     estados_validos = ['approved', 'enviado', 'entregado']
     
-    # 2. Filtramos las ventas exitosas
-    ventas_exitosas = Sale.objects.filter(status__in=estados_validos)
-    total_ventas_count = ventas_exitosas.count()
+    # 1. Ventas para estadísticas
+    ventas_stats = Sale.objects.filter(status__in=estados_validos)
+    total_ventas_count = ventas_stats.count()
     
-    # 3. Sumamos la ganancia_neta de todas esas ventas
-    # Usamos aggregate para que la base de datos haga la suma rápido
-    resultado_ganancia = ventas_exitosas.aggregate(total=Sum('ganancia_neta'))
+    # 2. Ganancias totales de la plataforma (INITRE)
+    resultado_ganancia = ventas_stats.aggregate(total=Sum('ganancia_neta'))
     ingresos_totales = resultado_ganancia['total'] or 0
 
-    # 4. Traemos todas las ventas para la tabla (sin filtrar estado para ver el historial completo)
+    # 3. Traemos todas las ventas para la tabla
     ventas_todas = Sale.objects.select_related('product__user__profile', 'buyer').all().order_by('-created_at')
+
+    # --- CÁLCULO DE LIQUIDACIÓN PARA LA TABLA ---
+    for venta in ventas_todas:
+        if venta.status in estados_validos:
+            # A. COMISIÓN MERCADO PAGO (Ejemplo: 3.49% + $4 + IVA)
+            # Calculamos sobre el precio total que pagó el cliente
+            monto_total = Decimal(str(venta.price))
+            comision_mp_porcentaje = monto_total * Decimal('0.0349')
+            comision_mp_fija = Decimal('4.00')
+            iva_comision_mp = (comision_mp_porcentaje + comision_mp_fija) * Decimal('0.16')
+            
+            total_mp = comision_mp_porcentaje + comision_mp_fija + iva_comision_mp
+            
+            # B. MONTO NETO AL VENDEDOR
+            # Es el Total - Lo que se queda MP - Lo que te quedas tú (ganancia_neta)
+            venta.monto_vendedor = monto_total - total_mp - Decimal(str(venta.ganancia_neta))
+            
+            # C. Guardamos también cuánto cobró MP para mostrarlo opcionalmente
+            venta.costo_mp = total_mp
+        else:
+            venta.monto_vendedor = 0
+            venta.costo_mp = 0
+
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
     context = {
@@ -462,8 +482,7 @@ def panel_administrador(request):
         'total_ventas_count': total_ventas_count,
         'ingresos_totales': ingresos_totales,
         'productos_recientes': productos_recientes,
-        'ventas_pendientes_pago': Sale.objects.filter(pagado_a_vendedor=False, status__in=['approved', 'enviado', 'entregado']).count(),
-        'total_ventas_count': Sale.objects.filter(status__in=['approved', 'enviado', 'entregado']).count(),
+        'ventas_pendientes_pago': Sale.objects.filter(pagado_a_vendedor=False, status__in=estados_validos).count(),
     }
     
     return render(request, 'marketplace/panel_admin.html', context)
@@ -630,6 +649,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
