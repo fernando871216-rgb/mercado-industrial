@@ -462,6 +462,8 @@ def panel_administrador(request):
         'total_ventas_count': total_ventas_count,
         'ingresos_totales': ingresos_totales,
         'productos_recientes': productos_recientes,
+        'ventas_pendientes_pago': Sale.objects.filter(pagado_a_vendedor=False, status__in=['approved', 'enviado', 'entregado']).count(),
+        'total_ventas_count': Sale.objects.filter(status__in=['approved', 'enviado', 'entregado']).count(),
     }
     
     return render(request, 'marketplace/panel_admin.html', context)
@@ -627,6 +629,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
