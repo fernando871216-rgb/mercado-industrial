@@ -119,6 +119,11 @@ def save_user_profile(sender, instance, **kwargs):
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
 
+def get_ganancia_initre(self):
+        # Tu ganancia es el 5% del producto (no del flete)
+        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+
+
 
 
 
