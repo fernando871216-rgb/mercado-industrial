@@ -26,17 +26,13 @@ class IndustrialProduct(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
     
-    # Imágenes (Tipo 'image')
     image = CloudinaryField('image', blank=True, null=True, folder='productos/')
     image2 = CloudinaryField('image', blank=True, null=True, folder='productos/')
     image3 = CloudinaryField('image', blank=True, null=True, folder='productos/')
     
-    # FICHA TÉCNICA (CAMBIO CLAVE AQUÍ)
-    # Quitamos 'raw' para usar el almacenamiento por defecto que configuramos en settings
-    # Esto evita el error 401 al descargar
     ficha_tecnica = models.FileField(
         upload_to='fichas_tecnicas/', 
-        storage=RawMediaCloudinaryStorage(), # Esto obliga a subirlo a Cloudinary como PDF
+        storage=RawMediaCloudinaryStorage(),
         blank=True, 
         null=True
     )
@@ -45,7 +41,6 @@ class IndustrialProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Datos de envío
     peso = models.DecimalField(max_digits=6, decimal_places=2, default=5.0, help_text="Peso estimado en Kg")
     largo = models.IntegerField(default=30, help_text="Largo en cm")
     ancho = models.IntegerField(default=30, help_text="Ancho en cm")
@@ -94,12 +89,12 @@ class Sale(models.Model):
         iva = (comision_porcentaje + fijo) * Decimal('0.16')
         return (comision_porcentaje + fijo + iva).quantize(Decimal('0.01'))
 
-     def get_platform_commission(self):
-         return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+    def get_platform_commission(self):
+        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
 
-     def get_net_amount(self):
-         total_recibido = self.price + self.shipping_cost
-         return (total_recibido - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
+    def get_net_amount(self):
+        total_recibido = self.price + self.shipping_cost
+        return (total_recibido - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
 
 # --- SEÑALES ---
 @receiver(post_save, sender=User)
@@ -113,18 +108,3 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-
-def get_ganancia_initre(self):
-        # Tu ganancia es el 5% del producto (no del flete)
-        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
-
-
-
-
-
-
-
-
-
-
-
