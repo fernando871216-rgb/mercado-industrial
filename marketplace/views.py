@@ -486,21 +486,27 @@ def panel_administrador(request):
     if not request.user.is_staff:
         return redirect('home')
 
+    # 1. Definimos los estados que cuentan como dinero real
     estados_validos = ['approved', 'enviado', 'entregado']
     
-    # 1. Ventas para estadísticas (cuadros superiores)
-    ventas_stats = Sale.objects.filter(status__in=estados_validos)
-    total_ventas_count = ventas_stats.count()
-    
-    # 2. Ganancias totales (INITRE) acumuladas en base de datos
-    resultado_ganancia = ventas_stats.aggregate(total=Sum('ganancia_neta'))
+    # 2. Traemos las ventas de la base de datos con toda la información de contacto
+    # Usamos select_related para que los datos de perfil (WhatsApp) carguen rápido
+    ventas_todas = Sale.objects.select_related(
+        'product__user__profile', 
+        'buyer__profile'
+    ).all().order_by('-created_at')
+
+    # 3. Calculamos el total de ganancias acumuladas (el cuadrito verde)
+    # Sumamos el campo 'ganancia_neta' que ya se grabó al momento del pago exitoso
+    resultado_ganancia = Sale.objects.filter(status__in=estados_validos).aggregate(total=Sum('ganancia_neta'))
     ingresos_totales = resultado_ganancia['total'] or 0
 
-    # 3. Traemos todas las ventas para la tabla
-    ventas_todas = Sale.objects.select_related('product__user__profile', 'buyer').all().order_by('-created_at')
+    # 4. Conteo de ventas para las estadísticas
+    total_ventas_count = Sale.objects.filter(status__in=estados_validos).count()
+    ventas_pendientes_pago = Sale.objects.filter(pagado_a_vendedor=False, status__in=estados_validos).count()
 
-    # NOTA: Ya no necesitamos el bucle "for venta in ventas_todas" aquí
-    # porque los cálculos ahora los hace el modelo dinámicamente cuando el HTML los pide.
+    # IMPORTANTE: Eliminamos el bucle "for venta in ventas_todas" que hacía cálculos manuales.
+    # Ahora el HTML leerá directamente "venta.price" (los $257.46 reales).
 
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
@@ -509,7 +515,7 @@ def panel_administrador(request):
         'total_ventas_count': total_ventas_count,
         'ingresos_totales': ingresos_totales,
         'productos_recientes': productos_recientes,
-        'ventas_pendientes_pago': Sale.objects.filter(pagado_a_vendedor=False, status__in=estados_validos).count(),
+        'ventas_pendientes_pago': ventas_pendientes_pago,
     }
     
     return render(request, 'marketplace/panel_admin.html', context)
@@ -699,6 +705,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
