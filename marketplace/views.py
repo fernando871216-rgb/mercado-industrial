@@ -527,27 +527,16 @@ def marcar_como_pagado(request, venta_id):
 
     if request.method == "POST":
         venta = get_object_or_404(Sale, id=venta_id)
+        
+        # 1. Obtenemos los montos directamente del modelo para que coincidan con el Panel
+        precio_producto_neto = venta.price - venta.shipping_cost
+        total_mp_producto = venta.get_gateway_cost()
+        comision_initre = venta.get_platform_commission()
+        monto_vendedor_final = venta.get_net_amount()
+
+        # 2. Marcamos como pagado
         venta.pagado_a_vendedor = True
         venta.save()
-
-        # --- LÓGICA DE PRECISIÓN CORREGIDA ---
-        # 1. Calculamos el precio real del producto restando el flete del total pagado
-        # Esto asegura que si el flete fue de $300, el cálculo sea sobre los $1000 restantes.
-        total_pagado_mp = Decimal(str(venta.price))
-        costo_envio = Decimal(str(venta.shipping_cost))
-        precio_producto_neto = total_pagado_mp - costo_envio
-        
-        # 2. Tu Comisión de Plataforma (5% sobre el neto del producto)
-        comision_initre = precio_producto_neto * Decimal('0.05')
-        
-        # 3. Comisión Mercado Pago sobre el PRODUCTO (3.49% + $4 + IVA)
-        com_porc_prod = precio_producto_neto * Decimal('0.0349')
-        com_fija = Decimal('4.00')
-        iva_mp_prod = (com_porc_prod + com_fija) * Decimal('0.16')
-        total_mp_producto = com_porc_prod + com_fija + iva_mp_prod
-        
-        # 4. MONTO FINAL PROMETIDO AL VENDEDOR ($1000 - $50 - $45.12 = $904.88)
-        monto_vendedor_final = precio_producto_neto - comision_initre - total_mp_producto
 
         try:
             subject = f"✅ ¡Pago enviado! Tu venta en INITRE: {venta.product.title}"
@@ -569,11 +558,11 @@ def marcar_como_pagado(request, venta_id):
             send_mail(
                 subject,
                 message,
-                'tu-correo-de-soporte@initre.com', 
+                settings.DEFAULT_FROM_EMAIL, # Usa tu configuración global de correo
                 [venta.product.user.email],
                 fail_silently=False,
             )
-            messages.success(request, f"Venta {venta.payment_id} liquidada con éxito por ${monto_vendedor_final:.2f}")
+            messages.success(request, f"Venta liquidada con éxito por ${monto_vendedor_final:.2f}")
         except Exception as e:
             messages.warning(request, f"Pago marcado, pero el correo falló: {e}")
 
@@ -705,6 +694,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
