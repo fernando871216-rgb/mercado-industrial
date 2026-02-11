@@ -33,7 +33,6 @@
         font-size: 0.8rem;
     }
 
-    /* Estilos para los estados del envío */
     .status-badge {
         padding: 5px 10px;
         border-radius: 20px;
@@ -101,12 +100,13 @@
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             {% if venta.product.user.profile.phone %}
                             <a href="https://wa.me/52{{ venta.product.user.profile.phone }}" target="_blank" class="btn-ws" style="background: #25D366;">
-                                <i class="fab fa-whatsapp"></i> VENDEDOR
+                                <i class="fab fa-whatsapp"></i> {{ venta.product.user.username|upper }} (VENDEDOR)
                             </a>
                             {% endif %}
+                            
                             {% if venta.buyer.profile.phone %}
                             <a href="https://wa.me/52{{ venta.buyer.profile.phone }}" target="_blank" class="btn-ws" style="background: #3498db;">
-                                <i class="fab fa-whatsapp"></i> COMPRADOR
+                                <i class="fab fa-whatsapp"></i> {{ venta.buyer.username|upper }} (COMPRADOR)
                             </a>
                             {% endif %}
                         </div>
@@ -120,7 +120,7 @@
                     <td>
                         <div style="font-weight: bold;">${{ venta.price|floatformat:2 }}</div>
                         <div style="color: #3498db; font-size: 0.8rem; font-weight: bold; margin-top: 4px;">
-                            <i class="fas fa-shopping-cart"></i> Flete (con 8%): ${{ venta.shipping_cost|floatformat:2 }}
+                            <i class="fas fa-shopping-cart"></i> Flete: ${{ venta.shipping_cost|floatformat:2 }}
                         </div>
                     </td>
 
@@ -175,4 +175,3 @@
     </div>
 </div>
 {% endblock %}
-
