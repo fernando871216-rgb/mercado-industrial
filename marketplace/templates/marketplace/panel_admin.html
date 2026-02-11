@@ -2,11 +2,11 @@
 
 {% block content %}
 <style>
-    /* Estilos específicos para que la tabla se vea bien en celular */
+    /* Estilos para que la tabla sea responsiva en la APK */
     .tabla-responsiva {
         width: 100%;
-        overflow-x: auto; /* Activa el scroll horizontal */
-        -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/Android */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         background: white;
         border-radius: 15px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -14,10 +14,9 @@
     
     @media (max-width: 768px) {
         #adminTable th, #adminTable td {
-            white-space: nowrap; /* Evita que el texto se rompa en varias líneas */
-            min-width: 150px;    /* Asegura que las columnas tengan un ancho mínimo */
+            white-space: nowrap;
+            min-width: 150px;
         }
-        /* La primera columna (Producto) puede ser un poco más ancha */
         #adminTable td:first-child {
             min-width: 200px;
         }
@@ -70,7 +69,7 @@
                                 <a href="https://wa.me/52{{ venta.product.user.profile.phone }}?text=Hola%20{{ venta.product.user.username }},%20soy%20el%20administrador%20de%20INITRE.%20Aquí%20tienes%20la%20guía%20para%20tu%20venta%20de%20{{ venta.product.title }}.%20CP%20Destino:%20{{ venta.shipping_cp }}" 
                                    target="_blank" 
                                    style="display: inline-flex; align-items: center; gap: 5px; background: #25D366; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
-                                     <i class="fab fa-whatsapp"></i> ENVIAR GUÍA (VENDEDOR)
+                                     <i class="fab fa-whatsapp"></i> ENVIAR GUÍA
                                 </a>
                             {% endif %}
                         </div>
@@ -79,13 +78,6 @@
                             <span style="font-size: 0.85rem; color: #7f8c8d; display: block; margin-bottom: 5px;">
                                 <i class="fas fa-user"></i> Comprador: <strong>{{ venta.buyer.username }}</strong>
                             </span>
-                            {% if venta.buyer.profile.phone %}
-                                <a href="https://wa.me/52{{ venta.buyer.profile.phone }}?text=Hola%20{{ venta.buyer.username }},%20soy%20el%20administrador%20de%20INITRE.%20Te%20contacto%20sobre%20tu%20compra%20de%20{{ venta.product.title }}." 
-                                   target="_blank" 
-                                   style="display: inline-flex; align-items: center; gap: 5px; background: #3498db; color: white; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">
-                                     <i class="fab fa-whatsapp"></i> CONTACTAR COMPRADOR
-                                </a>
-                            {% endif %}
                         </div>
 
                         {% if venta.is_delivery %}
@@ -102,30 +94,28 @@
                     </td>
 
                     <td style="padding: 20px;">
-                        <div style="font-weight: bold; color: #2c3e50;">${{ venta.price|floatformat:2 }}</div>
+                        <div style="font-weight: bold; color: #2c3e50;">${{ venta.price|add:venta.shipping_cost|floatformat:2 }}</div>
                         <small style="color: #e74c3c; background: #fdf2f2; padding: 2px 5px; border-radius: 4px; font-size: 0.75rem;">
-                            Costo MP: -${{ venta.costo_mp|floatformat:2 }}
+                            Costo MP: -${{ venta.get_gateway_cost|floatformat:2 }}
                         </small>
                     </td>
 
                     <td style="padding: 20px;">
                         {% if venta.is_delivery %}
                             <div style="color: #2980b9; font-size: 0.85rem;">
-                                <i class="fas fa-truck"></i> <strong>Flete Pagado:</strong><br>${{ venta.shipping_cost|floatformat:2 }}
+                                <i class="fas fa-truck"></i> ${{ venta.shipping_cost|floatformat:2 }}
                             </div>
                         {% else %}
-                            <div style="color: #7f8c8d; font-size: 0.85rem;">
-                                <i class="fas fa-handshake"></i> <strong>Recolección</strong><br>Local
-                            </div>
+                            <div style="color: #7f8c8d; font-size: 0.85rem;">Recolección Local</div>
                         {% endif %}
                     </td>
 
                     <td style="padding: 20px; color: #3498db; font-weight: bold;">
-                        +${{ venta.ganancia_calculada|floatformat:2 }}
+                        +${{ venta.get_platform_commission|floatformat:2 }}
                     </td>
 
                     <td style="padding: 20px; background: #f9fffb;">
-                        <strong style="color: #27ae60; font-size: 1.1rem;">${{ venta.monto_vendedor|floatformat:2 }}</strong>
+                        <strong style="color: #27ae60; font-size: 1.1rem;">${{ venta.get_net_amount|floatformat:2 }}</strong>
                     </td>
 
                     <td style="padding: 20px; text-align: center;">
@@ -142,7 +132,7 @@
                         {% if not venta.pagado_a_vendedor %}
                             <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
                                 {% csrf_token %}
-                                <button type="submit" onclick="return confirm('¿Ya transferiste los fondos al vendedor?')" 
+                                <button type="submit" onclick="return confirm('¿Confirmas liquidación al vendedor?')" 
                                     style="background: #f39c12; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
                                     LIQUIDAR
                                 </button>
@@ -163,11 +153,9 @@
 </div>
 
 <script>
-    // Buscador en tiempo real
     document.getElementById('adminSearch').addEventListener('keyup', function() {
         let filter = this.value.toUpperCase();
         let rows = document.querySelector("#adminTable tbody").rows;
-        
         for (let i = 0; i < rows.length; i++) {
             let text = rows[i].innerText.toUpperCase();
             rows[i].style.display = text.indexOf(filter) > -1 ? "" : "none";
