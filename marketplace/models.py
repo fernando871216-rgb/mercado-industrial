@@ -86,8 +86,8 @@ class Sale(models.Model):
 
     def __str__(self):
         return f"Venta de {self.product.title}"
-
-    def get_gateway_cost(self):
+        
+   def get_gateway_cost(self):
         total_cobrado = self.price + self.shipping_cost
         comision_porcentaje = total_cobrado * Decimal('0.0349')
         fijo = Decimal('4.00')
@@ -98,9 +98,9 @@ class Sale(models.Model):
         return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
 
    def get_net_amount(self):
-        # Es lo que pagó el cliente menos lo que se queda MP y menos tu comisión
         total_recibido = self.price + self.shipping_cost
-        return (total_recibido - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
+        # Restamos costo de pasarela y comisión de plataforma del total
+        return (total_recibido - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01')))
 
 # --- SEÑALES ---
 @receiver(post_save, sender=User)
@@ -118,6 +118,7 @@ def save_user_profile(sender, instance, **kwargs):
 def get_ganancia_initre(self):
         # Tu ganancia es el 5% del producto (no del flete)
         return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+
 
 
 
