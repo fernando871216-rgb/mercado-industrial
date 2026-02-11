@@ -488,45 +488,19 @@ def panel_administrador(request):
 
     estados_validos = ['approved', 'enviado', 'entregado']
     
-    # 1. Ventas para estadísticas
+    # 1. Ventas para estadísticas (cuadros superiores)
     ventas_stats = Sale.objects.filter(status__in=estados_validos)
     total_ventas_count = ventas_stats.count()
     
-    # 2. Ganancias totales de la plataforma (INITRE)
+    # 2. Ganancias totales (INITRE) acumuladas en base de datos
     resultado_ganancia = ventas_stats.aggregate(total=Sum('ganancia_neta'))
     ingresos_totales = resultado_ganancia['total'] or 0
 
     # 3. Traemos todas las ventas para la tabla
     ventas_todas = Sale.objects.select_related('product__user__profile', 'buyer').all().order_by('-created_at')
 
-    # --- CÁLCULO DE LIQUIDACIÓN PARA LA TABLA ---
-    for venta in ventas_todas:
-        if venta.status in estados_validos:
-            # 1. Datos base del producto
-            precio_prod = Decimal(str(venta.price)) - Decimal(str(venta.shipping_cost))
-            
-            # 2. Tu comisión fija (5%)
-            comision_initre = precio_prod * Decimal('0.05')
-            
-            # 3. Comisión MP solo sobre el precio del producto
-            # (3.49% + $4 + IVA)
-            com_porc_prod = precio_prod * Decimal('0.0349')
-            com_fija = Decimal('4.00')
-            iva_prod = (com_porc_prod + com_fija) * Decimal('0.16')
-            mp_solo_producto = com_porc_prod + com_fija + iva_prod
-
-            # 4. CÁLCULO FINAL PROTEGIDO
-            # El vendedor recibe: $1000 - $50 (Initre) - $45.12 (MP) = $904.88
-            venta.monto_vendedor = precio_prod - comision_initre - mp_solo_producto
-            
-            # Datos para las columnas de la tabla
-            venta.ganancia_calculada = comision_initre
-            venta.costo_mp = mp_solo_producto
-        else:
-            # Valores en cero para ventas no aprobadas
-            venta.monto_vendedor = 0
-            venta.costo_mp = 0
-            venta.ganancia_calculada = 0
+    # NOTA: Ya no necesitamos el bucle "for venta in ventas_todas" aquí
+    # porque los cálculos ahora los hace el modelo dinámicamente cuando el HTML los pide.
 
     productos_recientes = IndustrialProduct.objects.all().order_by('-created_at')[:5]
 
@@ -725,6 +699,7 @@ def mercadopago_webhook(request):
 
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
+
 
 
 
