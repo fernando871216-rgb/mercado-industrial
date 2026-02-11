@@ -83,18 +83,26 @@ class Sale(models.Model):
         return f"Venta de {self.product.title}"
         
     def get_gateway_cost(self):
-        total_cobrado = self.price + self.shipping_cost
-        comision_porcentaje = total_cobrado * Decimal('0.0349')
+        # Calculamos la comisión de MP SOLO sobre el precio del producto ($100)
+        # El 8% extra que cobramos en el flete ya cubre la comisión de la guía
+        precio_producto_original = self.price - self.shipping_cost
+        
+        comision_porcentaje = precio_producto_original * Decimal('0.0349')
         fijo = Decimal('4.00')
         iva = (comision_porcentaje + fijo) * Decimal('0.16')
+        
         return (comision_porcentaje + fijo + iva).quantize(Decimal('0.01'))
 
     def get_platform_commission(self):
-        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
-
+        # Tu 5% sobre el precio original del producto
+        precio_producto_original = self.price - self.shipping_cost
+        return (precio_producto_original * Decimal('0.05')).quantize(Decimal('0.01'))
+        
     def get_net_amount(self):
-        total_recibido = self.price + self.shipping_cost
-        return (total_recibido - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
+        # Ahora sí: $100 - $8.69 (MP de 100) - $5.00 (Tuyo) = $86.31
+        precio_producto_original = self.price - self.shipping_cost
+        neto = precio_producto_original - self.get_gateway_cost() - self.get_platform_commission()
+        return neto.quantize(Decimal('0.01'))
 
 # --- SEÑALES ---
 @receiver(post_save, sender=User)
@@ -108,3 +116,4 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
