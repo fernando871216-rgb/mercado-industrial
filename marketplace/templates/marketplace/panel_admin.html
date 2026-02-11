@@ -2,7 +2,6 @@
 
 {% block content %}
 <style>
-    /* Diseño responsivo para la APK */
     .tabla-responsiva {
         width: 100%;
         overflow-x: auto;
@@ -34,6 +33,18 @@
         font-size: 0.8rem;
     }
 
+    /* Estilos para los estados del envío */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .status-pendiente { background: #fff3e0; color: #ef6c00; }
+    .status-enviado { background: #e3f2fd; color: #1565c0; }
+    .status-entregado { background: #e8f5e9; color: #2e7d32; }
+
     .btn-ws {
         display: inline-flex;
         align-items: center;
@@ -44,10 +55,7 @@
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: bold;
-        transition: transform 0.2s;
     }
-
-    .btn-ws:active { transform: scale(0.95); }
 
     .info-clabe-box {
         margin-top: 12px;
@@ -62,119 +70,108 @@
     
     <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 15px;">
         <div>
-            <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrador INITRE</h2>
-            <p style="margin: 5px 0 0 0; opacity: 0.8;">Liquidaciones y Gestión de Envíos</p>
+            <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrador</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Liquidaciones y Seguimiento de Guías</p>
         </div>
         <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
-            <span style="display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Ganancia Plataforma (5%)</span>
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancia Plataforma (5%)</span>
             <strong style="font-size: 2rem; color: #2ecc71;">${{ ingresos_totales|floatformat:2 }}</strong>
         </div>
-    </div>
-
-    <div style="margin-bottom: 20px; position: relative;">
-        <i class="fas fa-search" style="position: absolute; left: 15px; top: 15px; color: #95a5a6;"></i>
-        <input type="text" id="adminSearch" placeholder="Buscar por producto, vendedor o CP..." 
-            style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
     </div>
 
     <div class="tabla-responsiva">
         <table id="adminTable" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="color: #7f8c8d; font-size: 0.85rem;">PRODUCTO / CONTACTO</th>
-                    <th style="color: #7f8c8d; font-size: 0.85rem;">PAGO TOTAL (MP)</th>
-                    <th style="color: #7f8c8d; font-size: 0.85rem;">FLETE</th>
-                    <th style="color: #7f8c8d; font-size: 0.85rem;">DESCUENTOS</th>
-                    <th style="color: #7f8c8d; font-size: 0.85rem;">NETO VENDEDOR</th>
-                    <th style="color: #7f8c8d; font-size: 0.85rem; text-align: center;">ACCIÓN</th>
+                    <th style="color: #7f8c8d;">PRODUCTO / CONTACTO</th>
+                    <th style="color: #7f8c8d;">PAGO TOTAL</th>
+                    <th style="color: #7f8c8d;">ESTADO ENVÍO</th>
+                    <th style="color: #7f8c8d;">DESCUENTOS</th>
+                    <th style="color: #7f8c8d;">NETO VENDEDOR</th>
+                    <th style="color: #7f8c8d; text-align: center;">ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
                 <tr style="border-bottom: 1px solid #f1f1f1;">
                     <td>
-                        <strong style="display: block; color: #2c3e50; font-size: 1.1rem; margin-bottom: 5px;">{{ venta.product.title }}</strong>
-                        <div style="margin-bottom: 10px;"><span class="badge-cp"><i class="fas fa-map-marker-alt"></i> CP: {{ venta.shipping_cp|default:"00000" }}</span></div>
+                        <strong style="display: block; color: #2c3e50; font-size: 1.1rem;">{{ venta.product.title }}</strong>
+                        <div style="margin: 5px 0;"><span class="badge-cp"><i class="fas fa-truck"></i> CP: {{ venta.shipping_cp|default:"00000" }}</span></div>
                         
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             {% if venta.product.user.profile.phone %}
                             <a href="https://wa.me/52{{ venta.product.user.profile.phone }}" target="_blank" class="btn-ws" style="background: #25D366;">
-                                <i class="fab fa-whatsapp"></i> VENDEDOR: {{ venta.product.user.username }}
+                                <i class="fab fa-whatsapp"></i> VENDEDOR
                             </a>
                             {% endif %}
-                            
                             {% if venta.buyer.profile.phone %}
                             <a href="https://wa.me/52{{ venta.buyer.profile.phone }}" target="_blank" class="btn-ws" style="background: #3498db;">
-                                <i class="fab fa-whatsapp"></i> COMPRADOR: {{ venta.buyer.username }}
+                                <i class="fab fa-whatsapp"></i> COMPRADOR
                             </a>
                             {% endif %}
                         </div>
 
                         <div class="info-clabe-box">
-                            <small style="display: block; color: #007bff; font-weight: bold; font-size: 0.7rem;">CLABE PARA TRANSFERIR:</small>
-                            <strong style="font-family: 'Courier New', monospace; font-size: 1.05rem; color: #2c3e50;">{{ venta.product.user.profile.clabe|default:"NO REGISTRADA" }}</strong>
+                            <small style="display: block; color: #007bff; font-weight: bold; font-size: 0.65rem;">CLABE:</small>
+                            <strong style="font-family: monospace; font-size: 0.95rem;">{{ venta.product.user.profile.clabe|default:"NO REGISTRADA" }}</strong>
                         </div>
                     </td>
 
                     <td>
-                        <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">${{ venta.price|floatformat:2 }}</div>
-                        <small style="color: #95a5a6;">ID: {{ venta.payment_id|truncatechars:12 }}</small>
-                    </td>
-
-                    <td>
-                        <div style="color: #007bff; font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-shopping-cart"></i> ${{ venta.shipping_cost|floatformat:2 }}
-                        </div>
-                        <small style="color: #7f8c8d; font-size: 0.75rem;">(Incluye margen 8%)</small>
-                    </td>
-
-                    <td>
-                        <div style="color: #e74c3c; font-size: 0.85rem; line-height: 1.4;">
-                            MP (Producto): -${{ venta.get_gateway_cost|floatformat:2 }}<br>
-                            INITRE (5%): -${{ venta.get_platform_commission|floatformat:2 }}
+                        <div style="font-weight: bold;">${{ venta.price|floatformat:2 }}</div>
+                        <div style="color: #3498db; font-size: 0.8rem; font-weight: bold; margin-top: 4px;">
+                            <i class="fas fa-shopping-cart"></i> Flete: ${{ venta.shipping_cost|floatformat:2 }}
                         </div>
                     </td>
 
-                    <td style="background: #f4fff7; border-left: 3px solid #27ae60;">
-                        <div style="color: #27ae60; font-size: 1.4rem; font-weight: 900;">
+                    <td>
+                        <span class="status-badge 
+                            {% if venta.status == 'approved' %}status-pendiente
+                            {% elif venta.status == 'enviado' %}status-enviado
+                            {% elif venta.status == 'entregado' %}status-entregado
+                            {% else %}status-pendiente{% endif %}">
+                            {{ venta.status }}
+                        </span>
+                        {% if venta.tracking_number %}
+                        <div style="font-size: 0.7rem; color: #7f8c8d; margin-top: 5px;">
+                            <strong>{{ venta.shipping_company }}:</strong><br>
+                            {{ venta.tracking_number }}
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div style="color: #e74c3c; font-size: 0.8rem;">
+                            MP: -${{ venta.get_gateway_cost|floatformat:2 }}<br>
+                            INITRE: -${{ venta.get_platform_commission|floatformat:2 }}
+                        </div>
+                    </td>
+
+                    <td style="background: #f4fff7;">
+                        <div style="color: #27ae60; font-size: 1.3rem; font-weight: 900;">
                             ${{ venta.get_net_amount|floatformat:2 }}
                         </div>
-                        <small style="color: #7f8c8d; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">A depositar hoy</small>
                     </td>
 
                     <td style="text-align: center;">
                         {% if not venta.pagado_a_vendedor %}
-                        <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST" style="margin: 0;">
+                        <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
                             {% csrf_token %}
-                            <button type="submit" onclick="return confirm('¿Ya transferiste ${{ venta.get_net_amount }} al vendedor?')" 
-                                    style="background: #f39c12; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);">
+                            <button type="submit" onclick="return confirm('¿Ya transferiste ${{ venta.get_net_amount }}?')" 
+                                    style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
                                 LIQUIDAR
                             </button>
                         </form>
                         {% else %}
-                        <div style="color: #27ae60; font-weight: bold; font-size: 0.9rem;">
-                            <i class="fas fa-check-double" style="font-size: 1.2rem;"></i><br>PAGADO
+                        <div style="color: #27ae60; font-weight: bold; font-size: 0.8rem;">
+                            <i class="fas fa-check-double"></i><br>PAGADO
                         </div>
                         {% endif %}
                     </td>
                 </tr>
-                {% empty %}
-                <tr><td colspan="6" style="padding: 50px; text-align: center; color: #95a5a6;">No hay ventas registradas por el momento.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-
-<script>
-    // Buscador en tiempo real para la APK
-    document.getElementById('adminSearch').addEventListener('keyup', function() {
-        let filter = this.value.toUpperCase();
-        let rows = document.querySelector("#adminTable tbody").rows;
-        for (let i = 0; i < rows.length; i++) {
-            let text = rows[i].innerText.toUpperCase();
-            rows[i].style.display = text.indexOf(filter) > -1 ? "" : "none";
-        }
-    });
-</script>
 {% endblock %}
