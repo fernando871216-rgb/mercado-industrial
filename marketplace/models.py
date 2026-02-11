@@ -88,14 +88,20 @@ class Sale(models.Model):
         return f"Venta de {self.product.title}"
 
     def get_gateway_cost(self):
-        comision_porcentaje = self.price * Decimal('0.0349')
+        # Mercado Pago cobra sobre el TOTAL (Producto + Envío)
+        total_cobrado = self.price + self.shipping_cost
+        
+        # 3.49% de comisión
+        comision_porcentaje = total_cobrado * Decimal('0.0349')
+        
+        # $4.00 de cuota fija
         fijo = Decimal('4.00')
+        
+        # El IVA (16%) se aplica a la suma de ambos
         iva = (comision_porcentaje + fijo) * Decimal('0.16')
-        total = comision_porcentaje + fijo + iva
-        return total.quantize(Decimal('0.01'))
-
-    def get_platform_commission(self):
-        return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+        
+        total_comision = comision_porcentaje + fijo + iva
+        return total_comision.quantize(Decimal('0.01'))
 
     def get_net_amount(self):
         return (self.price - self.get_gateway_cost() - self.get_platform_commission()).quantize(Decimal('0.01'))
@@ -106,12 +112,13 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=Us    er)
 def save_user_profile(sender, instance, **kwargs):
     try:
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+
 
 
 
