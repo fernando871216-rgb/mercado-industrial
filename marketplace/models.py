@@ -112,7 +112,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
 
-@receiver(post_save, sender=Us    er)
+@receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     try:
         instance.profile.save()
@@ -122,6 +122,7 @@ def save_user_profile(sender, instance, **kwargs):
 def get_ganancia_initre(self):
         # Tu ganancia es el 5% del producto (no del flete)
         return (self.price * Decimal('0.05')).quantize(Decimal('0.01'))
+
 
 
 
