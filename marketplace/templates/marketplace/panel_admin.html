@@ -120,7 +120,7 @@
                     <td>
                         <div style="font-weight: bold;">${{ venta.price|floatformat:2 }}</div>
                         <div style="color: #3498db; font-size: 0.8rem; font-weight: bold; margin-top: 4px;">
-                            <i class="fas fa-shopping-cart"></i> Flete: ${{ venta.shipping_cost|floatformat:2 }}
+                            <i class="fas fa-shopping-cart"></i> Flete (con 8%): ${{ venta.shipping_cost|floatformat:2 }}
                         </div>
                     </td>
 
@@ -175,3 +175,4 @@
     </div>
 </div>
 {% endblock %}
+
