@@ -24,80 +24,120 @@
         gap: 5px;
         color: white;
         text-decoration: none;
-        padding: 5px 10px;
+        padding: 6px 12px;
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: bold;
         margin-top: 5px;
+        transition: opacity 0.2s;
+    }
+    .btn-ws:hover { opacity: 0.9; }
+    
+    .info-clabe {
+        margin-top: 10px;
+        padding: 8px;
+        background: #ebf5ff;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
     }
 </style>
 
 <div class="container" style="max-width: 1200px; margin: 30px auto; font-family: 'Segoe UI', sans-serif;">
     
-    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrador INITRE</h2>
-        <div style="text-align: right;">
-            <span style="display: block; font-size: 0.8rem;">GANANCIAS PLATAFORMA</span>
+    <div style="background: #2c3e50; color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+            <h2 style="margin: 0;"><i class="fas fa-shield-alt"></i> Panel Administrador INITRE</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8;">Control de Liquidaciones y Logística</p>
+        </div>
+        <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase;">Ganancia Plataforma (5%)</span>
             <strong style="font-size: 1.8rem; color: #2ecc71;">${{ ingresos_totales|floatformat:2 }}</strong>
         </div>
     </div>
 
     <div class="tabla-responsiva">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead style="background: #f8f9fa;">
+        <table id="adminTable" style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
                 <tr>
-                    <th style="padding: 15px;">PRODUCTO / CONTACTO</th>
-                    <th style="padding: 15px;">PAGO CLIENTE</th>
-                    <th style="padding: 15px;">DESCUENTOS</th>
-                    <th style="padding: 15px;">NETO VENDEDOR</th>
-                    <th style="padding: 15px; text-align: center;">ACCIÓN</th>
+                    <th style="padding: 15px; color: #7f8c8d;">PRODUCTO / LOGÍSTICA</th>
+                    <th style="padding: 15px; color: #7f8c8d;">PAGO TOTAL (MP)</th>
+                    <th style="padding: 15px; color: #7f8c8d;">FLETE</th>
+                    <th style="padding: 15px; color: #7f8c8d;">COMISIONES</th>
+                    <th style="padding: 15px; color: #7f8c8d;">NETO VENDEDOR</th>
+                    <th style="padding: 15px; text-align: center; color: #7f8c8d;">ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
                 {% for venta in ventas %}
                 <tr style="border-bottom: 1px solid #f1f1f1;">
                     <td style="padding: 20px;">
-                        <strong style="color: #2c3e50;">{{ venta.product.title }}</strong>
-                        <div style="margin: 5px 0;"><span class="badge-cp">CP Destino: {{ venta.shipping_cp|default:"00000" }}</span></div>
+                        <strong style="display: block; color: #2c3e50; font-size: 1.05rem; margin-bottom: 5px;">{{ venta.product.title }}</strong>
+                        <div style="margin-bottom: 10px;"><span class="badge-cp">CP Destino: {{ venta.shipping_cp|default:"00000" }}</span></div>
                         
-                        {% if venta.product.user.profile.phone %}
-                        <a href="https://wa.me/52{{ venta.product.user.profile.phone }}" class="btn-ws" style="background: #25D366;">
-                            <i class="fab fa-whatsapp"></i> VENDEDOR: {{ venta.product.user.username }}
-                        </a>
-                        {% endif %}
-                        
-                        {% if venta.buyer.profile.phone %}
-                        <a href="https://wa.me/52{{ venta.buyer.profile.phone }}" class="btn-ws" style="background: #3498db;">
-                            <i class="fab fa-whatsapp"></i> COMPRADOR: {{ venta.buyer.username }}
-                        </a>
-                        {% endif %}
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            {% if venta.product.user.profile.phone %}
+                            <a href="https://wa.me/52{{ venta.product.user.profile.phone }}" class="btn-ws" style="background: #25D366;">
+                                <i class="fab fa-whatsapp"></i> VENDEDOR: {{ venta.product.user.username }}
+                            </a>
+                            {% endif %}
+                            
+                            {% if venta.buyer.profile.phone %}
+                            <a href="https://wa.me/52{{ venta.buyer.profile.phone }}" class="btn-ws" style="background: #3498db;">
+                                <i class="fab fa-whatsapp"></i> COMPRADOR: {{ venta.buyer.username }}
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="info-clabe">
+                            <small style="display: block; color: #2980b9; font-weight: bold; font-size: 0.7rem; text-transform: uppercase;">CLABE Depósito:</small>
+                            <strong style="font-family: monospace; color: #2c3e50; font-size: 0.9rem;">{{ venta.product.user.profile.clabe|default:"NO REGISTRADA" }}</strong>
+                        </div>
                     </td>
 
                     <td style="padding: 20px;">
-                        <div style="font-weight: bold;">${{ venta.price|floatformat:2 }}</div>
-                        <small style="color: #7f8c8d;">Flete inc: ${{ venta.shipping_cost|floatformat:2 }}</small>
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 1.1rem;">${{ venta.price|floatformat:2 }}</div>
+                        <small style="color: #95a5a6;">ID: {{ venta.payment_id|truncatechars:10 }}</small>
                     </td>
 
-                    <td style="padding: 20px; color: #e74c3c; font-size: 0.85rem;">
-                        MP: -${{ venta.get_gateway_cost|floatformat:2 }}<br>
-                        INITRE: -${{ venta.get_platform_commission|floatformat:2 }}
+                    <td style="padding: 20px;">
+                        <div style="color: #3498db; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-shopping-cart"></i> ${{ venta.shipping_cost|floatformat:2 }}
+                        </div>
+                        <small style="color: #7f8c8d; font-size: 0.75rem;">Costo de envío</small>
                     </td>
 
-                    <td style="padding: 20px; background: #f9fffb; font-weight: bold; color: #27ae60;">
-                        ${{ venta.get_net_amount|floatformat:2 }}
+                    <td style="padding: 20px;">
+                        <div style="color: #e74c3c; font-size: 0.85rem; line-height: 1.4;">
+                            MP: -${{ venta.get_gateway_cost|floatformat:2 }}<br>
+                            INITRE (5%): -${{ venta.get_platform_commission|floatformat:2 }}
+                        </div>
+                    </td>
+
+                    <td style="padding: 20px; background: #f9fffb; border-left: 2px solid #27ae60;">
+                        <div style="color: #27ae60; font-size: 1.25rem; font-weight: 800;">
+                            ${{ venta.get_net_amount|floatformat:2 }}
+                        </div>
+                        <small style="color: #7f8c8d; font-size: 0.7rem;">(Precio Prod. - Comisiones)</small>
                     </td>
 
                     <td style="padding: 20px; text-align: center;">
                         {% if not venta.pagado_a_vendedor %}
                         <form action="{% url 'marcar_como_pagado' venta.id %}" method="POST">
                             {% csrf_token %}
-                            <button type="submit" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 5px; font-weight: bold;">LIQUIDAR</button>
+                            <button type="submit" onclick="return confirm('¿Confirmas que ya transferiste ${{ venta.get_net_amount }} a la CLABE del vendedor?')" 
+                                    style="background: #f39c12; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
+                                LIQUIDAR
+                            </button>
                         </form>
                         {% else %}
-                        <span style="color: #27ae60; font-weight: bold;">PAGADO</span>
+                        <div style="color: #27ae60; font-weight: bold;">
+                            <i class="fas fa-check-double"></i><br>PAGADO
+                        </div>
                         {% endif %}
                     </td>
                 </tr>
+                {% empty %}
+                <tr><td colspan="6" style="padding: 50px; text-align: center; color: #95a5a6;">No hay ventas registradas.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
