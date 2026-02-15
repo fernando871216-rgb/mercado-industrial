@@ -13,6 +13,7 @@
     {% endfor %}
   </div>
 {% endif %}
+
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
     <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366;">
@@ -24,10 +25,11 @@
                 </h2>
                 <p style="color: #4a5568; line-height: 1.5; margin: 0 0 15px 0; font-size: 0.95rem;">
                     Nuestra plataforma facilita el contacto y el pago seguro entre profesionales. 
-                    <strong>Vendedor y comprador acuerdan libremente</strong> la entrega o envío del equipo. Registrate para empezar a publicar tus productos. <strong>Instala</strong> la app para una gestion mas comoda, de permisos a su celular para poder instalar. Si la app marca error: elimine el cache y datos, deberia funcionar con normalidad.
+                    <strong>Vendedor y comprador acuerdan libremente</strong> la entrega o envío del equipo. Registrate para empezar a publicar tus productos. 
+                    <strong>Instala</strong> la app para una gestión más cómoda.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-width: 280px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                     <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                         <i class="fas fa-search" style="color: #3498db; font-size: 1.1rem; margin-bottom: 5px;"></i>
                         <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Busca</span>
@@ -90,7 +92,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="color: #3498db; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
                             {% if product.stock > 0 %}
-                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">En Stock: {{ product.stock }}</span>
+                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Stock: {{ product.stock }}</span>
                             {% else %}
                                 <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Agotado</span>
                             {% endif %}
@@ -105,36 +107,13 @@
         {% endfor %} 
     </div> 
 
-    <div style="text-align: center; margin: 40px 0;"> <a href="{% url 'descargar_app' %}" 
-       download="INITRE_Mercado_Industrial.apk"
-       style="
-            display: inline-flex; /* Cambiado de flex a inline-flex */
-            align-items: center; 
-            background-color: #3DDC84; 
-            color: white; 
-            padding: 15px 30px; 
-            border-radius: 30px; 
-            text-decoration: none; 
-            font-weight: bold; 
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            /* Eliminamos position: fixed, bottom y left */
-       "
-       onmouseover="this.style.backgroundColor='#34B776'; this.style.transform='scale(1.05)';"
-       onmouseout="this.style.backgroundColor='#3DDC84'; this.style.transform='scale(1)';"
-    >
-        <i class="fab fa-android" style="margin-right: 10px; font-size: 1.3rem;"></i>
-        Descargar App Oficial INITRE
-    </a>
-</div>
+    <div style="text-align: center; margin: 40px 0;"> 
+        <a href="{% url 'descargar_app' %}" 
+           download="INITRE_Mercado_Industrial.apk"
+           style="display: inline-flex; align-items: center; background-color: #3DDC84; color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            <i class="fab fa-android" style="margin-right: 10px; font-size: 1.3rem;"></i>
+            Descargar App Oficial INITRE
+        </a>
+    </div>
+
 </div> {% endblock %}
-
-
-
-
-
-
-
-
-
