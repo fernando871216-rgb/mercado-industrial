@@ -695,6 +695,10 @@ def mercadopago_webhook(request):
 def como_funciona(request):
     return render(request, 'marketplace/como_funciona.html') # O el nombre de tu template
 
+def privacidad(request):
+    return render(request, 'marketplace/privacidad.html')
+
+
 
 
 
