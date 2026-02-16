@@ -57,12 +57,20 @@
         </div>
     </div>
 
-    <div style="margin-bottom: 50px; text-align: center;">
+    <div style="
+        position: sticky; 
+        top: 70px; /* Se ajusta según la altura de tu navbar en base.html */
+        z-index: 1500; 
+        background-color: rgba(244, 247, 246, 0.95); /* Color de fondo del body con ligera transparencia */
+        padding: 15px 0; 
+        margin-bottom: 30px;
+        backdrop-filter: blur(5px); /* Efecto de desenfoque moderno */
+    ">
         <form method="GET" action="{% url 'home' %}" style="max-width: 700px; margin: 0 auto; display: flex; flex-direction: row; gap: 10px; padding: 0 10px;">
             <div style="flex: 1; position: relative; display: flex; align-items: center;">
                 <i class="fas fa-search" style="position: absolute; left: 20px; color: #95a5a6;"></i>
                 <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar equipos, marcas, componentes..." 
-                       style="width: 100%; padding: 15px 20px 15px 50px; border: none; border-radius: 35px; font-size: 1rem; outline: none; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: 0.3s;">
+                       style="width: 100%; padding: 15px 20px 15px 50px; border: none; border-radius: 35px; font-size: 1rem; outline: none; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: 0.3s; background: white;">
             </div>
             <button type="submit" style="background: #002244; color: white; border: none; padding: 0 30px; border-radius: 35px; cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 8px 20px rgba(0,34,68,0.2);">
                 BUSCAR
@@ -128,7 +136,6 @@
 </div>
 
 <style>
-    /* Efectos de interactividad sin romper el HTML */
     .product-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
