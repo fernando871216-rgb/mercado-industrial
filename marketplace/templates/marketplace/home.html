@@ -23,9 +23,8 @@
                     <i class="fas fa-handshake" style="color: #f39c12;"></i> Comercio Directo y Seguro
                 </h2>
                 <p style="color: #5d6d7e; line-height: 1.6; margin: 0 0 20px 0; font-size: 1rem;">
-                    Compra y Venta de equipos Industriales. Contacto técnico y pago seguro.
-                    Sube o compra Articulos Nuevos o Usados.
-                    <span style="color: #0056b3;">¡Usa nuestra App (Android) para uso movil!</span>
+                    Compra y Venta de equipos Industriales. Contacto técnico y pago seguro. 
+                    <span style="color: #0056b3;">¡Usa nuestra App para gestionar tus ventas!</span>
                 </p>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                     <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; border: 1px solid #edf2f7;">
@@ -65,23 +64,13 @@
             </button>
         </form>
 
-        <div style="
-            display: flex; 
-            overflow-x: auto; 
-            white-space: nowrap; 
-            gap: 10px; 
-            padding: 5px 15px 10px 15px; 
-            -webkit-overflow-scrolling: touch; /* Habilita scroll suave en iOS/APK */
-            scrollbar-width: none; /* Oculta barra en Firefox */
-        ">
+        <div style="display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding: 5px 15px 10px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
             <style>
-                /* Ocultar barra de scroll en Chrome/Safari/APK */
-                .cat-container::-webkit-scrollbar { display: none; }
                 .cat-btn:hover { background: #0056b3 !important; color: white !important; }
             </style>
             
             <a href="?q=Bomba" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <i class="fas fa-faucet"></i> Bombas
+                <i class="fas fa-tools"></i> Bombas
             </a>
             
             <a href="?q=Auto" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
@@ -94,6 +83,14 @@
             
             <a href="?q=PLC" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                 <i class="fas fa-microchip"></i> PLC's
+            </a>
+
+            <a href="?q=Laboratorio" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-flask"></i> Laboratorio
+            </a>
+
+            <a href="?q=Sensor" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-broadcast-tower"></i> Sensores
             </a>
             
             <a href="{% url 'home' %}" class="cat-btn" style="text-decoration: none; background: #edf2f7; color: #0056b3; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #0056b3; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
@@ -145,10 +142,4 @@
         {% endfor %} 
     </div> 
 </div>
-
-<style>
-    .product-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; border-color: #0056b3 !important; }
-    input:focus { box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1) !important; border-color: #0056b3 !important; }
-</style>
 {% endblock %}
-
