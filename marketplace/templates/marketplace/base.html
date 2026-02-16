@@ -1,4 +1,4 @@
-{% load static %}
+    {% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,7 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --safe-top: env(safe-area-inset-top, 25px); }
+        :root { 
+            /* Ajuste para que en el celular no se pegue al borde físico */
+            --safe-top: env(safe-area-inset-top, 25px); 
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        
         html, body { height: 100%; margin: 0; }
         body { 
             display: flex; 
@@ -18,12 +23,13 @@
             background-color: #f4f7f6; 
         }
         
-        /* Ajuste para que el contenido no quede oculto tras el footer fijo */
+        /* El contenido principal debe terminar antes de que empiece el footer fijo */
         .main-content { 
             flex: 1; 
-            padding-bottom: 120px; /* Espacio para el footer estático */
+            padding-bottom: 160px; 
         }
 
+        /* NAVBAR RECONSTRUIDA */
         .navbar {
             background-color: #0056b3;
             color: white;
@@ -38,12 +44,34 @@
             min-height: 70px;
         }
 
-        /* NAVBAR LOGO Y LINKS (Se mantienen igual) */
         .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
         .logo-img { height: 40px; width: auto; margin-right: 10px; object-fit: contain; }
         .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; }
 
-        /* FOOTER ESTÁTICO (FIXED) */
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a, .logout-btn { 
+            color: white; 
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            transition: 0.3s; 
+            background: none; 
+            border: none; 
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .nav-links a:hover { color: #f39c12; }
+
+        .btn-como-funciona {
+            color: #ffcc00 !important;
+            border: 1px solid #ffcc00;
+            padding: 5px 12px !important;
+            border-radius: 20px;
+            font-weight: bold !important;
+        }
+        .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
+
+        /* FOOTER ESTÁTICO CORREGIDO */
         .footer-static {
             position: fixed;
             bottom: 0;
@@ -52,7 +80,8 @@
             background-color: #002244;
             color: white;
             z-index: 3000;
-            padding: 15px 0;
+            /* Añadimos padding bottom dinámico para que los botones suban un poco en el cel */
+            padding: 15px 0 calc(10px + var(--safe-bottom)) 0;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             text-align: center;
         }
@@ -61,29 +90,31 @@
         .footer-links a { 
             color: #bdc3c7; 
             text-decoration: none; 
-            margin: 0 8px; 
-            font-size: 0.75rem; 
+            margin: 0 10px; 
+            font-size: 0.8rem; 
             font-weight: bold;
+            display: inline-block;
+            padding: 5px; /* Más área de click */
         }
 
-        /* BOTÓN APP DENTRO DEL FOOTER */
         .btn-app-footer {
             display: inline-flex;
             align-items: center;
             background-color: #3DDC84;
             color: white;
-            padding: 8px 18px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 30px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            transition: 0.3s;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* RESPONSIVO */
+        .menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; color: white; }
+
         @media (max-width: 992px) {
-            .menu-toggle { display: block; font-size: 1.8rem; cursor: pointer; color: white; }
+            .menu-toggle { display: block; }
             .nav-links {
                 display: none;
                 flex-direction: column;
@@ -92,10 +123,9 @@
                 background-color: #0056b3;
                 padding: 20px 0; gap: 20px;
                 z-index: 1900;
+                box-shadow: 0 10px 10px rgba(0,0,0,0.2);
             }
             .nav-links.active { display: flex; }
-            /* Footer más compacto en móvil */
-            .footer-links a { display: inline-block; margin: 5px; }
         }
     </style>
 </head>
@@ -112,28 +142,38 @@
         </div>
 
         <div class="nav-links" id="nav-content">
-            <a href="{% url 'home' %}">Catálogo</a>
+            <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
+            <a href="{% url 'como_funciona' %}" class="btn-como-funciona">¿Cómo funciona?</a>
+            
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}">Mis Productos</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil">Perfil</a>
+                <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
+                <a href="{% url 'mis_compras' %}">Mis Compras</a>
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil">Perfil / Pagos</a>
+
+                {% if user.is_staff %}
+                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
+                {% endif %}
+
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                    {% csrf_token %}<button type="submit" style="color:white; background:none; border:none; cursor:pointer;">Salir</button>
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Salir</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Ingresar</a>
+                <a href="{% url 'registro' %}">Registro</a>
             {% endif %}
         </div>
     </nav>
 
     <div class="main-content">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </div>
 
     <footer class="footer-static">
         <div class="container">
             <a href="{% url 'descargar_app' %}" download="INITRE_Mercado_Industrial.apk" class="btn-app-footer">
-                <i class="fab fa-android" style="margin-right: 8px;"></i> Descargar App INITRE
+                <i class="fab fa-android" style="margin-right: 8px;"></i> Descargar App Oficial INITRE
             </a>
 
             <div class="footer-links">
@@ -148,7 +188,7 @@
     </footer>
 
     <a href="https://wa.me/522225858320" target="_blank" 
-       style="position: fixed; width: 50px; height: 50px; bottom: 130px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 25px; box-shadow: 2px 2px 3px #999; z-index: 4000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+       style="position: fixed; width: 55px; height: 55px; bottom: 160px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 25px; box-shadow: 2px 2px 3px #999; z-index: 4000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fab fa-whatsapp"></i>
     </a>
 
