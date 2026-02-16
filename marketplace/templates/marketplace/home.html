@@ -5,7 +5,7 @@
 {% if messages %}
   <div class="container mt-3">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         {{ message }}
         <a href="{% url 'editar_perfil' %}" class="alert-link">Configurar perfil ahora</a>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -16,38 +16,38 @@
 
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
-    <div style="background: #eef2f7; border-radius: 15px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #003366;">
-        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+    <div style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 35px; border-left: 8px solid #0056b3; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
             
             <div style="flex: 2; min-width: 280px;">
-                <h2 style="color: #003366; margin: 0 0 10px 0; font-size: clamp(1.2rem, 4vw, 1.5rem);">
-                    <i class="fas fa-handshake"></i> Comercio Directo y Seguro
+                <h2 style="color: #002244; margin: 0 0 15px 0; font-size: clamp(1.4rem, 4vw, 1.8rem); font-weight: 800;">
+                    <i class="fas fa-handshake" style="color: #f39c12;"></i> Comercio Directo y Seguro
                 </h2>
-                <p style="color: #4a5568; line-height: 1.5; margin: 0 0 15px 0; font-size: 0.95rem;">
-                    Nuestra plataforma esta enfocada a <strong>Compra y Venta de equipos Industriales</strong>.
-                    Facilita el contacto y el pago seguro entre Usuarios. 
-                    <strong>Vendedor y comprador acuerdan libremente</strong> la entrega o envío del equipo. Registrate para empezar a publicar tus productos. 
-                    <strong>Instala</strong> la app para una gestión más cómoda.
+                <p style="color: #5d6d7e; line-height: 1.6; margin: 0 0 20px 0; font-size: 1rem;">
+                    Nuestra plataforma está enfocada a la <strong>Compra y Venta de equipos Industriales</strong>. 
+                    Facilitamos el contacto técnico y el pago seguro. 
+                    <strong>Vendedor y comprador acuerdan</strong> la entrega. 
+                    <span style="color: #0056b3;">¡Instala nuestra App para gestionar tus ventas en tiempo real!</span>
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <i class="fas fa-search" style="color: #3498db; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Busca</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; transition: 0.3s; border: 1px solid #edf2f7;">
+                        <i class="fas fa-search" style="color: #3498db; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: #2c3e50; text-transform: uppercase;">Busca</span>
                     </div>
-                    <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Contacta</span>
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; transition: 0.3s; border: 1px solid #edf2f7;">
+                        <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: #2c3e50; text-transform: uppercase;">Contacta</span>
                     </div>
-                    <div style="text-align: center; background: white; padding: 12px 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <i class="fas fa-truck" style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 5px;"></i>
-                        <span style="display: block; font-size: 0.65rem; font-weight: bold; color: #2c3e50;">Acuerda</span>
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; transition: 0.3s; border: 1px solid #edf2f7;">
+                        <i class="fas fa-truck" style="color: #002244; font-size: 1.3rem; margin-bottom: 8px;"></i>
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: #2c3e50; text-transform: uppercase;">Acuerda</span>
                     </div>
                 </div>
             </div>
             
             <div style="flex: 1; min-width: 280px; display: flex; justify-content: center;">
-                <div style="max-width: 320px; width: 100%; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div style="max-width: 320px; width: 100%; border-radius: 15px; overflow: hidden; background: #000; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 4px solid white;">
                     <video autoplay loop muted playsinline style="width: 100%; display: block;">
                         <source src="{% static 'video_promo_initre.mp4' %}" type="video/mp4">
                         Tu navegador no soporta video.
@@ -57,56 +57,89 @@
         </div>
     </div>
 
-    <div style="margin-bottom: 40px; text-align: center;">
-        <form method="GET" action="{% url 'home' %}" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: row; gap: 8px; padding: 0 10px;">
-            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Equipos, marcas..." 
-                   style="flex: 1; padding: 12px 20px; border: 2px solid #ddd; border-radius: 30px; font-size: 1rem; outline: none; min-width: 0;">
-            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">
-                <i class="fas fa-search"></i>
+    <div style="margin-bottom: 50px; text-align: center;">
+        <form method="GET" action="{% url 'home' %}" style="max-width: 700px; margin: 0 auto; display: flex; flex-direction: row; gap: 10px; padding: 0 10px;">
+            <div style="flex: 1; position: relative; display: flex; align-items: center;">
+                <i class="fas fa-search" style="position: absolute; left: 20px; color: #95a5a6;"></i>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar equipos, marcas, componentes..." 
+                       style="width: 100%; padding: 15px 20px 15px 50px; border: none; border-radius: 35px; font-size: 1rem; outline: none; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: 0.3s;">
+            </div>
+            <button type="submit" style="background: #002244; color: white; border: none; padding: 0 30px; border-radius: 35px; cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 8px 20px rgba(0,34,68,0.2);">
+                BUSCAR
             </button>
         </form>
     </div>
 
-    <h3 style="color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">
-        {% if query %} Resultados para "{{ query }}" {% else %} Equipos Recientes {% endif %}
+    <h3 style="color: #2c3e50; border-bottom: 3px solid #0056b3; width: fit-content; padding-bottom: 5px; margin-bottom: 30px; font-size: 1.4rem; font-weight: 800;">
+        {% if query %} <i class="fas fa-filter"></i> Resultados para "{{ query }}" {% else %} <i class="fas fa-bolt" style="color: #f39c12;"></i> Equipos Recientes {% endif %}
     </h3>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
         {% for product in products %}
-            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; {% if product.stock <= 0 %} opacity: 0.7; {% endif %}">
+            <div class="product-card" style="background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid #edf2f7; position: relative; transition: 0.3s; {% if product.stock <= 0 %} opacity: 0.6; {% endif %}">
+                
                 {% if product.ficha_tecnica %}
-                <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                    <span style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                        <i class="fas fa-file-pdf"></i> TÉCNICO
+                <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
+                    <span style="background: #e74c3c; color: white; padding: 5px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: bold; box-shadow: 0 4px 8px rgba(231,76,60,0.3);">
+                        <i class="fas fa-file-pdf"></i> PDF
                     </span>
                 </div>
                 {% endif %}
+
                 <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
-                    <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                    <div style="height: 200px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 15px; border-bottom: 1px solid #f8f9fa;">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.5s;">
                         {% else %}
-                            <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
+                            <div style="text-align: center; color: #d5d8dc;">
+                                <i class="fas fa-image" style="font-size: 3.5rem;"></i>
+                                <p style="font-size: 0.7rem; margin-top: 5px;">Sin imagen</p>
+                            </div>
                         {% endif %}
                     </div>
-                    <div style="padding: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="color: #3498db; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
+                    
+                    <div style="padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="color: #0056b3; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">{{ product.brand|default:"INDUSTRIAL" }}</span>
                             {% if product.stock > 0 %}
-                                <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Stock: {{ product.stock }}</span>
+                                <span style="font-size: 0.7rem; background: #e6fcf5; color: #087f5b; padding: 3px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #c3fae8;">Stock: {{ product.stock }}</span>
                             {% else %}
-                                <span style="font-size: 0.65rem; background: #fff5f5; color: #fa5252; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Agotado</span>
+                                <span style="font-size: 0.7rem; background: #fff5f5; color: #fa5252; padding: 3px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #ffe3e3;">Agotado</span>
                             {% endif %}
                         </div>
-                        <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #2c3e50; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ product.title }}</h4>
-                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">${{ product.price }} <span style="font-size: 0.75rem; font-weight: normal; color: #95a5a6;">MXN</span></div>
+                        
+                        <h4 style="margin: 0 0 12px 0; font-size: 1.05rem; color: #1a202c; height: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700;">{{ product.title }}</h4>
+                        
+                        <div style="display: flex; align-items: baseline; gap: 5px;">
+                            <span style="font-size: 1.3rem; font-weight: 800; color: #27ae60;">${{ product.price }}</span>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #95a5a6;">MXN</span>
+                        </div>
                     </div>
                 </a>
             </div>
         {% empty %}
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color: #7f8c8d;">No hay productos disponibles.</p>
+            <div style="grid-column: 1/-1; text-align: center; padding: 80px 20px; background: white; border-radius: 20px; border: 2px dashed #d5d8dc;">
+                <i class="fas fa-box-open" style="font-size: 4rem; color: #d5d8dc; margin-bottom: 20px;"></i>
+                <h3 style="color: #5d6d7e;">No hay productos disponibles por ahora</h3>
+                <p style="color: #aab7b8;">Intenta con otros términos de búsqueda o vuelve más tarde.</p>
+            </div>
         {% endfor %} 
     </div> 
-  
-</div> {% endblock %}
+</div>
 
+<style>
+    /* Efectos de interactividad sin romper el HTML */
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+        border-color: #0056b3 !important;
+    }
+    input:focus {
+        box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.15) !important;
+    }
+    button:hover {
+        transform: scale(1.02);
+        background: #003366 !important;
+    }
+</style>
+{% endblock %}
