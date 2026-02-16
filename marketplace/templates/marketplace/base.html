@@ -21,7 +21,6 @@
             display: flex; 
             flex-direction: column; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            /* FONDO MEJORADO: Patrón sutil de puntos industriales */
             background-color: #f4f7f6;
             background-image: radial-gradient(#d1d5db 0.8px, transparent 0.8px);
             background-size: 24px 24px;
@@ -51,41 +50,60 @@
         .logo-img { height: 45px; width: auto; margin-right: 12px; object-fit: contain; }
         .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; letter-spacing: -0.5px; }
 
-        .nav-links { display: flex; gap: 18px; align-items: center; }
+        /* ESTILO DE BOTONES CIRCULARES (PILL) */
+        .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
         .nav-links a, .logout-btn { 
             color: white; 
             text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 500; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
             transition: 0.3s; 
-            background: none; 
-            border: none; 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.3); 
+            padding: 8px 15px;
+            border-radius: 25px; /* Bordes circulares */
             cursor: pointer;
             font-family: inherit;
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
-        .nav-links a:hover { color: #f39c12; transform: translateY(-1px); }
 
+        .nav-links a:hover, .logout-btn:hover { 
+            background: rgba(255,255,255,0.25);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+
+        /* BOTONES ESPECIALES */
         .btn-como-funciona {
             color: #ffcc00 !important;
-            border: 1.5px solid #ffcc00;
-            padding: 6px 14px !important;
-            border-radius: 20px;
-            font-weight: bold !important;
+            border: 1.5px solid #ffcc00 !important;
+            background: rgba(255, 204, 0, 0.1) !important;
         }
-        .btn-como-funciona:hover { background: #ffcc00; color: var(--primary-blue) !important; }
+        .btn-como-funciona:hover { 
+            background: #ffcc00 !important; 
+            color: var(--primary-blue) !important; 
+        }
 
         .btn-perfil { 
-            background: #f39c12; 
-            padding: 8px 16px; 
-            border-radius: 20px; 
+            background: #f39c12 !important; 
+            border: none !important;
             color: white !important; 
-            font-weight: bold !important;
             box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
         }
-        .btn-perfil:hover { background: #e67e22 !important; box-shadow: 0 6px 12px rgba(243, 156, 18, 0.4); }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #ff9f94;
+        }
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
 
         /* FOOTER ESTÁTICO */
         .footer-static {
@@ -127,7 +145,6 @@
             box-shadow: 0 4px 15px rgba(61, 220, 132, 0.4);
             transition: 0.3s;
         }
-        .btn-app-footer:hover { background-color: #34c776; transform: scale(1.05); }
 
         .menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; color: white; }
 
@@ -139,11 +156,13 @@
                 position: absolute;
                 top: 100%; left: 0; width: 100%;
                 background-color: var(--primary-blue);
-                padding: 25px 0; gap: 20px;
+                padding: 20px 15px; gap: 12px;
                 z-index: 1900;
                 box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+                align-items: stretch; /* Botones ocupan el ancho en móvil */
             }
             .nav-links.active { display: flex; }
+            .nav-links a, .logout-btn { justify-content: center; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -170,7 +189,7 @@
                 <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Perfil / Pagos</a>
 
                 {% if user.is_staff %}
-                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><i class="fas fa-tools"></i> <b>ADMIN</b></a>
+                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12; border-color: #f39c12;"><i class="fas fa-tools"></i> <b>ADMIN</b></a>
                 {% endif %}
 
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
@@ -224,4 +243,3 @@
     </script>
 </body>
 </html>
-
