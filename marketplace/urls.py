@@ -49,12 +49,14 @@ urlpatterns = [
     
     # --- OTROS ---
     path('terminos/', TemplateView.as_view(template_name="marketplace/terminos.html"), name='terminos'),
+    path('privacidad/', views.privacidad, name='privacidad'),
     
     # --- PANEL ADMINISTRATIVO ---
     # Cambiado de 'panel_control' a 'panel_administrador' para que coincida con tu base.html
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
