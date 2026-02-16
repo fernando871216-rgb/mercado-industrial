@@ -6,27 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Mercado Industrial INITRE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
-        /* Ajuste para APK: Evita que el reloj y batería tapen el menú */
-        :root {
-            --safe-top: env(safe-area-inset-top, 25px);
-        }
-
+        :root { --safe-top: env(safe-area-inset-top, 25px); }
         html, body { height: 100%; margin: 0; }
         body { 
             display: flex; 
             flex-direction: column; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6; 
-            padding-top: 0; 
         }
         
-        .main-content { flex: 1; }
+        /* Ajuste para que el contenido no quede oculto tras el footer fijo */
+        .main-content { 
+            flex: 1; 
+            padding-bottom: 120px; /* Espacio para el footer estático */
+        }
 
-        /* Barra de Navegación */
         .navbar {
             background-color: #0056b3;
             color: white;
@@ -41,214 +38,117 @@
             min-height: 70px;
         }
 
-        .logo-container { 
-            display: flex; 
-            align-items: center; 
-            text-decoration: none; 
-            color: white; 
-        }
-        .logo-img { 
-            height: 40px;
-            width: auto;
-            margin-right: 10px;
-            object-fit: contain;
-        }
+        /* NAVBAR LOGO Y LINKS (Se mantienen igual) */
+        .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
+        .logo-img { height: 40px; width: auto; margin-right: 10px; object-fit: contain; }
+        .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; }
 
-        .logo-text { 
-            font-family: 'Montserrat', sans-serif; 
-            font-weight: 900; 
-            font-size: 1.1rem; 
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-        }
-
-        /* BUSCADOR */
-        .search-container {
-            flex: 1;
-            max-width: 350px;
-            margin: 0 15px;
-        }
-        .search-form {
-            display: flex;
-            background: rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 4px 15px;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .search-input {
-            background: none;
-            border: none;
-            color: white;
-            padding: 6px;
+        /* FOOTER ESTÁTICO (FIXED) */
+        .footer-static {
+            position: fixed;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            outline: none;
-            font-size: 0.85rem;
-        }
-        .search-input::placeholder { color: rgba(255,255,255,0.7); }
-        .search-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Enlaces de Navegación */
-        .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a, .logout-btn { 
-            color: white; 
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 500; 
-            transition: 0.3s; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 0; 
-            font-family: inherit; 
-        }
-        .nav-links a:hover, .logout-btn:hover { color: #f39c12; }
-        
-        .btn-como-funciona {
-            color: #ffcc00 !important;
-            border: 1px solid #ffcc00;
-            padding: 5px 12px !important;
-            border-radius: 20px;
-            font-weight: bold !important;
-        }
-        .btn-como-funciona:hover {
-            background: #ffcc00;
-            color: #0056b3 !important;
-        }
-
-        .btn-perfil { background: #f39c12; padding: 6px 14px; border-radius: 20px; color: white !important; font-weight: bold !important; }
-        
-        /* Menu Hamburguesa */
-        .menu-toggle { 
-            display: none; 
-            font-size: 1.8rem;
-            cursor: pointer; 
-            color: white; 
-            padding: 5px;
-        }
-
-        /* Footer */
-        footer {
             background-color: #002244;
-            color: #bdc3c7;
-            padding: 30px 20px;
+            color: white;
+            z-index: 3000;
+            padding: 15px 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             text-align: center;
-            margin-top: 40px;
         }
-        .footer-links { margin-bottom: 15px; }
-        .footer-links a { color: #ffffff; text-decoration: none; margin: 0 10px; font-size: 0.85rem; opacity: 0.8; }
-        .copyright { font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
 
-        /* Responsivo */
+        .footer-links { margin-bottom: 10px; }
+        .footer-links a { 
+            color: #bdc3c7; 
+            text-decoration: none; 
+            margin: 0 8px; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+        }
+
+        /* BOTÓN APP DENTRO DEL FOOTER */
+        .btn-app-footer {
+            display: inline-flex;
+            align-items: center;
+            background-color: #3DDC84;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            transition: 0.3s;
+        }
+
+        /* RESPONSIVO */
         @media (max-width: 992px) {
-            .search-container { display: none; }
-            .menu-toggle { display: block; }
+            .menu-toggle { display: block; font-size: 1.8rem; cursor: pointer; color: white; }
             .nav-links {
                 display: none;
                 flex-direction: column;
                 position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
+                top: 100%; left: 0; width: 100%;
                 background-color: #0056b3;
-                padding: 20px 0;
-                gap: 20px;
-                box-shadow: 0 10px 10px rgba(0,0,0,0.2);
+                padding: 20px 0; gap: 20px;
                 z-index: 1900;
             }
             .nav-links.active { display: flex; }
-            .logo-text { font-size: 0.85rem; }
+            /* Footer más compacto en móvil */
+            .footer-links a { display: inline-block; margin: 5px; }
         }
     </style>
 </head>
 <body>
 
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60vw; height: auto; z-index: -1000; opacity: 0.05; pointer-events: none; user-select: none;">
-        <img src="{% static 'INITRELOGO.jpg' %}" alt="INITRE Background" style="width: 100%; filter: grayscale(100%);">
-    </div>
-
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span class="logo-text">MERCADO INDUSTRIAL INITRE</span>
+            <span class="logo-text">INITRE</span>
         </a>
-
-        <div class="search-container">
-            <form action="{% url 'home' %}" method="GET" class="search-form">
-                <input type="text" name="q" class="search-input" placeholder="Buscar equipo..." value="{{ request.GET.q|default:'' }}">
-                <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-        </div>
 
         <div class="menu-toggle" id="mobile-menu">
             <i class="fas fa-bars"></i>
         </div>
 
         <div class="nav-links" id="nav-content">
-            <a href="{% url 'home' %}"><i class="fas fa-th"></i> Catálogo</a>
-            <a href="{% url 'como_funciona' %}" class="btn-como-funciona">
-                <i class="fas fa-question-circle"></i> ¿Cómo funciona?
-            </a>
-            
+            <a href="{% url 'home' %}">Catálogo</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'mi_inventario' %}">Mis Productos</a>
-                <a href="{% url 'mis_ventas' %}">Mis Ventas</a>
-                <a href="{% url 'mis_compras' %}">Mis Compras</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Perfil</a>
-
-                {% if user.is_staff %}
-                    <a href="{% url 'panel_administrador' %}" style="color: #f39c12;"><b>ADMIN</b></a>
-                {% endif %}
-
+                <a href="{% url 'editar_perfil' %}" class="btn-perfil">Perfil</a>
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
+                    {% csrf_token %}<button type="submit" style="color:white; background:none; border:none; cursor:pointer;">Salir</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Ingresar</a>
-                <a href="{% url 'registro' %}">Registro</a>
             {% endif %}
         </div>
     </nav>
-
-    {% if messages %}
-    <div style="padding: 10px 20px;">
-        {% for message in messages %}
-            <div style="padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     <div class="main-content">
         {% block content %}
         {% endblock %}
     </div>
 
-    <footer>
-        <div class="footer-links">
-            <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
-            <a href="{% url 'terminos' %}">Aviso de Privacidad</a>
-            <a href="{% url 'terminos' %}">Términos y Condiciones</a>
-        </div>
-        <div class="copyright">
-            &copy; 2026 Mercado Industrial INITRE.
+    <footer class="footer-static">
+        <div class="container">
+            <a href="{% url 'descargar_app' %}" download="INITRE_Mercado_Industrial.apk" class="btn-app-footer">
+                <i class="fab fa-android" style="margin-right: 8px;"></i> Descargar App INITRE
+            </a>
+
+            <div class="footer-links">
+                <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
+                <a href="{% url 'terminos' %}">Privacidad</a>
+                <a href="{% url 'terminos' %}">Términos</a>
+            </div>
+            <div style="font-size: 0.65rem; color: #7f8c8d; opacity: 0.8;">
+                &copy; 2026 Mercado Industrial INITRE
+            </div>
         </div>
     </footer>
 
-    <a href="https://wa.me/522225858320" 
-       class="whatsapp-float" 
-       target="_blank" 
-       style="position: fixed; width: 55px; height: 55px; bottom: 20px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 25px; box-shadow: 2px 2px 3px #999; z-index: 2000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+    <a href="https://wa.me/522225858320" target="_blank" 
+       style="position: fixed; width: 50px; height: 50px; bottom: 130px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 25px; box-shadow: 2px 2px 3px #999; z-index: 4000; display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fab fa-whatsapp"></i>
     </a>
 
@@ -258,15 +158,8 @@
         if (menuToggle) {
             menuToggle.addEventListener('click', () => {
                 navContent.classList.toggle('active');
-                const icon = menuToggle.querySelector('i');
-                if (icon.classList.contains('fa-bars')) {
-                    icon.classList.replace('fa-bars', 'fa-times');
-                } else {
-                    icon.classList.replace('fa-times', 'fa-bars');
-                }
             });
         }
     </script>
 </body>
 </html>
-
