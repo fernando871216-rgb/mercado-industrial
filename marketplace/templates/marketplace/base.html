@@ -1,4 +1,4 @@
-    {% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -80,7 +80,6 @@
             background-color: #002244;
             color: white;
             z-index: 3000;
-            /* Añadimos padding bottom dinámico para que los botones suban un poco en el cel */
             padding: 15px 0 calc(10px + var(--safe-bottom)) 0;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             text-align: center;
@@ -94,7 +93,7 @@
             font-size: 0.8rem; 
             font-weight: bold;
             display: inline-block;
-            padding: 5px; /* Más área de click */
+            padding: 5px; 
         }
 
         .btn-app-footer {
@@ -178,7 +177,7 @@
 
             <div class="footer-links">
                 <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
-                <a href="{% url 'terminos' %}">Privacidad</a>
+                <a href="{% url 'privacidad' %}">Privacidad</a>
                 <a href="{% url 'terminos' %}">Términos</a>
             </div>
             <div style="font-size: 0.65rem; color: #7f8c8d; opacity: 0.8;">
@@ -203,4 +202,3 @@
     </script>
 </body>
 </html>
-
