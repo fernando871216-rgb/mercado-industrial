@@ -16,7 +16,7 @@
             --dark-blue: #002244;
         }
         
-        html, body { height: 100%; margin: 0; }
+        html, body { height: 100%; margin: 0; overflow-x: hidden; } /* Evita scroll lateral */
         body { 
             display: flex; 
             flex-direction: column; 
@@ -26,10 +26,7 @@
             background-size: 24px 24px;
         }
         
-        .main-content { 
-            flex: 1; 
-            padding-bottom: 160px; 
-        }
+        .main-content { flex: 1; padding-bottom: 160px; }
 
         /* NAVBAR */
         .navbar {
@@ -44,14 +41,15 @@
             z-index: 2000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             min-height: 70px;
+            box-sizing: border-box;
         }
 
         .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
-        .logo-img { height: 45px; width: auto; margin-right: 12px; object-fit: contain; }
-        .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; letter-spacing: -0.5px; }
+        .logo-img { height: 40px; width: auto; margin-right: 10px; object-fit: contain; }
+        .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1rem; text-transform: uppercase; letter-spacing: -0.5px; }
 
-        /* ESTILO DE BOTONES CIRCULARES (PILL) */
-        .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        /* ESTILO DE BOTONES CIRCULARES */
+        .nav-links { display: flex; gap: 10px; align-items: center; }
         
         .nav-links a, .logout-btn { 
             color: white; 
@@ -62,7 +60,7 @@
             background: rgba(255,255,255,0.1); 
             border: 1px solid rgba(255,255,255,0.3); 
             padding: 8px 15px;
-            border-radius: 25px; /* Bordes circulares */
+            border-radius: 25px;
             cursor: pointer;
             font-family: inherit;
             display: flex;
@@ -74,43 +72,16 @@
         .nav-links a:hover, .logout-btn:hover { 
             background: rgba(255,255,255,0.25);
             border-color: white;
-            transform: translateY(-2px);
         }
 
-        /* BOTONES ESPECIALES */
-        .btn-como-funciona {
-            color: #ffcc00 !important;
-            border: 1.5px solid #ffcc00 !important;
-            background: rgba(255, 204, 0, 0.1) !important;
-        }
-        .btn-como-funciona:hover { 
-            background: #ffcc00 !important; 
-            color: var(--primary-blue) !important; 
-        }
-
-        .btn-perfil { 
-            background: #f39c12 !important; 
-            border: none !important;
-            color: white !important; 
-            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
-        }
-
-        .logout-btn {
-            background: rgba(231, 76, 60, 0.1);
-            border: 1px solid #e74c3c;
-            color: #ff9f94;
-        }
-        .logout-btn:hover {
-            background: #e74c3c;
-            color: white;
-        }
+        .btn-como-funciona { color: #ffcc00 !important; border: 1.5px solid #ffcc00 !important; }
+        .btn-perfil { background: #f39c12 !important; border: none !important; color: white !important; }
+        .logout-btn { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #ff9f94; }
 
         /* FOOTER ESTÁTICO */
         .footer-static {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
+            bottom: 0; left: 0; width: 100%;
             background-color: var(--dark-blue);
             color: white;
             z-index: 3000;
@@ -118,18 +89,6 @@
             box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
             text-align: center;
         }
-
-        .footer-links { margin-bottom: 12px; }
-        .footer-links a { 
-            color: #bdc3c7; 
-            text-decoration: none; 
-            margin: 0 12px; 
-            font-size: 0.8rem; 
-            font-weight: bold;
-            display: inline-block;
-            transition: 0.2s;
-        }
-        .footer-links a:hover { color: white; }
 
         .btn-app-footer {
             display: inline-flex;
@@ -142,27 +101,38 @@
             font-weight: bold;
             font-size: 0.9rem;
             margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(61, 220, 132, 0.4);
-            transition: 0.3s;
         }
+
+        .footer-links a { color: #bdc3c7; text-decoration: none; margin: 0 12px; font-size: 0.8rem; font-weight: bold; }
 
         .menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; color: white; }
 
+        /* AJUSTES PARA MÓVIL (HAMBURGUESA) */
         @media (max-width: 992px) {
             .menu-toggle { display: block; }
             .nav-links {
                 display: none;
                 flex-direction: column;
                 position: absolute;
-                top: 100%; left: 0; width: 100%;
+                top: 100%;
+                left: 0;
+                width: 100%;
                 background-color: var(--primary-blue);
-                padding: 20px 15px; gap: 12px;
+                padding: 20px; /* Espacio interno para que no peguen al borde */
+                gap: 12px;
                 z-index: 1900;
                 box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-                align-items: stretch; /* Botones ocupan el ancho en móvil */
+                box-sizing: border-box; /* IMPORTANTE: Mantiene el padding dentro del ancho 100% */
+                align-items: stretch; /* Estira los botones al ancho del menú */
             }
             .nav-links.active { display: flex; }
-            .nav-links a, .logout-btn { justify-content: center; font-size: 0.9rem; }
+            .nav-links a, .logout-btn { 
+                justify-content: flex-start; /* Iconos a la izquierda */
+                font-size: 0.9rem; 
+                white-space: normal; /* Permite que el texto baje si es muy largo */
+                padding: 12px 20px; 
+            }
+            .logo-text { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -171,7 +141,7 @@
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span class="logo-text">MERCADO INDUSTRIAL INITRE</span>
+            <span class="logo-text"> MERCADO INDUSTRIAL INITRE</span>
         </a>
 
         <div class="menu-toggle" id="mobile-menu">
@@ -192,9 +162,9 @@
                     <a href="{% url 'panel_administrador' %}" style="color: #f39c12; border-color: #f39c12;"><i class="fas fa-tools"></i> <b>ADMIN</b></a>
                 {% endif %}
 
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                <form action="{% url 'logout' %}" method="post" style="display: block; width: 100%;">
                     {% csrf_token %}
-                    <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                    <button type="submit" class="logout-btn" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
@@ -212,7 +182,6 @@
             <a href="{% url 'descargar_app' %}" download="INITRE_Mercado_Industrial.apk" class="btn-app-footer">
                 <i class="fab fa-android" style="margin-right: 8px;"></i> Descargar App Oficial INITRE
             </a>
-
             <div class="footer-links">
                 <a href="{% url 'como_funciona' %}">¿Cómo funciona?</a>
                 <a href="{% url 'privacidad' %}">Privacidad</a>
