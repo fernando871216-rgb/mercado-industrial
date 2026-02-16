@@ -8,6 +8,12 @@
         <p style="color: #7f8c8d;">Accede a tu panel de Mercado Industrial</p>
     </div>
 
+    {% if form.errors %}
+        <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb; margin-bottom: 20px; font-size: 0.9rem; text-align: center;">
+            <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.
+        </div>
+    {% endif %}
+
     <form method="post">
         {% csrf_token %}
         
@@ -26,8 +32,12 @@
         
         <div style="margin-bottom: 25px;">
             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #34495e;">Contraseña:</label>
-            <input type="password" name="password" required 
-                   style="width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+            <div style="position: relative;">
+                <input type="password" name="password" id="id_password" required 
+                       style="width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; padding-right: 45px;">
+                <i class="fas fa-eye" id="togglePassword" 
+                   style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #95a5a6; z-index: 10;"></i>
+            </div>
         </div>
         
         <button type="submit" style="width: 100%; padding: 14px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
@@ -41,13 +51,6 @@
         </div>
     </form>
     
-        {% if form.errors %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb; margin-bottom: 20px; font-size: 0.9rem; text-align: center;">
-            <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.
-            </div>
-        {% endif %}
-    </form>
-    
     <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
         <p style="color: #7f8c8d; font-size: 0.9rem;">
             ¿No tienes cuenta? <a href="{% url 'registro' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Regístrate aquí</a>
@@ -58,13 +61,23 @@
     </div>
 </div>
 
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#id_password');
+
+    togglePassword.addEventListener('click', function (e) {
+        // Alternar el tipo de input
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        // Alternar el icono
+        this.classList.toggle('fa-eye-slash');
+    });
+</script>
+
 <style>
-    /* Efecto hover para el botón respetando tu color base */
     button:hover {
         background: #34495e !important;
     }
 </style>
 {% endblock %}
-
-
-
