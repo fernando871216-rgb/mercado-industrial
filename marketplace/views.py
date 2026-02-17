@@ -275,76 +275,135 @@ def editar_perfil(request):
     if u.is_valid() and p.is_valid(): u.save(); p.save(); return redirect('editar_perfil')
     return render(request, 'marketplace/editar_perfil.html', {'u_form': u, 'p_form': p})
 
-def cotizar_soloenvios(request):
-    product_id = request.GET.get('product_id')
-    cp_destino = request.GET.get('cp_destino')
-    
-    if not product_id or not cp_destino:
-        return JsonResponse({'tarifas': []})
-        
-    p = get_object_or_404(IndustrialProduct, id=product_id)
-
+def obtener_token_soloenvios():
+    """Obtiene el token de acceso dinámico usando las credenciales de Render"""
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
-    
-    # URL de Producción (Asegúrate de que tu cuenta sea de producción)
-    # Si usas Sandbox, la url suele ser sandbox-api.soloenvios.com
-    base_url = "https://amplify-api.soloenvios.com" 
+    url = "https://app.soloenvios.com/api/v1/auth/token"
     
     try:
-        # 1. Pedir Token
-        auth_res = requests.post(
-            f'{base_url}/v1/auth/token',
-            data={
-                'grant_type': 'client_credentials',
-                'client_id': client_id,
-                'client_secret': client_secret
-            },
-            timeout=10 # Aumentamos el tiempo de espera
-        )
+        # Petición de token a la URL principal de la App
+        res = requests.post(url, data={
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret
+        }, timeout=15, verify=False)
         
-        # Log para debug en Render
-        print(f"DEBUG AUTH: {auth_res.status_code} - {auth_res.text}")
-        
-        token = auth_res.json().get('access_token')
-        
-        if not token:
-            return JsonResponse({'tarifas': []})
-
-        # 2. Cotizar
-        payload = {
-            "origen": str(p.cp_origen),
-            "destino": str(cp_destino),
-            "paquetes": [{
-                "peso": float(p.peso),
-                "largo": int(p.largo),
-                "ancho": int(p.ancho),
-                "alto": int(p.alto),
-                "cantidad": 1
-            }]
-        }
-        
-        headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json'
-        }
-        
-        response = requests.post(
-            f'{base_url}/v1/cotizaciones', 
-            json=payload, 
-            headers=headers,
-            timeout=15
-        )
-        
-        print(f"DEBUG COTIZACION: {response.status_code} - {response.text}")
-
-        if response.status_code == 200:
-            return JsonResponse({'tarifas': response.json()[:3]})
-            
+        if res.status_code == 200:
+            return res.json().get('access_token')
+        return f"ERROR_STATUS_{res.status_code}"
     except Exception as e:
-        print(f"Error detallado en SoloEnvíos: {str(e)}")
+        return f"ERROR_CONEXION_{str(e)}"
+
+def cotizar_soloenvios(request):
+    # 1. Obtenemos el ID del producto que viene del HTML
+    product_id = request.GET.get('product_id')
+    
+    try:
+        # Buscamos en IndustrialProduct que es el modelo que usas
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        cp_origen = str(producto.cp_origen).strip().zfill(5)
+        peso_db = producto.peso
+        largo_db = producto.largo
+        ancho_db = producto.ancho
+        alto_db = producto.alto
+    except Exception as e:
+        print(f"Error cargando producto: {e}")
+        cp_origen = "72460" # Fallback a tu CP de origen por defecto
+        peso_db, largo_db, ancho_db, alto_db = 1, 20, 20, 20
+
+    # 2. Datos que vienen del formulario (CP de destino)
+    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
+    
+    # Obtenemos el token usando la función anterior
+    token = obtener_token_soloenvios()
+    if "ERROR" in str(token):
+        return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
+
+    try:
+        # Función auxiliar para asegurar que siempre enviemos números válidos a la API
+        def limpiar_valor(val, default_val):
+            try:
+                if val is None: return default_val
+                num = int(float(val))
+                return num if num > 0 else default_val
+            except:
+                return default_val
+
+        # Priorizamos lo que venga del request, si no, lo de la DB
+        peso = limpiar_valor(request.GET.get('peso'), peso_db)
+        largo = limpiar_valor(request.GET.get('largo'), largo_db)
+        ancho = limpiar_valor(request.GET.get('ancho'), ancho_db)
+        alto = limpiar_valor(request.GET.get('alto'), alto_db)
+
+        url = "https://app.soloenvios.com/api/v1/quotations"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
         
-    return JsonResponse({'tarifas': []})
+        payload = {
+            "quotation": {
+                "address_from": {
+                    "country_code": "MX", 
+                    "postal_code": cp_origen,
+                    "area_level1": "Origen", 
+                    "area_level2": "Municipio", 
+                    "area_level3": "Colonia"
+                },
+                "address_to": {
+                    "country_code": "MX", 
+                    "postal_code": cp_destino,
+                    "area_level1": "Destino", 
+                    "area_level2": "Ciudad", 
+                    "area_level3": "Colonia"
+                },
+                "parcels": [{
+                    "length": largo, 
+                    "width": ancho, 
+                    "height": alto, 
+                    "weight": peso,
+                    "package_protected": False, 
+                    "declared_value": 100
+                }]
+            }
+        }
+        
+        # PASO 1: Crear la intención de cotización
+        res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
+        
+        if res.status_code in [200, 201]:
+            cotizacion_id = res.json().get('id')
+            
+            # PASO 2: Espera estratégica para que los carriers (FedEx, DHL, etc) respondan
+            time.sleep(3.0) 
+            
+            # PASO 3: Recuperar los resultados de la cotización
+            res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
+            data = res_final.json()
+            
+            tarifas = []
+            # Procesamos las tasas recibidas
+            for t in data.get('rates', []):
+                monto_total = t.get('total')
+                if monto_total and float(monto_total) > 0:
+                    tarifas.append({
+                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                        # Aquí aplicamos tu margen del 8% sobre el precio de SoloEnvíos
+                        'precio_final': round(float(monto_total) * 1.08, 2),
+                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                    })
+            
+            # Ordenamos por precio para mostrar las más baratas primero
+            tarifas = sorted(tarifas, key=lambda x: x['precio_final'])
+            return JsonResponse({'tarifas': tarifas})
+        
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.text}'})
+
+    except Exception as e:
+        print(f"Error crítico en cotizador: {e}")
+        return JsonResponse({'tarifas': [], 'error': str(e)})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -352,6 +411,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
