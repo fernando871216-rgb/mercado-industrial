@@ -281,31 +281,34 @@ def obtener_token_soloenvios():
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # URL de autenticación oficial
-    url = "https://app.soloenvios.com/api/v1/auth/token"
+    # CAMBIO CRUCIAL: Eliminamos el '/api' de la ruta de autenticación
+    url = "https://app.soloenvios.com/v1/auth/token"
     
     try:
-        # Probamos enviando los datos como un objeto JSON puro
         credentials = {
             'client_id': client_id,
             'client_secret': client_secret,
             'grant_type': 'client_credentials'
         }
         
-        # Agregamos headers explícitos para que la API sepa que enviamos JSON
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
         
+        # Hacemos la petición
         res = requests.post(url, json=credentials, headers=headers, timeout=15, verify=False)
         
         if res.status_code == 200:
             return res.json().get('access_token')
         
-        # Si falla el 200, imprimimos el error en los logs de Render para que lo veas
-        print(f"DEBUG SOLOENVIOS: Status {res.status_code} - Body: {res.text}")
-        return f"ERROR_AUTH_STATUS_{res.status_code}"
+        # Esto nos dirá en el log si la nueva URL funcionó
+        print(f"DEBUG SOLOENVIOS NUEVA URL: Status {res.status_code} - Body: {res.text}")
+        return None
         
     except Exception as e:
-        return f"ERROR_EXCEPTION_{str(e)}"
+        print(f"DEBUG EXCEPTION: {str(e)}")
+        return None
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -394,6 +397,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
