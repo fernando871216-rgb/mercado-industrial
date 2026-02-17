@@ -102,7 +102,6 @@
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
-    // Cambio de imágenes
     function changeImage(src) {
         const mainImg = document.getElementById('mainImage');
         const thumbs = document.querySelectorAll('.thumb');
@@ -130,10 +129,8 @@
         });
     }
 
-    // Carga inicial del botón sin flete
     renderMP("{{ preference_id }}");
 
-    // Lógica del Cotizador
     function cotizarFlete() {
         const cp = document.getElementById('cp_destino').value.trim();
         const btn = document.getElementById('btn-cotizar');
@@ -146,9 +143,11 @@
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        lista.innerlista.innerHTML = '<div style="padding:20px; text-align:center; color:#0056b3;">' +
-                  '<i class="fas fa-sync fa-spin"></i> Buscando tarifas en tiempo real...<br>' +
-                  '<small style="color:#666;">Estamos consultando FedEx, Estafeta y DHL. Esto puede tardar 5 segundos.</small></div>';
+        
+        // CORRECCIÓN AQUÍ: Eliminado el ".innerlista" que causaba el error
+        lista.innerHTML = '<div style="padding:20px; text-align:center; color:#0056b3;">' +
+                          '<i class="fas fa-sync fa-spin"></i> Buscando tarifas en tiempo real...<br>' +
+                          '<small style="color:#666;">Estamos consultando FedEx, Estafeta y DHL. Esto puede tardar unos segundos.</small></div>';
         lista.style.display = 'block';
 
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
@@ -161,11 +160,10 @@
                         item.className = "tarifa-item";
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer; transition: 0.2s;";
                         
-                        // Efecto hover y selección
                         item.onmouseover = () => { item.style.backgroundColor = "#f0f7ff"; };
                         item.onmouseout = () => { if(item.dataset.selected !== "true") item.style.backgroundColor = "transparent"; };
                         
-                        item.onclick = () => seleccionarTarifa(item, t.precio_final, t.paqueteria);
+                        item.onclick = () => seleccionarTarifa(item, t.precio_final);
                         
                         item.innerHTML = `
                             <div>
@@ -193,53 +191,39 @@
             });
     }
 
-    function seleccionarTarifa(elemento, precio, nombre) {
-    // 1. Limpiamos y validamos el CP una sola vez
-    const cpInput = document.getElementById('cp_destino').value.trim();
-    const cp = cpInput || '00000'; 
-    
-    // 2. Obtenemos los elementos del DOM
-    const filas = document.querySelectorAll('.tarifa-item');
-    const walletContainer = document.getElementById('wallet_container');
+    function seleccionarTarifa(elemento, precio) {
+        const cp = document.getElementById('cp_destino').value.trim();
+        const filas = document.querySelectorAll('.tarifa-item');
+        const walletContainer = document.getElementById('wallet_container');
 
-    // --- ELIMINÉ LA LÍNEA QUE REPETÍA "const cp" ---
-
-    // 3. Resetear estilos de todas las filas
-    filas.forEach(f => { 
-        f.style.backgroundColor = "transparent"; 
-        f.style.borderLeft = "none";
-        f.dataset.selected = "false";
-    });
-
-    // 4. Estilo de fila seleccionada
-    elemento.style.backgroundColor = "#f0fff4";
-    elemento.style.borderLeft = "5px solid #27ae60";
-    elemento.dataset.selected = "true";
-
-    // 5. Bloquear contenedor de pago mientras se actualiza
-    walletContainer.style.opacity = "0.5";
-    walletContainer.style.pointerEvents = "none";
-
-    // 6. Llamada al servidor para actualizar el total
-    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
-        .then(res => res.json())
-        .then(data => { 
-            if (data.preference_id) {
-                renderMP(data.preference_id);
-            } else {
-                alert("Error al actualizar el total.");
-            }
-        })
-        .finally(() => {
-            walletContainer.style.opacity = "1";
-            walletContainer.style.pointerEvents = "all";
+        filas.forEach(f => { 
+            f.style.backgroundColor = "transparent"; 
+            f.style.borderLeft = "none";
+            f.dataset.selected = "false";
         });
-}
+
+        elemento.style.backgroundColor = "#f0fff4";
+        elemento.style.borderLeft = "5px solid #27ae60";
+        elemento.dataset.selected = "true";
+
+        walletContainer.style.opacity = "0.5";
+        walletContainer.style.pointerEvents = "none";
+
+        // IMPORTANTE: Aseguramos que pasamos cp_destino correctamente
+        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+            .then(res => res.json())
+            .then(data => { 
+                if (data.preference_id) {
+                    renderMP(data.preference_id);
+                } else {
+                    alert("Error al actualizar el total.");
+                }
+            })
+            .finally(() => {
+                walletContainer.style.opacity = "1";
+                walletContainer.style.pointerEvents = "all";
+            });
+    }
     {% endif %}
 </script>
 {% endblock %}
-
-
-
-
-
