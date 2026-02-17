@@ -60,7 +60,7 @@
         <div style="flex: 1.2; min-width: 320px;">
             <span style="background: #e1effe; color: #1e429f; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
             <h1 style="color: #002244; font-size: 2rem; margin: 10px 0 5px 0; line-height: 1.2;">{{ product.title }}</h1>
-            <p style="color: #64748b; font-size: 1rem;">Modelo / N. Parte: <strong style="color: #334155;">{{ product.part_number|default:"N/A" }}</strong></p>
+            <p style="color: #64748b; font-size: 1rem;">Num. de Parte: <strong style="color: #334155;">{{ product.part_number|default:"N/A" }}</strong></p>
 
             <div style="margin: 25px 0;">
                 <span style="font-size: 2.8rem; font-weight: 800; color: #27ae60;">${{ product.price }} <small style="font-size: 1rem; color: #94a3b8; font-weight: normal;">MXN</small></span>
@@ -193,5 +193,6 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
 
