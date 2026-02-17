@@ -39,6 +39,7 @@ def descargar_ficha(request, product_id):
     return FileResponse(p.ficha_tecnica.open(), content_type='application/pdf')
 
 # --- MERCADO PAGO Y WEBHOOK ---
+
 @login_required
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
@@ -128,14 +129,42 @@ def home(request):
         'products': products, 
         'perfil_incompleto': perfil_incompleto
     })
-
+@login_required
 def detalle_producto(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
-    u_id = request.user.id if request.user.is_authenticated else 0
-    pref_data = {"items": [{"title": p.title, "quantity": 1, "unit_price": float(p.price), "currency_id": "MXN"}],
-                 "external_reference": f"{p.id}-{u_id}-0-00000"}
-    pref_id = SDK.preference().create(pref_data)["response"]["id"]
-    return render(request, 'marketplace/product_detail.html', {'product': p, 'preference_id': pref_id, 'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9"})
+    u = request.user
+    
+    # 1. Verificamos si el perfil está completo (necesario para la logística)
+    # Ajusta los nombres de los campos según tu modelo de perfil/usuario
+    perfil_incompleto = not (u.email and hasattr(u, 'perfil') and u.perfil.telefono and u.perfil.direccion)
+
+    # 2. Generamos la preferencia inicial (solo el producto, sin flete)
+    # La referencia externa lleva 0 en flete y 00000 en CP por defecto
+    pref_data = {
+        "items": [{
+            "title": p.title, 
+            "quantity": 1, 
+            "unit_price": float(p.price), 
+            "currency_id": "MXN"
+        }],
+        "external_reference": f"{p.id}-{u.id}-0-00000",
+        "binary_mode": True,
+    }
+    
+    try:
+        pref_id = SDK.preference().create(pref_data)["response"]["id"]
+    except Exception as e:
+        print(f"Error Mercado Pago: {e}")
+        pref_id = None
+
+    context = {
+        'product': p,
+        'preference_id': pref_id,
+        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9",
+        'perfil_incompleto': perfil_incompleto  # <--- IMPORTANTE para tu HTML
+    }
+    
+    return render(request, 'marketplace/product_detail.html', context)
 
 # --- INVENTARIO ---
 @login_required
@@ -417,6 +446,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
