@@ -51,14 +51,15 @@
             <div style="padding: 20px; background: #fff5f5; border: 2px dashed #e74c3c; border-radius: 15px; text-align: center; margin-top: 20px;">
                 <h5 style="margin: 0 0 10px 0; color: #c53030; font-size: 0.95rem;"><i class="fas fa-file-pdf"></i> Documentación Técnica</h5>
                 
-                <a href="https://drive.google.com/viewerng/viewer?embedded=true&url=https://{{ request.get_host }}{{ product.ficha_tecnica.url }}" 
-                   target="_self" 
+                <a href="{{ product.ficha_tecnica.url }}" 
+                   download
+                   rel="external"
                    style="display: block; background: #e74c3c; color: white; text-decoration: none; padding: 14px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(231,76,60,0.2);">
-                    <i class="fas fa-eye"></i> VER FICHA TÉCNICA
+                    <i class="fas fa-download"></i> DESCARGAR PDF
                 </a>
 
-                <p style="font-size: 0.7rem; color: #7f8c8d; margin-top: 10px; line-height: 1.3;">
-                    Si no visualizas el documento, asegúrate de tener conexión a internet.
+                <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 10px;">
+                    Al hacer clic, el archivo se guardará en la carpeta de <b>Descargas</b> de tu equipo.
                 </p>
             </div>
             {% endif %}
@@ -200,6 +201,7 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
 
 
