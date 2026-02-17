@@ -279,51 +279,45 @@ def obtener_token_soloenvios():
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # URL ACTUALIZADA DE LA API DE SOLOENVIOS
-    url = "https://api.soloenvios.com/v1/auth/token"
+    # CAMBIAMOS A LA URL DE RESPALDO (AMPLIFY) PARA EVITAR EL ERROR DE DNS EN RENDER
+    url = "https://amplify-api.soloenvios.com/v1/auth/token"
     
     try:
-        # SoloEnvíos prefiere recibir estos datos como un JSON plano
         payload = {
             'grant_type': 'client_credentials',
             'client_id': client_id,
             'client_secret': client_secret
         }
         
-        res = requests.post(url, json=payload, timeout=15)
+        # Intentamos la conexión
+        res = requests.post(url, json=payload, timeout=15, verify=False)
         
         if res.status_code == 200:
             return res.json().get('access_token')
-        else:
-            # Si falla, intentamos con el subdominio de respaldo que usan a veces
-            url_backup = "https://amplify-api.soloenvios.com/v1/auth/token"
-            res = requests.post(url_backup, json=payload, timeout=15)
-            if res.status_code == 200:
-                return res.json().get('access_token')
-
-        return f"ERROR_STATUS_{res.status_code}"
+        
+        return f"ERROR_STATUS_{res.status_code}: {res.text}"
     except Exception as e:
-        return f"ERROR_CONEXION_{str(e)}"
-
+        return f"ERROR_CONEXION: {str(e)}"
+        
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token = obtener_token_soloenvios()
     
-    # Si el token trae un error, lo mostramos para saber qué pasa
     if "ERROR" in str(token):
-        return JsonResponse({'tarifas': [], 'error': f'Problema de acceso: {token}'})
+        return JsonResponse({'tarifas': [], 'error': f'Acceso denegado: {token}'})
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         cp_origen = str(producto.cp_origen).strip().zfill(5)
         
-        url = "https://app.soloenvios.com/api/v1/quotations"
+        # IMPORTANTE: Usar la misma base de URL (amplify-api) para la cotización
+        url_cotizacion = "https://amplify-api.soloenvios.com/v1/quotations"
+        
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Content-Type": "application/json"
         }
         
         payload = {
@@ -339,7 +333,7 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
+        res = requests.post(url_cotizacion, json=payload, headers=headers, timeout=25, verify=False)
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
@@ -370,6 +364,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
