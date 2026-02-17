@@ -315,7 +315,7 @@ def cotizar_soloenvios(request):
     
     token = obtener_token_soloenvios()
     if not token or "ERROR" in str(token):
-        return JsonResponse({'tarifas': [], 'error': 'Sincronizando paqueterías...'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
@@ -326,10 +326,23 @@ def cotizar_soloenvios(request):
             "Content-Type": "application/json"
         }
         
+        # ESTRUCTURA CON AREA_LEVELS (Lo que pedía el error 422)
         payload = {
             "quotation": {
-                "address_from": {"country_code": "MX", "postal_code": str(producto.cp_origen).strip().zfill(5)},
-                "address_to": {"country_code": "MX", "postal_code": cp_destino},
+                "address_from": {
+                    "country_code": "MX",
+                    "postal_code": str(producto.cp_origen).strip().zfill(5),
+                    "area_level1": "Puebla",      # Estado
+                    "area_level2": "Puebla",      # Ciudad/Municipio
+                    "area_level3": "Centro"       # Colonia
+                },
+                "address_to": {
+                    "country_code": "MX",
+                    "postal_code": cp_destino,
+                    "area_level1": "Ciudad de Mexico", 
+                    "area_level2": "Cuauhtemoc",
+                    "area_level3": "Juarez"
+                },
                 "parcels": [{
                     "length": int(float(producto.largo or 20)),
                     "width": int(float(producto.ancho or 20)),
@@ -344,40 +357,30 @@ def cotizar_soloenvios(request):
         
         res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
         
-        # SI FALLA, QUEREMOS VER EL TEXTO CRUDO DE LA API
-        if res.status_code != 200 and res.status_code != 201:
-            return JsonResponse({
-                'tarifas': [], 
-                'error': f"Respuesta de SoloEnvíos ({res.status_code}): {res.text}"
-            })
+        if res.status_code in [200, 201]:
+            data = res.json()
+            tarifas = []
+            rates = data.get('rates', [])
             
-            # SoloEnvíos a veces devuelve 'rates' directamente o dentro de un objeto
-            rates_list = data.get('rates', []) if isinstance(data, dict) else []
-            
-            for t in rates_list:
-                # Intentamos obtener el monto de varias llaves posibles
-                monto = t.get('total') or t.get('total_price') or t.get('price')
-                provider = t.get('provider_display_name') or t.get('provider') or "Paquetería"
-                service = t.get('provider_service_name') or t.get('service_level_name') or "Estándar"
-                
+            for t in rates:
+                monto = t.get('total')
                 if monto:
                     tarifas.append({
-                        'paqueteria': f"{provider} ({service})",
+                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
                         'precio_final': round(float(monto) * 1.08, 2),
-                        'tiempo': f"{t.get('days')} días" if t.get('days') else "3-5 días"
+                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             
             if not tarifas:
-                # Si llegamos aquí con código 200 pero sin tarifas, imprimimos el JSON para ver qué llegó
-                print(f"DEBUG DATA SIN TARIFAS: {data}")
-                return JsonResponse({'tarifas': [], 'error': 'No hay cobertura para esta zona con este peso.'})
-
+                return JsonResponse({'tarifas': [], 'error': 'No hay cobertura para esta zona.'})
+                
             return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+        # Si vuelve a fallar, el diagnóstico nos dirá qué otro campo falta
+        return JsonResponse({'tarifas': [], 'error': f"Detalle: {res.text}"})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Reintentando conexión...'})
+        return JsonResponse({'tarifas': [], 'error': f'Error: {str(e)}'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -386,6 +389,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
