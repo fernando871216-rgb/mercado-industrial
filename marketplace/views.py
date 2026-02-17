@@ -309,26 +309,32 @@ def obtener_token_soloenvios():
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
+    # 1. Forzamos el CP a ser un texto de 5 dígitos siempre (rellena con ceros a la izquierda)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token = obtener_token_soloenvios()
-    
-    # Si hay error de DNS, mostramos un mensaje de espera al usuario
     if "ERROR" in str(token):
-        return JsonResponse({
-            'tarifas': [], 
-            'error': 'Estamos sincronizando las paqueterías. Por favor, reintenta en 10 segundos.'
-        })
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        # 2. Aseguramos que el CP de origen también sea texto de 5 dígitos
         cp_origen = str(producto.cp_origen).strip().zfill(5)
         
-        # Usamos la URL que sabemos que existe
+        # 3. CONVERSIÓN DE SEGURIDAD: 
+        # Convertimos a float primero por si el usuario puso decimales, 
+        # y luego a int porque la API de SoloEnvíos prefiere enteros en las medidas.
+        peso = int(float(producto.peso or 1))
+        largo = int(float(producto.largo or 20))
+        ancho = int(float(producto.ancho or 20))
+        alto = int(float(producto.alto or 20))
+
         url_cot = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
         
         payload = {
@@ -336,14 +342,15 @@ def cotizar_soloenvios(request):
                 "address_from": {"country_code": "MX", "postal_code": cp_origen},
                 "address_to": {"country_code": "MX", "postal_code": cp_destino},
                 "parcels": [{
-                    "length": int(float(producto.largo or 20)),
-                    "width": int(float(producto.ancho or 20)),
-                    "height": int(float(producto.alto or 20)),
-                    "weight": int(float(producto.peso or 1))
+                    "length": largo, 
+                    "width": ancho, 
+                    "height": alto, 
+                    "weight": peso
                 }]
             }
         }
         
+        # Enviamos la petición
         res = requests.post(url_cot, json=payload, headers=headers, timeout=20, verify=False)
         
         if res.status_code in [200, 201]:
@@ -380,6 +387,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
