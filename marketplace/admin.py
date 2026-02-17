@@ -66,8 +66,6 @@ class ProfileAdmin(admin.ModelAdmin):
     
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    # HE FUSIONADO LAS COLUMNAS AQUÍ:
-    # Ahora verás quién compró, si ya RECIBIÓ y si ya le PAGASTE al vendedor
     list_display = (
         'id', 
         'product', 
@@ -79,12 +77,14 @@ class SaleAdmin(admin.ModelAdmin):
         'created_at'
     )
     
-    # Filtros laterales para encontrar rápido lo pendiente
+    # NUEVO: Esto permite editar las casillas sin entrar al detalle de la venta
+    list_editable = ('pagado_a_vendedor', 'recibido_por_comprador', 'status')
+    
     list_filter = ('status', 'recibido_por_comprador', 'pagado_a_vendedor', 'created_at')
     
-    # Buscador por nombre de producto o comprador
     readonly_fields = ('created_at',)
-    search_fields = ('product__title', 'buyer__username')
+    search_fields = ('product__title', 'buyer__username', 'payment_id')
+
 
 
 
