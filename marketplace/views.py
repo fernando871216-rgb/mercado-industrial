@@ -1,4 +1,4 @@
-import requests
+    import requests
 import urllib3
 import json
 import mercadopago
@@ -44,48 +44,39 @@ def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
-        # 1. Recibimos el flete base que mandó el JS
-        flete_raw = float(request.GET.get('envio', 0))
+        # El flete que viene del JS ya tiene el 8% (porque lo calculamos en cotizar_soloenvios)
+        # Pero por seguridad, si quieres asegurar el margen, lo recalculamos o lo recibimos tal cual:
+        flete_seleccionado = float(request.GET.get('envio', 0))
         cp = request.GET.get('cp_destino') or '00000'
-        
-        # 2. APLICAMOS EL 8% AQUÍ (Para asegurar que el cobro sea correcto)
-        # Si el flete es 100, flete_con_comision será 108
-        flete_con_comision = round(flete_raw * 1.08, 2)
     except:
-        flete_con_comision, cp = 0, '00000'
+        flete_seleccionado, cp = 0, '00000'
 
-    # 3. Sumamos Precio Producto + Flete con Comisión
-    total = round(float(producto.price) + flete_con_comision, 2)
+    # Sumamos el precio del producto + el flete (que ya trae el 8% de la vista anterior)
+    total_con_flete = round(float(producto.price) + flete_seleccionado, 2)
     
-    # Título dinámico
-    if flete_con_comision > 0:
-        titulo_pago = f"{producto.title} (Envío incluido a CP {cp})"
-    else:
-        titulo_pago = producto.title
+    # Título que verá el cliente en Mercado Pago
+    titulo = f"{producto.title} (Envío incluido)" if flete_seleccionado > 0 else producto.title
 
     pref_data = {
         "items": [{
-            "title": titulo_pago, 
-            "quantity": 1, 
-            "unit_price": total, 
+            "title": titulo,
+            "quantity": 1,
+            "unit_price": total_con_flete, # <--- Aquí está la clave del total
             "currency_id": "MXN"
         }],
-        # Guardamos el flete con comisión en la referencia para que el Webhook lo registre bien
-        "external_reference": f"{producto.id}-{request.user.id}-{flete_con_comision}-{cp}",
+        "external_reference": f"{producto.id}-{request.user.id}-{flete_seleccionado}-{cp}",
         "back_urls": {
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_con_comision}&cp={cp}'),
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_seleccionado}&cp={cp}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
-            "pending": request.build_absolute_uri('/pago-pendiente/')
         },
         "auto_return": "approved",
         "binary_mode": True,
     }
     
-    preference_response = SDK.preference().create(pref_data)
-    return JsonResponse({
-        'preference_id': preference_response["response"]["id"], 
-        'total_final': f"{total:,.2f}"
-    })
+    res_mp = SDK.preference().create(pref_data)
+    return JsonResponse({'preference_id': res_mp["response"]["id"], 'total_final': f"{total_con_flete:,.2f}"})
+
+
 @csrf_exempt
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
@@ -385,36 +376,32 @@ def cotizar_soloenvios(request):
         }
 
         # --- LÓGICA DE REINTENTOS OPTIMIZADA ---
-        for intento in range(3):
-            res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
-            
-            # Solo intentamos leer JSON si la respuesta es exitosa
-            data = res.json() if res.status_code in [200, 201] else {}
-            rates = data.get('rates', [])
-            
-            if rates:
-                tarifas = []
-                for t in rates:
-                    monto = t.get('total')
-                    if monto:
-                        tarifas.append({
-                            'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                            'precio_final': round(float(monto) * 1.08, 2),
-                            'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
-                        })
-                return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
-            
-            # Si no hay tarifas, aplicamos pausa incremental
-            if intento < 2:
-                # Intento 0 espera 1.5s, Intento 1 espera 2.5s
-                time.sleep(1.5 + intento) 
-                
-                # En el primer fallo, refrescamos token por si acaso
-                if intento == 0:
-                    nuevo_token = obtener_token_soloenvios()
-                    headers["Authorization"] = f"Bearer {nuevo_token}"
+        for intento in range(3):  # Intentamos 3 veces
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
+        data = res.json() if res.status_code in [200, 201] else {}
+        rates = data.get('rates', [])
         
-        return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas en este momento. Intente nuevamente en unos segundos.'})
+        if rates:
+            tarifas = []
+            for t in rates:
+                monto = t.get('total')
+                if monto:
+                    # Aquí ya mostramos el precio con el 8% al cliente
+                    tarifas.append({
+                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                        'precio_final': round(float(monto) * 1.08, 2),
+                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                    })
+            return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
+        
+        # Si no hay tarifas, esperamos: 1.5s el primer fallo, 2.5s el segundo
+        if intento < 2:
+            time.sleep(1.5 + intento) 
+            # Refrescamos token por si acaso en el primer reintento
+            if intento == 0:
+                headers["Authorization"] = f"Bearer {obtener_token_soloenvios()}"
+
+    return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está tardando en responder. Intente de nuevo.'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
@@ -426,6 +413,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
