@@ -134,38 +134,37 @@ def detalle_producto(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
     u = request.user
     
-    # 1. Verificamos si el perfil está completo (necesario para la logística)
-    # Ajusta los nombres de los campos según tu modelo de perfil/usuario
-    perfil_incompleto = not (u.email and hasattr(u, 'perfil') and u.perfil.telefono and u.perfil.direccion)
+    # 1. Obtenemos el perfil (usando el nombre de relación correcto)
+    # Según tu código en home, la relación es request.user.profile
+    try:
+        perfil = u.profile
+        # Validamos que existan los campos (ajusta los nombres si son distintos)
+        # Aquí verifico los que usas en la función home: phone, address, clabe
+        tiene_datos = all([perfil.phone, perfil.address]) 
+        perfil_incompleto = not tiene_datos
+    except:
+        perfil_incompleto = True
 
-    # 2. Generamos la preferencia inicial (solo el producto, sin flete)
-    # La referencia externa lleva 0 en flete y 00000 en CP por defecto
+    # 2. Generamos la preferencia
     pref_data = {
-        "items": [{
-            "title": p.title, 
-            "quantity": 1, 
-            "unit_price": float(p.price), 
-            "currency_id": "MXN"
-        }],
-        "external_reference": f"{p.id}-{u.id}-0-00000",
+        "items": [{"title": p.title, "quantity": 1, "unit_price": float(p.price), "currency_id": "MXN"}],
+        "external_reference": f"PROD:{p.id}-USER:{u.id}-FLETE:0-CP:00000",
         "binary_mode": True,
     }
     
     try:
         pref_id = SDK.preference().create(pref_data)["response"]["id"]
-    except Exception as e:
-        print(f"Error Mercado Pago: {e}")
+    except:
         pref_id = None
 
     context = {
         'product': p,
         'preference_id': pref_id,
         'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9",
-        'perfil_incompleto': perfil_incompleto  # <--- IMPORTANTE para tu HTML
+        'perfil_incompleto': perfil_incompleto
     }
-    
     return render(request, 'marketplace/product_detail.html', context)
-
+    
 # --- INVENTARIO ---
 @login_required
 def mi_inventario(request): return render(request, 'marketplace/mi_inventario.html', {'products': IndustrialProduct.objects.filter(user=request.user)})
@@ -446,6 +445,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
