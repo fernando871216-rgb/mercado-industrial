@@ -142,7 +142,7 @@ def detalle_producto(request, product_id):
         tiene_datos = all([
             perfil.phone,    # <-- Antes decía telefono
             perfil.address,  # <-- Antes decía direccion
-            perfil.clabe
+            
         ])
         perfil_incompleto = not tiene_datos
     except Exception as e:
@@ -450,6 +450,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
