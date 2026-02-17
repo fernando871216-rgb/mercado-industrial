@@ -703,12 +703,15 @@ def descargar_ficha(request, product_id):
         if not product.ficha_tecnica:
             raise Http404
         
-        # Abrimos el archivo
         file_handle = product.ficha_tecnica.open()
         
-        # Enviamos la respuesta como un archivo adjunto (attachment)
+        # Cambiamos content_type para que el navegador sepa que es PDF
         response = FileResponse(file_handle, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{product.title}_Ficha_Tecnica.pdf"'
+        
+        # 'inline' permite abrir en pestaña nueva en la web. 
+        # La APK al no poder abrirlo 'inline', debería activar su protocolo de descarga.
+        response['Content-Disposition'] = f'inline; filename="{product.title}_Ficha_Tecnica.pdf"'
+        
         return response
     except IndustrialProduct.DoesNotExist:
         raise Http404
