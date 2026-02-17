@@ -133,6 +133,14 @@
 </head>
 <body>
 
+    {% if perfil_incompleto %}
+    <div style="background: #fff3cd; color: #856404; padding: 12px; text-align: center; border-bottom: 1px solid #ffeeba; font-size: 0.9rem; font-weight: bold;">
+    <i class="fas fa-exclamation-triangle me-2"></i> 
+    Tu perfil no está completo (falta Teléfono, CLABE o Dirección). 
+    <a href="{% url 'editar_perfil' %}" style="color: #856404; text-decoration: underline;">Completar ahora</a>
+    </div>
+    {% endif %}
+
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
@@ -207,3 +215,4 @@
     </script>
 </body>
 </html>
+
