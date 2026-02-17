@@ -281,33 +281,37 @@ def obtener_token_soloenvios():
     client_id = "puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA"
     client_secret = "vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps"
     
-    # CAMBIO CRUCIAL: Eliminamos el '/api' de la ruta de autenticación
-    url = "https://app.soloenvios.com/v1/auth/token"
+    rutas = [
+        "https://api.soloenvios.com/v1/auth/token",     # API pura (Producción)
+        "https://app.soloenvios.com/api/v1/auth/token", # App antigua
+        "https://api.soloenvios.com/api/v1/auth/token"  # Combinada
+    ]
     
-    try:
-        credentials = {
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'grant_type': 'client_credentials'
-        }
-        
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
-        
-        # Hacemos la petición
-        res = requests.post(url, json=credentials, headers=headers, timeout=15, verify=False)
-        
-        if res.status_code == 200:
-            return res.json().get('access_token')
-        
-        # Esto nos dirá en el log si la nueva URL funcionó
-        print(f"DEBUG SOLOENVIOS NUEVA URL: Status {res.status_code} - Body: {res.text}")
-        return None
-    except Exception as e:
-        print(f"DEBUG EXCEPTION: {str(e)}")
-        return None
+    payload = {
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    }
+    
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+
+    for url in rutas:
+        try:
+            res = requests.post(url, json=payload, headers=headers, timeout=10, verify=False)
+            print(f"PROBANDO URL: {url} | STATUS: {res.status_code}")
+            
+            if res.status_code == 200:
+                print("¡CONECTADO EXITOSAMENTE!")
+                return res.json().get('access_token')
+            
+            if res.status_code == 401:
+                print("URL CORRECTA, PERO LLAVES INVÁLIDAS (401)")
+                return "ERROR_LLAVES"
+                
+        except Exception as e:
+            print(f"FALLO CONEXION EN: {url} - {str(e)}")
+            
+    return None
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -396,6 +400,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
