@@ -21,15 +21,9 @@
             </div>
 
             <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #0056b3;" class="thumb">
-                {% endif %}
-                {% if product.image2 %}
-                    <img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">
-                {% endif %}
-                {% if product.image3 %}
-                    <img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">
-                {% endif %}
+                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #0056b3;" class="thumb">{% endif %}
+                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">{% endif %}
+                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">{% endif %}
             </div>
 
             <div style="padding: 20px; background: #fcfdfd; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
@@ -93,7 +87,7 @@
             <div style="margin-top: 30px; padding: 15px; background-color: #f0f7ff; border-radius: 12px; display: flex; gap: 15px;">
                 <i class="fas fa-shield-alt" style="color: #0056b3; font-size: 1.5rem; margin-top: 5px;"></i>
                 <p style="margin: 0; font-size: 0.85rem; color: #1e429f; line-height: 1.5;">
-                    <strong>Protección INITRE:</strong>.Si no recibe su producto, se le hara reembolso total pagado. El monto con el cotizador de flete INITRE incluirá una comision de 8% sobre el costo del envio y sera el pago de <strong>FLETE + Producto</strong>. Si no usa el cotizador y quiere ahorrar esa comision, acuerde el flete directo con el vendedor tras pagar el equipo.
+                    <strong>Protección INITRE:</strong> Si no recibe su producto, se le hará reembolso total pagado. El monto con el cotizador incluirá una comisión de 8% sobre el envío. Pago total = <strong>FLETE + Producto</strong>.
                 </p>
             </div>
         </div>
@@ -104,13 +98,11 @@
 <script>
     function changeImage(src) {
         const mainImg = document.getElementById('mainImage');
-        const thumbs = document.querySelectorAll('.thumb');
         mainImg.style.opacity = '0';
         setTimeout(() => {
             mainImg.src = src;
             mainImg.style.opacity = '1';
         }, 200);
-        thumbs.forEach(t => t.style.borderColor = (t.src === src) ? '#0056b3' : '#eee');
     }
 
     {% if product.stock > 0 and not perfil_incompleto %}
@@ -123,7 +115,6 @@
         walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
             initialization: { preferenceId: preferenceId, redirectMode: "modal" },
             callbacks: {
-                onReady: () => { console.log("Botón MP listo"); },
                 onError: (error) => { console.error("Error MP:", error); }
             }
         });
@@ -137,17 +128,16 @@
         const lista = document.getElementById('lista-tarifas');
 
         if (!cp || cp.length < 5) {
-            alert("Por favor ingresa un Código Postal válido (5 dígitos).");
+            alert("Por favor ingresa un Código Postal válido.");
             return;
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
         
-        // CORRECCIÓN AQUÍ: Eliminado el ".innerlista" que causaba el error
         lista.innerHTML = '<div style="padding:20px; text-align:center; color:#0056b3;">' +
-                          '<i class="fas fa-sync fa-spin"></i> Buscando tarifas en tiempo real...<br>' +
-                          '<small style="color:#666;">Estamos consultando FedEx, Estafeta y DHL. Esto puede tardar unos segundos.</small></div>';
+                          '<i class="fas fa-sync fa-spin"></i> Consultando paqueterías...<br>' +
+                          '<small style="color:#666;">Esto puede tardar unos segundos.</small></div>';
         lista.style.display = 'block';
 
         fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
@@ -158,32 +148,32 @@
                     data.tarifas.forEach(t => {
                         const item = document.createElement('div');
                         item.className = "tarifa-item";
-                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer; transition: 0.2s;";
-                        
-                        item.onmouseover = () => { item.style.backgroundColor = "#f0f7ff"; };
-                        item.onmouseout = () => { if(item.dataset.selected !== "true") item.style.backgroundColor = "transparent"; };
-                        
+                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer;";
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
-                        
                         item.innerHTML = `
                             <div>
-                                <strong style="color: #2d3748; font-size: 0.9rem;">${t.paqueteria}</strong><br>
-                                <small style="color: #718096;"><i class="far fa-clock"></i> Entrega: ${t.tiempo}</small>
+                                <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
+                                <small style="color: #718096;">Entrega: ${t.tiempo}</small>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-weight: 800; color: #27ae60; font-size: 1.1rem;">$${t.precio_final}</div>
-                                <small style="color: #a0aec0; font-size: 0.7rem;">IVA incluido</small>
-                            </div>
-                        `;
+                                <div style="font-weight: 800; color: #27ae60;">$${t.precio_final}</div>
+                                <small style="color: #a0aec0; font-size: 0.7rem;">Final</small>
+                            </div>`;
                         lista.appendChild(item);
                     });
                 } else {
-                    lista.innerHTML = `<div style="padding:15px; color:#e74c3c; font-size:0.9rem;">${data.error || 'No hay paqueterías disponibles para esta zona.'}</div>`;
+                    // MENSAJE CON BOTÓN DE REINTENTO
+                    lista.innerHTML = `
+                        <div style="padding:20px; text-align:center; background:#fff5f5; border-radius:10px;">
+                            <p style="color:#e74c3c; font-weight:bold; margin-bottom:10px;">La conexión con las paqueterías tardó demasiado.</p>
+                            <button onclick="cotizarFlete()" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                                <i class="fas fa-sync"></i> INTENTAR DE NUEVO
+                            </button>
+                        </div>`;
                 }
             })
             .catch(err => {
-                console.error(err);
-                lista.innerHTML = '<div style="padding:15px; color:#e74c3c;">Error al conectar con el servidor.</div>';
+                lista.innerHTML = '<div style="padding:15px; color:#e74c3c;">Error de conexión.</div>';
             })
             .finally(() => {
                 btn.disabled = false;
@@ -196,28 +186,17 @@
         const filas = document.querySelectorAll('.tarifa-item');
         const walletContainer = document.getElementById('wallet_container');
 
-        filas.forEach(f => { 
-            f.style.backgroundColor = "transparent"; 
-            f.style.borderLeft = "none";
-            f.dataset.selected = "false";
-        });
-
+        filas.forEach(f => { f.style.backgroundColor = "transparent"; f.style.borderLeft = "none"; });
         elemento.style.backgroundColor = "#f0fff4";
         elemento.style.borderLeft = "5px solid #27ae60";
-        elemento.dataset.selected = "true";
 
         walletContainer.style.opacity = "0.5";
         walletContainer.style.pointerEvents = "none";
 
-        // IMPORTANTE: Aseguramos que pasamos cp_destino correctamente
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => { 
-                if (data.preference_id) {
-                    renderMP(data.preference_id);
-                } else {
-                    alert("Error al actualizar el total.");
-                }
+                if (data.preference_id) renderMP(data.preference_id);
             })
             .finally(() => {
                 walletContainer.style.opacity = "1";
