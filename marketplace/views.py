@@ -44,19 +44,24 @@ def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
-        # Obtenemos flete y CP de la URL
-        flete_final = float(request.GET.get('envio', 0))
+        # 1. Recibimos el flete base que mandó el JS
+        flete_raw = float(request.GET.get('envio', 0))
         cp = request.GET.get('cp_destino') or '00000'
+        
+        # 2. APLICAMOS EL 8% AQUÍ (Para asegurar que el cobro sea correcto)
+        # Si el flete es 100, flete_con_comision será 108
+        flete_con_comision = round(flete_raw * 1.08, 2)
     except:
-        flete_final, cp = 0, '00000'
+        flete_con_comision, cp = 0, '00000'
 
-    total = round(float(producto.price) + flete_final, 2)
+    # 3. Sumamos Precio Producto + Flete con Comisión
+    total = round(float(producto.price) + flete_con_comision, 2)
     
-    # --- CAMBIO AQUÍ: Título dinámico ---
-    if flete_final > 0:
+    # Título dinámico
+    if flete_con_comision > 0:
         titulo_pago = f"{producto.title} (Envío incluido a CP {cp})"
     else:
-        titulo_pago = producto.title # Solo el nombre si no hay flete
+        titulo_pago = producto.title
 
     pref_data = {
         "items": [{
@@ -65,9 +70,10 @@ def generar_preferencia_pago(request, producto_id):
             "unit_price": total, 
             "currency_id": "MXN"
         }],
-        "external_reference": f"{producto.id}-{request.user.id}-{flete_final}-{cp}",
+        # Guardamos el flete con comisión en la referencia para que el Webhook lo registre bien
+        "external_reference": f"{producto.id}-{request.user.id}-{flete_con_comision}-{cp}",
         "back_urls": {
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final}&cp={cp}'),
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_con_comision}&cp={cp}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
             "pending": request.build_absolute_uri('/pago-pendiente/')
         },
@@ -75,13 +81,11 @@ def generar_preferencia_pago(request, producto_id):
         "binary_mode": True,
     }
     
-    # Creamos la preferencia con el SDK
     preference_response = SDK.preference().create(pref_data)
     return JsonResponse({
         'preference_id': preference_response["response"]["id"], 
         'total_final': f"{total:,.2f}"
     })
-
 @csrf_exempt
 def mercadopago_webhook(request):
     payment_id = request.GET.get('id') or request.GET.get('data.id')
@@ -414,6 +418,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
