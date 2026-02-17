@@ -16,19 +16,19 @@
             --dark-blue: #002244;
         }
         
-        html, body { height: 100%; margin: 0; overflow-x: hidden; } /* Evita scroll lateral */
+        html, body { height: 100%; margin: 0; overflow-x: hidden; }
         body { 
             display: flex; 
             flex-direction: column; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6;
+            /* Patrón de puntos sutil que sustituye al logo de fondo anterior */
             background-image: radial-gradient(#d1d5db 0.8px, transparent 0.8px);
             background-size: 24px 24px;
         }
         
         .main-content { flex: 1; padding-bottom: 160px; }
 
-        /* NAVBAR */
         .navbar {
             background-color: var(--primary-blue);
             color: white;
@@ -48,9 +48,7 @@
         .logo-img { height: 40px; width: auto; margin-right: 10px; object-fit: contain; }
         .logo-text { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1rem; text-transform: uppercase; letter-spacing: -0.5px; }
 
-        /* ESTILO DE BOTONES CIRCULARES */
         .nav-links { display: flex; gap: 10px; align-items: center; }
-        
         .nav-links a, .logout-btn { 
             color: white; 
             text-decoration: none; 
@@ -78,7 +76,6 @@
         .btn-perfil { background: #f39c12 !important; border: none !important; color: white !important; }
         .logout-btn { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #ff9f94; }
 
-        /* FOOTER ESTÁTICO */
         .footer-static {
             position: fixed;
             bottom: 0; left: 0; width: 100%;
@@ -104,10 +101,8 @@
         }
 
         .footer-links a { color: #bdc3c7; text-decoration: none; margin: 0 12px; font-size: 0.8rem; font-weight: bold; }
-
         .menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; color: white; }
 
-        /* AJUSTES PARA MÓVIL (HAMBURGUESA) */
         @media (max-width: 992px) {
             .menu-toggle { display: block; }
             .nav-links {
@@ -118,18 +113,18 @@
                 left: 0;
                 width: 100%;
                 background-color: var(--primary-blue);
-                padding: 20px; /* Espacio interno para que no peguen al borde */
+                padding: 20px;
                 gap: 12px;
                 z-index: 1900;
                 box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-                box-sizing: border-box; /* IMPORTANTE: Mantiene el padding dentro del ancho 100% */
-                align-items: stretch; /* Estira los botones al ancho del menú */
+                box-sizing: border-box;
+                align-items: stretch;
             }
             .nav-links.active { display: flex; }
             .nav-links a, .logout-btn { 
-                justify-content: flex-start; /* Iconos a la izquierda */
+                justify-content: flex-start;
                 font-size: 0.9rem; 
-                white-space: normal; /* Permite que el texto baje si es muy largo */
+                white-space: normal;
                 padding: 12px 20px; 
             }
             .logo-text { font-size: 0.85rem; }
@@ -141,7 +136,7 @@
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo-container">
             <img src="{% static 'INITRELOGO.jpg' %}" alt="Logo INITRE" class="logo-img">
-            <span class="logo-text"> MERCADO INDUSTRIAL INITRE</span>
+            <span class="logo-text">MERCADO INDUSTRIAL INITRE</span>
         </a>
 
         <div class="menu-toggle" id="mobile-menu">
