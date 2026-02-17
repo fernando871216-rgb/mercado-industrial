@@ -60,7 +60,7 @@
                 </div>
 
                 <div class="solo-apk">
-                    <a href="https://wa.me/?text=Hola!%20Te%20comparto%20la%20ficha%20t%C3%A9cnica%20de:%20{{ product.title|urlencode }}.%20Puedes%20descargarla%20aqu%C3%AD:%20https://{{ request.get_host }}{% url 'descargar_ficha' product.id %}" 
+                    <a href="https://wa.me/?text=Hola!%20Te%20comparto%20la%20ficha%20t%C3%A9cnica%20de:%20{{ product.title|urlencode }}.%20Puedes%20descargarla%20aqu%C3%AD:%20https://{{ request.get_host }}/descargar-ficha/{{ product.id }}/" 
                        target="_blank"
                        style="display: block; background: #25d366; color: white; text-decoration: none; padding: 14px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem;">
                         <i class="fab fa-whatsapp"></i> RECIBIR FICHA POR WHATSAPP
@@ -216,6 +216,7 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
 
 
