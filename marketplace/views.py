@@ -375,35 +375,33 @@ def cotizar_soloenvios(request):
             }
         }
 
-        # --- LÓGICA DE REINTENTOS OPTIMIZADA ---
-        for intento in range(3):  # Intentamos 3 veces
+        # --- LÓGICA DE 3 INTENTOS ---
+        for intento in range(3):
             res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
             data = res.json() if res.status_code in [200, 201] else {}
             rates = data.get('rates', [])
-        
-        if rates:
-            tarifas = []
-            for t in rates:
-                monto = t.get('total')
-                if monto:
-                    # Aquí ya mostramos el precio con el 8% al cliente
-                    tarifas.append({
-                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        'precio_final': round(float(monto) * 1.08, 2),
-                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
-                    })
-            return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
-        
-        # Si no hay tarifas, esperamos: 1.5s el primer fallo, 2.5s el segundo
-        if intento < 2:
-            time.sleep(1.5 + intento) 
-            # Refrescamos token por si acaso en el primer reintento
-            if intento == 0:
-                headers["Authorization"] = f"Bearer {obtener_token_soloenvios()}"
+            
+            if rates:
+                tarifas = []
+                for t in rates:
+                    monto = t.get('total')
+                    if monto:
+                        tarifas.append({
+                            'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                            'precio_final': round(float(monto) * 1.08, 2),
+                            'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                        })
+                return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
+            
+            if intento < 2:
+                time.sleep(1.5 + intento)
+                if intento == 0:
+                    headers["Authorization"] = f"Bearer {obtener_token_soloenvios()}"
 
-    return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está tardando en responder. Intente de nuevo.'})
+        return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está tardando en responder. Intente de nuevo.'})
 
     except Exception as e:
+        # Este es el bloque que faltaba para corregir el SyntaxError
         return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
     
 def category_detail(request, category_id):
@@ -413,6 +411,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
