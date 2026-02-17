@@ -276,55 +276,34 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html', {'u_form': u, 'p_form': p})
 
 def obtener_token_soloenvios():
-    """Obtiene el token de acceso dinámico usando las credenciales de Render"""
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
-    url = "https://app.soloenvios.com/api/v1/auth/token"
+    
+    # URL ACTUALIZADA DE LA API DE SOLOENVIOS
+    url = "https://api.soloenvios.com/v1/auth/token"
     
     try:
-        # Petición de token a la URL principal de la App
-        res = requests.post(url, data={
+        # SoloEnvíos prefiere recibir estos datos como un JSON plano
+        payload = {
             'grant_type': 'client_credentials',
             'client_id': client_id,
             'client_secret': client_secret
-        }, timeout=15, verify=False)
+        }
+        
+        res = requests.post(url, json=payload, timeout=15)
         
         if res.status_code == 200:
             return res.json().get('access_token')
+        else:
+            # Si falla, intentamos con el subdominio de respaldo que usan a veces
+            url_backup = "https://amplify-api.soloenvios.com/v1/auth/token"
+            res = requests.post(url_backup, json=payload, timeout=15)
+            if res.status_code == 200:
+                return res.json().get('access_token')
+
         return f"ERROR_STATUS_{res.status_code}"
     except Exception as e:
         return f"ERROR_CONEXION_{str(e)}"
-
-def obtener_token_soloenvios():
-    # Buscamos las variables tal cual están en tu captura de Render
-    client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
-    client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
-    
-    if not client_id or not client_secret:
-        return "ERROR: Faltan variables de entorno en Render"
-
-    url = "https://app.soloenvios.com/api/v1/auth/token"
-    
-    # Intentamos con JSON (Formato más moderno de SoloEnvíos)
-    payload = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-    
-    try:
-        res = requests.post(url, json=payload, timeout=15, verify=False)
-        
-        # Si falla con JSON, intentamos con Form-Data (Tradicional)
-        if res.status_code != 200:
-            res = requests.post(url, data=payload, timeout=15, verify=False)
-            
-        if res.status_code == 200:
-            return res.json().get('access_token')
-        
-        return f"ERROR_STATUS_{res.status_code}: {res.text}"
-    except Exception as e:
-        return f"ERROR_CONEXION: {str(e)}"
 
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -391,6 +370,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
