@@ -377,9 +377,9 @@ def cotizar_soloenvios(request):
 
         # --- LÓGICA DE REINTENTOS OPTIMIZADA ---
         for intento in range(3):  # Intentamos 3 veces
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
-        data = res.json() if res.status_code in [200, 201] else {}
-        rates = data.get('rates', [])
+            res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
+            data = res.json() if res.status_code in [200, 201] else {}
+            rates = data.get('rates', [])
         
         if rates:
             tarifas = []
@@ -413,6 +413,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
