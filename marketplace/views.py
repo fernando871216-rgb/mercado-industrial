@@ -44,29 +44,32 @@ def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
-        # El flete que viene del JS ya tiene el 8% (porque lo calculamos en cotizar_soloenvios)
-        # Pero por seguridad, si quieres asegurar el margen, lo recalculamos o lo recibimos tal cual:
-        flete_seleccionado = float(request.GET.get('envio', 0))
+        # Recibimos el flete. 
+        # Si la lista decía 132, aquí llega 132.
+        flete_recibido = float(request.GET.get('envio', 0))
         cp = request.GET.get('cp_destino') or '00000'
-    except:
-        flete_seleccionado, cp = 0, '00000'
+    except (TypeError, ValueError):
+        flete_recibido, cp = 0, '00000'
 
-    # Sumamos el precio del producto + el flete (que ya trae el 8% de la vista anterior)
-    total_con_flete = round(float(producto.price) + flete_seleccionado, 2)
+    # EXPLICACIÓN:
+    # Si en cotizar_soloenvios ya multiplicaste por 1.08, el flete_recibido ya es 142.56 (si el original era 132)
+    # Por lo tanto, esta suma ya es correcta:
+    total_con_flete = round(float(producto.price) + flete_recibido, 2)
     
-    # Título que verá el cliente en Mercado Pago
-    titulo = f"{producto.title} (Envío incluido)" if flete_seleccionado > 0 else producto.title
+    titulo = f"{producto.title} (Envío a CP {cp})" if flete_recibido > 0 else producto.title
 
     pref_data = {
         "items": [{
+            "id": str(producto.id),
             "title": titulo,
             "quantity": 1,
-            "unit_price": total_con_flete, # <--- Aquí está la clave del total
+            "unit_price": total_con_flete,
             "currency_id": "MXN"
         }],
-        "external_reference": f"{producto.id}-{request.user.id}-{flete_seleccionado}-{cp}",
+        # Guardamos el flete por separado en la referencia para saber cuánto cobrar de envío luego
+        "external_reference": f"PROD:{producto.id}-USER:{request.user.id}-FLETE:{flete_recibido}-CP:{cp}",
         "back_urls": {
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_seleccionado}&cp={cp}'),
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_recibido}&cp={cp}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
         },
         "auto_return": "approved",
@@ -74,7 +77,10 @@ def generar_preferencia_pago(request, producto_id):
     }
     
     res_mp = SDK.preference().create(pref_data)
-    return JsonResponse({'preference_id': res_mp["response"]["id"], 'total_final': f"{total_con_flete:,.2f}"})
+    return JsonResponse({
+        'preference_id': res_mp["response"]["id"], 
+        'total_final': f"{total_con_flete:,.2f}"
+    })
 
 
 @csrf_exempt
@@ -411,6 +417,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
