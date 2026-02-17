@@ -279,12 +279,11 @@ def editar_perfil(request):
 
         
 def obtener_token_soloenvios():
-    # Usa las llaves de tu imagen (Client ID y Client Secret)
-    client_id = os.getenv('puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA')
-    client_secret = os.getenv('vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps')
+    client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
+    client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # Esta es la URL de autenticación para el tipo de llaves que tienes en la foto
-    url = "https://app.soloenvios.com/v1/auth/token"
+    # URL EXACTA DE LA DOCUMENTACIÓN
+    url = "https://app.soloenvios.com/api/v1/oauth/token"
     
     payload = {
         "client_id": client_id,
@@ -293,61 +292,55 @@ def obtener_token_soloenvios():
     }
     
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Content-Type": "application/json"
     }
 
     try:
-        # Importante: verify=False para evitar bloqueos de SSL en Render
-        res = requests.post(url, json=payload, headers=headers, timeout=15, verify=False)
+        # En la documentación dice que no requiere Authorization para obtener el token inicial
+        res = requests.post(url, json=payload, headers=headers, timeout=15)
         
         if res.status_code == 200:
             return res.json().get('access_token')
         
-        print(f"DEBUG AUTH: {res.status_code} - {res.text}")
+        print(f"DEBUG OAUTH: {res.status_code} - {res.text}")
         return None
     except Exception as e:
-        print(f"DEBUG EXCEPTION AUTH: {str(e)}")
+        print(f"DEBUG EXCEPTION: {str(e)}")
         return None
 
 def cotizar_soloenvios(request):
-    product_id = request.GET.get('product_id')
-    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
+    # ... (tu lógica de obtener producto y CPs)
     
     token = obtener_token_soloenvios()
-    
     if not token:
-        return JsonResponse({'tarifas': [], 'error': 'No se pudo autenticar con SoloEnvíos'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación Oauth'})
 
-    try:
-        producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # URL de cotización (asegúrate de que no lleve /api/)
-        url_cot = "https://app.soloenvios.com/v1/quotations"
-        
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "address_from": {
-                "country_code": "MX",
-                "postal_code": str(producto.cp_origen).zfill(5)
-            },
-            "address_to": {
-                "country_code": "MX",
-                "postal_code": cp_destino
-            },
-            "parcels": [{
-                "length": int(producto.largo or 20),
-                "width": int(producto.ancho or 20),
-                "height": int(producto.alto or 20),
-                "weight": int(producto.peso or 1)
-            }]
-        }
-        
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=20, verify=False)
+    url_cot = "https://app.soloenvios.com/api/v1/quotations"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    # Asegúrate de que el payload sea plano (sin envolver en 'quotation' si falla)
+    payload = {
+        "address_from": {
+            "country_code": "MX", 
+            "postal_code": str(producto.cp_origen).zfill(5)
+        },
+        "address_to": {
+            "country_code": "MX", 
+            "postal_code": cp_destino
+        },
+        "parcels": [{
+            "length": int(producto.largo),
+            "width": int(producto.ancho),
+            "height": int(producto.alto),
+            "weight": int(producto.peso)
+        }]
+    }
+    
+    res = requests.post(url_cot, json=payload, headers=headers, timeout=20)
         
         if res.status_code in [200, 201]:
             # El resto de tu lógica para procesar tarifas...
@@ -365,6 +358,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
