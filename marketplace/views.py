@@ -163,9 +163,26 @@ def cancelar_venta(request, venta_id):
 @login_required
 def confirmar_recepcion(request, venta_id):
     v = get_object_or_404(Sale, id=venta_id, buyer=request.user)
+    
+    # Marcamos ambos campos para que el botón desaparezca en el HTML
     v.status = 'entregado'
-    v.recibido_por_comprador = True  # <--- AGREGA ESTA LÍNEA
+    v.recibido_por_comprador = True 
     v.save()
+    
+    # Enviamos correo al vendedor avisando que ya se entregó
+    try:
+        subject = f"📦 ¡Equipo entregado!: {v.product.title}"
+        message = (
+            f"Hola {v.product.user.username},\n\n"
+            f"El comprador ha confirmado la recepción del equipo: {v.product.title}.\n\n"
+            f"Tu pago de ${v.get_net_amount()} ha entrado en proceso de liquidación. "
+            f"El administrador lo transferirá a tu CLABE registrada a la brevedad.\n\n"
+            f"¡Gracias por confiar en INITRE!"
+        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [v.product.user.email])
+    except:
+        pass # Para que la página no falle si el correo tiene problemas
+        
     return redirect('mis_compras')
 
 @login_required
@@ -218,5 +235,6 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
