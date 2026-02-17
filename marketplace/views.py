@@ -163,7 +163,10 @@ def cancelar_venta(request, venta_id):
 @login_required
 def confirmar_recepcion(request, venta_id):
     v = get_object_or_404(Sale, id=venta_id, buyer=request.user)
-    v.status = 'entregado'; v.save(); return redirect('mis_compras')
+    v.status = 'entregado'
+    v.recibido_por_comprador = True  # <--- AGREGA ESTA LÍNEA
+    v.save()
+    return redirect('mis_compras')
 
 @login_required
 def crear_intencion_compra(request, product_id):
@@ -215,4 +218,5 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
