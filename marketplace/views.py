@@ -282,7 +282,6 @@ def obtener_token_soloenvios():
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # URL EXACTA DE LA DOCUMENTACIÓN
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
     payload = {
@@ -291,17 +290,12 @@ def obtener_token_soloenvios():
         "grant_type": "client_credentials"
     }
     
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     try:
-        # En la documentación dice que no requiere Authorization para obtener el token inicial
         res = requests.post(url, json=payload, headers=headers, timeout=15)
-        
         if res.status_code == 200:
             return res.json().get('access_token')
-        
         print(f"DEBUG OAUTH: {res.status_code} - {res.text}")
         return None
     except Exception as e:
@@ -309,47 +303,60 @@ def obtener_token_soloenvios():
         return None
 
 def cotizar_soloenvios(request):
-    # ... (tu lógica de obtener producto y CPs)
+    product_id = request.GET.get('product_id')
+    cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
     token = obtener_token_soloenvios()
     if not token:
-        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación Oauth'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
 
-    url_cot = "https://app.soloenvios.com/api/v1/quotations"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
-    
-    # Asegúrate de que el payload sea plano (sin envolver en 'quotation' si falla)
-    payload = {
-        "address_from": {
-            "country_code": "MX", 
-            "postal_code": str(producto.cp_origen).zfill(5)
-        },
-        "address_to": {
-            "country_code": "MX", 
-            "postal_code": cp_destino
-        },
-        "parcels": [{
-            "length": int(producto.largo),
-            "width": int(producto.ancho),
-            "height": int(producto.alto),
-            "weight": int(producto.peso)
-        }]
-    }
-    
-    res = requests.post(url_cot, json=payload, headers=headers, timeout=20) 
-    if res.status_code in [200, 201]:
-        data = res.json()
-            # El resto de tu lógica para procesar tarifas...
-            return JsonResponse(res.json()) # Prueba rápida para ver qué llega
-            
+    try:
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        
+        url_cot = "https://app.soloenvios.com/api/v1/quotations"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        
+        payload = {
+            "address_from": {
+                "country_code": "MX", 
+                "postal_code": str(producto.cp_origen).zfill(5)
+            },
+            "address_to": {
+                "country_code": "MX", 
+                "postal_code": cp_destino
+            },
+            "parcels": [{
+                "length": int(producto.largo or 20),
+                "width": int(producto.ancho or 20),
+                "height": int(producto.alto or 20),
+                "weight": int(producto.peso or 1)
+            }]
+        }
+        
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=20)
+        
+        if res.status_code in [200, 201]:
+            data = res.json()
+            tarifas = []
+            # Procesamos las tarifas que vienen de SoloEnvíos
+            for t in data.get('rates', []):
+                monto = t.get('total')
+                if monto:
+                    tarifas.append({
+                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                        'precio_final': round(float(monto) * 1.08, 2),
+                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                    })
+            return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
+        
         return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -358,6 +365,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
