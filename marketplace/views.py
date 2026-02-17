@@ -88,7 +88,18 @@ def mercadopago_webhook(request):
 def home(request):
     q = request.GET.get('q')
     products = IndustrialProduct.objects.filter(Q(title__icontains=q)|Q(part_number__icontains=q)|Q(brand__icontains=q)) if q else IndustrialProduct.objects.all()
-    return render(request, 'marketplace/home.html', {'products': products})
+    
+    # Verificamos perfil incompleto si está logueado
+    perfil_incompleto = False
+    if request.user.is_authenticated:
+        p = request.user.profile
+        if not p.phone or not p.clabe or not p.address:
+            perfil_incompleto = True
+            
+    return render(request, 'marketplace/home.html', {
+        'products': products, 
+        'perfil_incompleto': perfil_incompleto
+    })
 
 def detalle_producto(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
@@ -235,6 +246,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
