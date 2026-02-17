@@ -125,14 +125,14 @@ def borrar_producto(request, pk):
 # --- COMPRAS Y VENTAS ---
 @login_required
 def mis_ventas(request):
+    # Traemos las ventas del vendedor actual
     ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    
     for v in ventas:
-        # CÁLCULO PARA LA INTERFAZ (Soluciona el problema de la imagen que enviaste)
-        precio_prod = Decimal(str(v.price)) - Decimal(str(v.shipping_cost))
-        comision_initre = precio_prod * Decimal('0.05')
-        com_mp = (precio_prod * Decimal('0.0349')) + Decimal('4.00')
-        iva_mp = com_mp * Decimal('0.16')
-        v.monto_limpio_vendedor = (precio_prod - comision_initre - (com_mp + iva_mp)).quantize(Decimal('0.01'))
+        # Usamos el método del modelo que ya tiene los "seguros" contra valores nulos
+        # Esto asegura que v.monto_limpio_vendedor SIEMPRE tenga un valor
+        v.monto_limpio_vendedor = v.get_net_amount()
+        
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
 
 @login_required
@@ -215,3 +215,4 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
