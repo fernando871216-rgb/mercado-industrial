@@ -295,46 +295,42 @@ def obtener_token_soloenvios():
     except Exception as e:
         return f"ERROR_CONEXION_{str(e)}"
 
-def cotizar_soloenvios(request):
-    # 1. Obtenemos el ID del producto que viene del HTML
-    product_id = request.GET.get('product_id')
+def obtener_token_soloenvios():
+    """Obtiene el token de acceso dinámico usando las credenciales de Render"""
+    client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
+    client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
+    url = "https://app.soloenvios.com/api/v1/auth/token"
     
     try:
-        # Buscamos en IndustrialProduct que es el modelo que usas
-        producto = get_object_or_404(IndustrialProduct, id=product_id)
-        cp_origen = str(producto.cp_origen).strip().zfill(5)
-        peso_db = producto.peso
-        largo_db = producto.largo
-        ancho_db = producto.ancho
-        alto_db = producto.alto
+        res = requests.post(url, data={
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret
+        }, timeout=15, verify=False)
+        
+        if res.status_code == 200:
+            return res.json().get('access_token')
+        return f"ERROR_STATUS_{res.status_code}"
     except Exception as e:
-        print(f"Error cargando producto: {e}")
-        cp_origen = "72460" # Fallback a tu CP de origen por defecto
-        peso_db, largo_db, ancho_db, alto_db = 1, 20, 20, 20
+        return f"ERROR_CONEXION_{str(e)}"
 
-    # 2. Datos que vienen del formulario (CP de destino)
+def cotizar_soloenvios(request):
+    product_id = request.GET.get('product_id')
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # Obtenemos el token usando la función anterior
-    token = obtener_token_soloenvios()
-    if "ERROR" in str(token):
-        return JsonResponse({'tarifas': [], 'error': f'Fallo de Token: {token}'})
-
     try:
-        # Función auxiliar para asegurar que siempre enviemos números válidos a la API
-        def limpiar_valor(val, default_val):
-            try:
-                if val is None: return default_val
-                num = int(float(val))
-                return num if num > 0 else default_val
-            except:
-                return default_val
-
-        # Priorizamos lo que venga del request, si no, lo de la DB
-        peso = limpiar_valor(request.GET.get('peso'), peso_db)
-        largo = limpiar_valor(request.GET.get('largo'), largo_db)
-        ancho = limpiar_valor(request.GET.get('ancho'), ancho_db)
-        alto = limpiar_valor(request.GET.get('alto'), alto_db)
+        producto = get_object_or_404(IndustrialProduct, id=product_id)
+        cp_origen = str(producto.cp_origen).strip().zfill(5)
+        
+        # Obtenemos medidas de la DB
+        peso = producto.peso or 1
+        largo = producto.largo or 20
+        ancho = producto.ancho or 20
+        alto = producto.alto or 20
+        
+        token = obtener_token_soloenvios()
+        if "ERROR" in str(token):
+            return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
 
         url = "https://app.soloenvios.com/api/v1/quotations"
         headers = {
@@ -345,53 +341,45 @@ def cotizar_soloenvios(request):
         
         payload = {
             "quotation": {
-                "address_from": {
-                    "country_code": "MX", 
-                    "postal_code": cp_origen,
-                   
-                },
-                "address_to": {
-                    "country_code": "MX", 
-                    "postal_code": cp_destino,
-                 
-                },
+                "address_from": {"country_code": "MX", "postal_code": cp_origen},
+                "address_to": {"country_code": "MX", "postal_code": cp_destino},
                 "parcels": [{
-                    "length": largo, 
-                    "width": ancho, 
-                    "height": alto, 
-                    "weight": peso,
+                    "length": int(largo), 
+                    "width": int(ancho), 
+                    "height": int(alto), 
+                    "weight": int(peso)
                 }]
             }
         }
         
-        # PASO 1: Crear la intención de cotización
+        # Paso 1: Crear cotización
         res = requests.post(url, json=payload, headers=headers, timeout=25, verify=False)
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
-            time.sleep(3.0) 
+            time.sleep(3.0) # Espera necesaria para que los carriers respondan
             
+            # Paso 2: Obtener resultados
             res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
             data = res_final.json()
             
             tarifas = []
             for t in data.get('rates', []):
-                monto_total = t.get('total')
-                if monto_total and float(monto_total) > 0:
+                monto = t.get('total')
+                if monto and float(monto) > 0:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        'precio_final': round(float(monto_total) * 1.08, 2),
+                        'precio_final': round(float(monto) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             
-            # Si después de esperar no hay tarifas, devolvemos el JSON de la API para ver qué pasó
-            if not tarifas:
-                return JsonResponse({'tarifas': [], 'debug_msg': 'La API no devolvió tarifas para estas medidas.', 'api_response': data})
-                
-            return JsonResponse({'tarifas': tarifas})
+            return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        # Si la primera petición falla, ver el error real
-        return JsonResponse({'tarifas': [], 'error': f'Error SoloEnvios: {res.status_code}', 'detalle': res.json()})
+        return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas'})
+
+    except Exception as e:
+        print(f"Error en cotizador: {e}")
+        return JsonResponse({'tarifas': [], 'error': str(e)})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -399,6 +387,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
