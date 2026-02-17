@@ -281,31 +281,31 @@ def obtener_token_soloenvios():
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # Intentamos con la URL que mejor ha respondido en tus logs
+    # URL de autenticación oficial
     url = "https://app.soloenvios.com/api/v1/auth/token"
     
     try:
-        payload = {
-            'grant_type': 'client_credentials',
+        # Probamos enviando los datos como un objeto JSON puro
+        credentials = {
             'client_id': client_id,
-            'client_secret': client_secret
+            'client_secret': client_secret,
+            'grant_type': 'client_credentials'
         }
         
-        # Forzamos un timeout corto para que no se quede colgado
-        res = requests.post(url, data=payload, timeout=10, verify=False)
+        # Agregamos headers explícitos para que la API sepa que enviamos JSON
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        
+        res = requests.post(url, json=credentials, headers=headers, timeout=15, verify=False)
         
         if res.status_code == 200:
             return res.json().get('access_token')
         
-        # Segundo intento como JSON si el primero falla
-        res = requests.post(url, json=payload, timeout=10, verify=False)
-        if res.status_code == 200:
-            return res.json().get('access_token')
-
-        return f"ERROR_STATUS_{res.status_code}"
+        # Si falla el 200, imprimimos el error en los logs de Render para que lo veas
+        print(f"DEBUG SOLOENVIOS: Status {res.status_code} - Body: {res.text}")
+        return f"ERROR_AUTH_STATUS_{res.status_code}"
+        
     except Exception as e:
-        # Si llegamos aquí, es que Render sigue sin encontrar el dominio
-        return "ERROR_DNS_BLOQUEO"
+        return f"ERROR_EXCEPTION_{str(e)}"
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -394,6 +394,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
