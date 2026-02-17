@@ -284,22 +284,29 @@ def obtener_token_soloenvios():
     
     url = "https://app.soloenvios.com/api/v1/oauth/token"
     
+    # Según la documentación, a veces prefieren los datos así para OAuth
     payload = {
         "client_id": client_id,
         "client_secret": client_secret,
         "grant_type": "client_credentials"
     }
     
-    headers = {"Content-Type": "application/json"}
-
     try:
-        res = requests.post(url, json=payload, headers=headers, timeout=15)
+        # Intentamos primero con data= (form-encoded) que es el estándar de OAuth2
+        res = requests.post(url, data=payload, timeout=15)
+        
+        # Si no funciona con data, intentamos con json
+        if res.status_code != 200:
+            res = requests.post(url, json=payload, timeout=15)
+            
         if res.status_code == 200:
             return res.json().get('access_token')
-        print(f"DEBUG OAUTH: {res.status_code} - {res.text}")
+            
+        # IMPORTANTE: Esto imprimirá el error real en tu log de Render
+        print(f"FALLO AUTENTICACION: {res.status_code} - {res.text}")
         return None
     except Exception as e:
-        print(f"DEBUG EXCEPTION: {str(e)}")
+        print(f"ERROR EXCEPCION: {str(e)}")
         return None
 
 def cotizar_soloenvios(request):
@@ -365,6 +372,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
