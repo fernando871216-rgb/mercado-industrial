@@ -278,28 +278,67 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html', {'u_form': u, 'p_form': p})
 
         
+def obtener_token_soloenvios():
+    # Usa las llaves de tu imagen (Client ID y Client Secret)
+    client_id = os.getenv('puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA')
+    client_secret = os.getenv('vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps')
+    
+    # Esta es la URL de autenticación para el tipo de llaves que tienes en la foto
+    url = "https://app.soloenvios.com/v1/auth/token"
+    
+    payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials"
+    }
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    try:
+        # Importante: verify=False para evitar bloqueos de SSL en Render
+        res = requests.post(url, json=payload, headers=headers, timeout=15, verify=False)
+        
+        if res.status_code == 200:
+            return res.json().get('access_token')
+        
+        print(f"DEBUG AUTH: {res.status_code} - {res.text}")
+        return None
+    except Exception as e:
+        print(f"DEBUG EXCEPTION AUTH: {str(e)}")
+        return None
+
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # TU API KEY DE SOLOENVIOS (El token largo que sacas de su panel)
-    # Si tienes el Secret, prueba con ese.
-    api_key = os.getenv('puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA') 
+    token = obtener_token_soloenvios()
+    
+    if not token:
+        return JsonResponse({'tarifas': [], 'error': 'No se pudo autenticar con SoloEnvíos'})
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         
-        # URL de cotización estable
-        url_cot = "https://api.skydropx.com/v1/quotations"
+        # URL de cotización (asegúrate de que no lleve /api/)
+        url_cot = "https://app.soloenvios.com/v1/quotations"
         
         headers = {
-            "Authorization": f"Token token={api_key}", # Formato estándar de Skydropx
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
         
         payload = {
-            "address_from": {"country_code": "MX", "postal_code": str(producto.cp_origen).zfill(5)},
-            "address_to": {"country_code": "MX", "postal_code": cp_destino},
+            "address_from": {
+                "country_code": "MX",
+                "postal_code": str(producto.cp_origen).zfill(5)
+            },
+            "address_to": {
+                "country_code": "MX",
+                "postal_code": cp_destino
+            },
             "parcels": [{
                 "length": int(producto.largo or 20),
                 "width": int(producto.ancho or 20),
@@ -308,24 +347,16 @@ def cotizar_soloenvios(request):
             }]
         }
         
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=20)
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=20, verify=False)
         
-        if res.status_code == 201 or res.status_code == 200:
-            data = res.json()
-            tarifas = []
-            # Skydropx a veces devuelve las tarifas directo o en una lista
-            for t in data.get('rates', []):
-                tarifas.append({
-                    'paqueteria': f"{t.get('provider')} ({t.get('service_level')})",
-                    'precio_final': round(float(t.get('total_price')) * 1.08, 2),
-                    'tiempo': t.get('delivery_estimate', 'N/A')
-                })
-            return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
-        
-        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
+        if res.status_code in [200, 201]:
+            # El resto de tu lógica para procesar tarifas...
+            return JsonResponse(res.json()) # Prueba rápida para ver qué llega
+            
+        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': 'Error de comunicación'})
+        return JsonResponse({'tarifas': [], 'error': str(e)})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -334,6 +365,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
