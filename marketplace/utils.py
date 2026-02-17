@@ -1,40 +1,71 @@
 # marketplace/utils.py
 from django.core.mail import send_mail
 from django.conf import settings
+from decimal import Decimal
 
 def enviar_notificacion_venta(venta):
+    # Obtenemos el monto neto usando la función que ya tienes en models.py
+    monto_neto = venta.get_net_amount()
+    
     # 1. NOTIFICACIÓN PARA EL VENDEDOR
-    subject_vendedor = f"✅ ¡Vendiste tu producto!: {venta.product.title}"
+    subject_vendedor = f"✅ ¡Venta confirmada!: {venta.product.title}"
     message_vendedor = (
         f"Hola {venta.product.user.username},\n\n"
-        f"¡Felicidades! Has realizado una venta.\n\n"
+        f"¡Excelentes noticias! Se ha confirmado el pago de tu producto.\n\n"
+        f"DETALLES DE LA VENTA:\n"
+        f"--------------------------\n"
         f"Producto: {venta.product.title}\n"
-        f"Precio: ${venta.product.price}\n\n"
-        f"El administrador te enviará la guía de envío a la brevedad.\n"
+        f"Monto a recibir: ${monto_neto} (neto)\n"
+        f"CP Destino: {venta.shipping_cp}\n"
+        f"--------------------------\n\n"
+        f"PRÓXIMOS PASOS:\n"
+        f"1. El equipo de INITRE te contactará para coordinar la guía de envío.\n"
+        f"2. Una vez enviado el equipo, se procesará tu pago a la CLABE registrada.\n\n"
         f"¡Gracias por vender en INITRE!"
     )
     
     # 2. NOTIFICACIÓN PARA TI (ADMINISTRADOR)
-    subject_admin = f"💰 NUEVA VENTA REGISTRADA - ID: {venta.payment_id}"
+    subject_admin = f"💰 NUEVA VENTA - {venta.product.title}"
+    # Usamos una dirección de respaldo si ADMIN_EMAIL no existe en settings
+    admin_email = getattr(settings, 'ADMIN_EMAIL', settings.DEFAULT_FROM_EMAIL)
+    
     message_admin = (
-        f"Se ha completado una venta en la plataforma.\n\n"
-        f"DETALLES:\n"
+        f"Se ha registrado una nueva venta.\n\n"
+        f"DETALLES OPERATIVOS:\n"
         f"--------------------------\n"
+        f"ID Pago MP: {venta.payment_id}\n"
         f"Producto: {venta.product.title}\n"
         f"Vendedor: {venta.product.user.username} ({venta.product.user.email})\n"
         f"Comprador: {venta.buyer.username} ({venta.buyer.email})\n"
-        f"Monto Cobrado: ${venta.price}\n"
+        f"Total cobrado (con flete): ${venta.price}\n"
         f"CP Destino: {venta.shipping_cp}\n"
         f"--------------------------\n\n"
-        f"Ya puedes generar la guía en SoloEnvíos y contactar al vendedor desde el panel."
+        f"Acciones pendientes:\n"
+        f"- Generar guía de envío.\n"
+        f"- Notificar al vendedor.\n"
+        f"- Revisar Panel de Administrador: https://mercado-industrial.onrender.com/panel-administrador/"
     )
 
     try:
         # Enviamos al Vendedor
-        send_mail(subject_vendedor, message_vendedor, settings.DEFAULT_FROM_EMAIL, [venta.product.user.email])
+        send_mail(
+            subject_vendedor, 
+            message_vendedor, 
+            settings.DEFAULT_FROM_EMAIL, 
+            [venta.product.user.email],
+            fail_silently=False
+        )
         
-        # Enviamos al Administrador (A ti)
-        send_mail(subject_admin, message_admin, settings.DEFAULT_FROM_EMAIL, [settings.ADMIN_EMAIL])
+        # Enviamos al Administrador
+        send_mail(
+            subject_admin, 
+            message_admin, 
+            settings.DEFAULT_FROM_EMAIL, 
+            [admin_email],
+            fail_silently=False
+        )
+        
+        print(f"DEBUG: Correos de venta {venta.id} enviados correctamente.")
         
     except Exception as e:
-        print(f"Error enviando notificaciones: {e}")
+        print(f"Error crítico enviando notificaciones: {e}")
