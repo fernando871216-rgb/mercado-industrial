@@ -281,11 +281,7 @@ def obtener_token_soloenvios():
     client_id = "puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA"
     client_secret = "vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps"
     
-    rutas = [
-        "https://api.soloenvios.com/v1/auth/token",     # API pura (Producción)
-        "https://app.soloenvios.com/api/v1/auth/token", # App antigua
-        "https://api.soloenvios.com/api/v1/auth/token"  # Combinada
-    ]
+    url = "https://api.skydropx.com/v1/auth/token"
     
     payload = {
         'grant_type': 'client_credentials',
@@ -293,25 +289,26 @@ def obtener_token_soloenvios():
         'client_secret': client_secret
     }
     
-    headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 
-    for url in rutas:
-        try:
-            res = requests.post(url, json=payload, headers=headers, timeout=10, verify=False)
-            print(f"PROBANDO URL: {url} | STATUS: {res.status_code}")
-            
-            if res.status_code == 200:
-                print("¡CONECTADO EXITOSAMENTE!")
-                return res.json().get('access_token')
-            
-            if res.status_code == 401:
-                print("URL CORRECTA, PERO LLAVES INVÁLIDAS (401)")
-                return "ERROR_LLAVES"
-                
-        except Exception as e:
-            print(f"FALLO CONEXION EN: {url} - {str(e)}")
-            
-    return None
+    try:
+        # Timeout de 20 segundos para dar margen al DNS
+        res = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
+        print(f"DEBUG SKYDROPX: Status {res.status_code}")
+        
+        if res.status_code == 200:
+            return res.json().get('access_token')
+        
+        # Si Skydropx también da error, imprimimos qué dice el servidor
+        print(f"ERROR BODY: {res.text}")
+        return None
+        
+    except Exception as e:
+        print(f"ERROR CRITICO CONEXION: {str(e)}")
+        return None
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -343,7 +340,7 @@ def cotizar_soloenvios(request):
         ancho = int(float(producto.ancho or 20))
         alto = int(float(producto.alto or 20))
 
-        url_cot = "https://app.soloenvios.com/api/v1/quotations"
+        url_cot = "https://api.skydropx.com/v1/quotations"
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
@@ -400,6 +397,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
