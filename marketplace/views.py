@@ -348,24 +348,18 @@ def cotizar_soloenvios(request):
                 "address_from": {
                     "country_code": "MX", 
                     "postal_code": cp_origen,
-                    "area_level1": "Origen", 
-                    "area_level2": "Municipio", 
-                    "area_level3": "Colonia"
+                   
                 },
                 "address_to": {
                     "country_code": "MX", 
                     "postal_code": cp_destino,
-                    "area_level1": "Destino", 
-                    "area_level2": "Ciudad", 
-                    "area_level3": "Colonia"
+                 
                 },
                 "parcels": [{
                     "length": largo, 
                     "width": ancho, 
                     "height": alto, 
                     "weight": peso,
-                    "package_protected": False, 
-                    "declared_value": 100
                 }]
             }
         }
@@ -411,6 +405,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
