@@ -318,6 +318,13 @@ def cotizar_soloenvios(request):
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
+
+        payload_peso = int(float(producto.peso or 1))
+        payload_largo = int(producto.largo or 20)
+        payload_ancho = int(producto.ancho or 20)
+        payload_alto = int(producto.alto or 20)
+        payload_cp_origen = str(producto.cp_origen).strip().zfill(5)
+        payload_cp_destino = str(cp_destino).strip().zfill(5)
         
         # 2. Aseguramos que el CP de origen también sea texto de 5 dígitos
         cp_origen = str(producto.cp_origen).strip().zfill(5)
@@ -339,19 +346,19 @@ def cotizar_soloenvios(request):
         
         payload = {
             "quotation": {
-                "address_from": {"country_code": "MX", "postal_code": cp_origen},
-                "address_to": {"country_code": "MX", "postal_code": cp_destino},
+                "address_from": {"country_code": "MX", "postal_code": payload_cp_origen},
+                "address_to": {"country_code": "MX", "postal_code": payload_cp_destino},
                 "parcels": [{
-                    "length": largo, 
-                    "width": ancho, 
-                    "height": alto, 
-                    "weight": peso
+                    "length": payload_largo,
+                    "width": payload_ancho,
+                    "height": payload_alto,
+                    "weight": payload_peso
                 }]
             }
         }
         
         # Enviamos la petición
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=20, verify=False)
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=30, verify=False)
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
@@ -387,6 +394,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
