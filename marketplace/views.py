@@ -42,20 +42,45 @@ def descargar_ficha(request, product_id):
 @login_required
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
+    
     try:
-        flete = float(request.GET.get('envio', 0))
-        cp = request.GET.get('cp') or '00000'
-    except: flete, cp = 0, '00000'
-    flete_final = round(flete * 1.08, 2)
+        # Obtenemos flete y CP de la URL
+        flete_final = float(request.GET.get('envio', 0))
+        cp = request.GET.get('cp_destino') or '00000'
+    except:
+        flete_final, cp = 0, '00000'
+
     total = round(float(producto.price) + flete_final, 2)
+    
+    # --- CAMBIO AQUÍ: Título dinámico ---
+    if flete_final > 0:
+        titulo_pago = f"{producto.title} (Envío incluido a CP {cp})"
+    else:
+        titulo_pago = producto.title # Solo el nombre si no hay flete
+
     pref_data = {
-        "items": [{"title": producto.title, "quantity": 1, "unit_price": total, "currency_id": "MXN"}],
+        "items": [{
+            "title": titulo_pago, 
+            "quantity": 1, 
+            "unit_price": total, 
+            "currency_id": "MXN"
+        }],
         "external_reference": f"{producto.id}-{request.user.id}-{flete_final}-{cp}",
-        "back_urls": {"success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final}&cp={cp}'),
-                      "failure": request.build_absolute_uri('/pago-fallido/'), "pending": request.build_absolute_uri('/pago-pendiente/')},
-        "auto_return": "approved", "binary_mode": True,
+        "back_urls": {
+            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_final}&cp={cp}'),
+            "failure": request.build_absolute_uri('/pago-fallido/'),
+            "pending": request.build_absolute_uri('/pago-pendiente/')
+        },
+        "auto_return": "approved",
+        "binary_mode": True,
     }
-    return JsonResponse({'preference_id': SDK.preference().create(pref_data)["response"]["id"], 'total_final': f"{total:,.2f}"})
+    
+    # Creamos la preferencia con el SDK
+    preference_response = SDK.preference().create(pref_data)
+    return JsonResponse({
+        'preference_id': preference_response["response"]["id"], 
+        'total_final': f"{total:,.2f}"
+    })
 
 @csrf_exempt
 def mercadopago_webhook(request):
@@ -389,6 +414,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
