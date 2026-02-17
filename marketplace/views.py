@@ -284,57 +284,65 @@ def cotizar_soloenvios(request):
         
     p = get_object_or_404(IndustrialProduct, id=product_id)
 
-    # 1. OBTENER TOKEN DINÁMICO (Usando tus variables de la imagen)
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
+    # URL de Producción (Asegúrate de que tu cuenta sea de producción)
+    # Si usas Sandbox, la url suele ser sandbox-api.soloenvios.com
+    base_url = "https://api.soloenvios.com" 
+    
     try:
+        # 1. Pedir Token
         auth_res = requests.post(
-            'https://api.soloenvios.com/v1/auth/token',
+            f'{base_url}/v1/auth/token',
             data={
                 'grant_type': 'client_credentials',
                 'client_id': client_id,
                 'client_secret': client_secret
             },
-            timeout=5
-        )
-        token = auth_res.json().get('access_token')
-    except Exception as e:
-        print(f"Error de autenticación en SoloEnvíos: {e}")
-        return JsonResponse({'tarifas': []})
-
-    # 2. COTIZAR CON EL TOKEN OBTENIDO
-    payload = {
-        "origen": p.cp_origen,
-        "destino": cp_destino,
-        "paquetes": [{
-            "peso": float(p.peso),
-            "largo": int(p.largo),
-            "ancho": int(p.ancho),
-            "alto": int(p.alto),
-            "cantidad": 1
-        }]
-    }
-    
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
-    
-    try:
-        response = requests.post(
-            'https://api.soloenvios.com/v1/cotizaciones', 
-            json=payload, 
-            headers=headers,
-            timeout=10
+            timeout=10 # Aumentamos el tiempo de espera
         )
         
+        # Log para debug en Render
+        print(f"DEBUG AUTH: {auth_res.status_code} - {auth_res.text}")
+        
+        token = auth_res.json().get('access_token')
+        
+        if not token:
+            return JsonResponse({'tarifas': []})
+
+        # 2. Cotizar
+        payload = {
+            "origen": str(p.cp_origen),
+            "destino": str(cp_destino),
+            "paquetes": [{
+                "peso": float(p.peso),
+                "largo": int(p.largo),
+                "ancho": int(p.ancho),
+                "alto": int(p.alto),
+                "cantidad": 1
+            }]
+        }
+        
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.post(
+            f'{base_url}/v1/cotizaciones', 
+            json=payload, 
+            headers=headers,
+            timeout=15
+        )
+        
+        print(f"DEBUG COTIZACION: {response.status_code} - {response.text}")
+
         if response.status_code == 200:
-            # Enviamos las 3 opciones más baratas
             return JsonResponse({'tarifas': response.json()[:3]})
             
     except Exception as e:
-        print(f"Error en cotización: {e}")
+        print(f"Error detallado en SoloEnvíos: {str(e)}")
         
     return JsonResponse({'tarifas': []})
     
@@ -344,6 +352,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
