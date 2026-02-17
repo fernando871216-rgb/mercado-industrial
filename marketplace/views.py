@@ -16,7 +16,7 @@ import time
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from .models import IndustrialProduct, Category, Sale, Profile
+from .models import IndustrialProduct, Category, Sale, Profile, Product
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -24,7 +24,6 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Sum
 from .utils import enviar_notificacion_venta
-from django.http import FileResponse
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.http import FileResponse, Http404
@@ -697,6 +696,23 @@ def como_funciona(request):
 
 def privacidad(request):
     return render(request, 'marketplace/privacidad.html')
+
+def descargar_ficha(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        if not product.ficha_tecnica:
+            raise Http404
+        
+        # Abrimos el archivo
+        file_handle = product.ficha_tecnica.open()
+        
+        # Enviamos la respuesta como un archivo adjunto (attachment)
+        response = FileResponse(file_handle, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{product.title}_Ficha_Tecnica.pdf"'
+        return response
+    except Product.DoesNotExist:
+        raise Http404
+
 
 
 
