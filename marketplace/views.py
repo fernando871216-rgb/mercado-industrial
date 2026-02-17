@@ -278,8 +278,8 @@ def editar_perfil(request):
     return render(request, 'marketplace/editar_perfil.html', {'u_form': u, 'p_form': p})
 
 def obtener_token_soloenvios():
-    client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
-    client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
+    client_id = "puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA"
+    client_secret = "vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps"
     
     # CAMBIO CRUCIAL: Eliminamos el '/api' de la ruta de autenticación
     url = "https://app.soloenvios.com/v1/auth/token"
@@ -305,7 +305,6 @@ def obtener_token_soloenvios():
         # Esto nos dirá en el log si la nueva URL funcionó
         print(f"DEBUG SOLOENVIOS NUEVA URL: Status {res.status_code} - Body: {res.text}")
         return None
-        
     except Exception as e:
         print(f"DEBUG EXCEPTION: {str(e)}")
         return None
@@ -397,6 +396,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
