@@ -2,6 +2,33 @@
 
 {% block content %}
 <div class="container" style="max-width: 900px; margin: 40px auto; font-family: 'Segoe UI', sans-serif; margin-bottom: 60px;">
+    
+    <div id="apk-warning" style="display: none; background: #fff9db; border: 2px solid #fcc419; padding: 25px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); animation: slideIn 0.5s ease-out;">
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div style="background: #fcc419; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-mobile-alt" style="font-size: 1.8rem; color: #856404;"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; color: #856404; font-weight: 800;">¿Deseas subir fotos y archivos?</h4>
+                <p style="margin: 0; color: #92761a; font-size: 0.95rem; line-height: 1.4;">
+                    Para cargar imágenes y PDFs desde tu celular, por favor usa nuestro portal en el navegador (Chrome). <b>Los botones de archivos están restringidos dentro de la App.</b>
+                </p>
+            </div>
+        </div>
+        <a href="https://mercado-industrial.onrender.com/subir-producto/" 
+           target="_blank" 
+           style="display: block; text-align: center; background: #003366; color: white; text-decoration: none; padding: 15px; border-radius: 12px; margin-top: 20px; font-weight: 800; font-size: 1rem; box-shadow: 0 4px 12px rgba(0,51,102,0.3);">
+           IR A PORTAL WEB <i class="fas fa-external-link-alt" style="margin-left: 8px;"></i>
+        </a>
+    </div>
+
+    <style>
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+
     <div style="background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid #eef2f7;">
         
         <div style="text-align: center; margin-bottom: 35px;">
@@ -147,7 +174,12 @@
 </div>
 
 <script>
-    // Lógica de Comisiones (Mantenemos tu lógica pero aseguramos el cálculo)
+    // DETECCIÓN DE APK PARA MOSTRAR AVISO
+    if (navigator.userAgent.includes('wv') || navigator.userAgent.includes('Android')) {
+        document.getElementById('apk-warning').style.display = 'block';
+    }
+
+    // Lógica de Comisiones
     const priceInput = document.getElementById('id_price');
     priceInput.addEventListener('input', function() {
         const price = parseFloat(this.value) || 0;
@@ -163,7 +195,7 @@
         document.getElementById('calc_total').innerText = `$${(neto > 0 ? neto : 0).toFixed(2)}`;
     });
 
-    // CORRECCIÓN PARA EL PDF: Buscamos cualquier input de tipo file que sea para la ficha técnica
+    // CORRECCIÓN PARA EL PDF
     const allInputs = document.querySelectorAll('input[type="file"]');
     allInputs.forEach(input => {
         if (input.name.includes('ficha_tecnica')) {
@@ -189,8 +221,8 @@
 
 <style>
     input[type="text"], input[type="number"], select, textarea {
-        width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+        width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; outline: none; transition: 0.3s;
     }
+    input:focus { border-color: #003366; box-shadow: 0 0 8px rgba(0,51,102,0.1); }
 </style>
 {% endblock %}
-
