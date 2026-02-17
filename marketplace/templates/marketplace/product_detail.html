@@ -192,44 +192,49 @@
     }
 
     function seleccionarTarifa(elemento, precio, nombre) {
-        const cpInput = document.getElementById('cp_destino').value.trim();
-        const cp = cpInput || '00000';
-        const filas = document.querySelectorAll('.tarifa-item');
-        const cp = document.getElementById('cp_destino').value;
-        const walletContainer = document.getElementById('wallet_container');
+    // 1. Limpiamos y validamos el CP una sola vez
+    const cpInput = document.getElementById('cp_destino').value.trim();
+    const cp = cpInput || '00000'; 
+    
+    // 2. Obtenemos los elementos del DOM
+    const filas = document.querySelectorAll('.tarifa-item');
+    const walletContainer = document.getElementById('wallet_container');
 
-        // Resetear estilos de todas las filas
-        filas.forEach(f => { 
-            f.style.backgroundColor = "transparent"; 
-            f.style.borderLeft = "none";
-            f.dataset.selected = "false";
+    // --- ELIMINÉ LA LÍNEA QUE REPETÍA "const cp" ---
+
+    // 3. Resetear estilos de todas las filas
+    filas.forEach(f => { 
+        f.style.backgroundColor = "transparent"; 
+        f.style.borderLeft = "none";
+        f.dataset.selected = "false";
+    });
+
+    // 4. Estilo de fila seleccionada
+    elemento.style.backgroundColor = "#f0fff4";
+    elemento.style.borderLeft = "5px solid #27ae60";
+    elemento.dataset.selected = "true";
+
+    // 5. Bloquear contenedor de pago mientras se actualiza
+    walletContainer.style.opacity = "0.5";
+    walletContainer.style.pointerEvents = "none";
+
+    // 6. Llamada al servidor para actualizar el total
+    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+        .then(res => res.json())
+        .then(data => { 
+            if (data.preference_id) {
+                renderMP(data.preference_id);
+            } else {
+                alert("Error al actualizar el total.");
+            }
+        })
+        .finally(() => {
+            walletContainer.style.opacity = "1";
+            walletContainer.style.pointerEvents = "all";
         });
-
-        // Estilo de fila seleccionada
-        elemento.style.backgroundColor = "#f0fff4";
-        elemento.style.borderLeft = "5px solid #27ae60";
-        elemento.dataset.selected = "true";
-
-        // Bloquear contenedor de pago mientras se actualiza
-        walletContainer.style.opacity = "0.5";
-        walletContainer.style.pointerEvents = "none";
-
-        // Llamada para actualizar la preferencia de Mercado Pago con el flete
-        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
-            .then(res => res.json())
-            .then(data => { 
-                if (data.preference_id) {
-                    renderMP(data.preference_id);
-                } else {
-                    alert("Error al actualizar el total.");
-                }
-            })
-            .finally(() => {
-                walletContainer.style.opacity = "1";
-                walletContainer.style.pointerEvents = "all";
-            });
-    }
+}
     {% endif %}
 </script>
 {% endblock %}
+
 
