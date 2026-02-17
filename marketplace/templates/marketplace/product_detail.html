@@ -192,6 +192,8 @@
     }
 
     function seleccionarTarifa(elemento, precio, nombre) {
+        const cpInput = document.getElementById('cp_destino').value.trim();
+        const cp = cpInput || '00000';
         const filas = document.querySelectorAll('.tarifa-item');
         const cp = document.getElementById('cp_destino').value;
         const walletContainer = document.getElementById('wallet_container');
@@ -230,3 +232,4 @@
     {% endif %}
 </script>
 {% endblock %}
+
