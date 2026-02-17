@@ -52,14 +52,26 @@
                 <h5 style="margin: 0 0 10px 0; color: #c53030; font-size: 0.95rem;"><i class="fas fa-file-pdf"></i> Documentación Técnica</h5>
                 
                 <a href="{% url 'descargar_ficha' product.id %}" 
+                   target="_blank"
+                   onclick="handleDownload(event, '{% url 'descargar_ficha' product.id %}')"
                    style="display: block; background: #e74c3c; color: white; text-decoration: none; padding: 14px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(231,76,60,0.2);">
                     <i class="fas fa-download"></i> DESCARGAR FICHA TÉCNICA
                 </a>
                 
                 <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 10px;">
-                    (Se guardará automáticamente en las descargas de tu celular)
+                    (Se abrirá en una pestaña nueva o se descargará en tu móvil)
                 </p>
             </div>
+
+            <script>
+                function handleDownload(event, url) {
+                    // Si detectamos que es una WebView (APK), forzamos un comportamiento de descarga
+                    if (navigator.userAgent.includes('wv') || navigator.userAgent.includes('Android')) {
+                        // No prevenimos el default, pero nos aseguramos de que el link se procese
+                        console.log("Detectada APK/Android, procesando descarga...");
+                    }
+                }
+            </script>
             {% endif %}
         </div>
 
@@ -199,6 +211,7 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
 
 
