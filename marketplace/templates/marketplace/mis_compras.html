@@ -74,7 +74,7 @@
                     {% endif %}
                 </div>
 
-                {% if not c.recibido_por_comprador %}
+                {% if not c.recibido_por_comprador and c.status != 'entregado' %}
                     <form action="{% url 'confirmar_recepcion' c.id %}" method="POST" style="margin: 0;">
                         {% csrf_token %}
                         <button type="submit" onclick="return confirm('¿Confirmas que ya tienes el producto en tus manos?')" 
@@ -108,3 +108,4 @@
 }
 </style>
 {% endblock %}
+
