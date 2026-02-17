@@ -16,7 +16,7 @@ import time
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from .models import IndustrialProduct, Category, Sale, Profile, Product
+from .models import IndustrialProduct, Category, Sale, Profile
 from .forms import ProductForm, RegistroForm, ProfileForm, UserUpdateForm
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -699,7 +699,7 @@ def privacidad(request):
 
 def descargar_ficha(request, product_id):
     try:
-        product = Product.objects.get(id=product_id)
+        product = IndustrialProduct.objects.get(id=product_id)
         if not product.ficha_tecnica:
             raise Http404
         
@@ -710,8 +710,9 @@ def descargar_ficha(request, product_id):
         response = FileResponse(file_handle, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{product.title}_Ficha_Tecnica.pdf"'
         return response
-    except Product.DoesNotExist:
+    except IndustrialProduct.DoesNotExist:
         raise Http404
+
 
 
 
