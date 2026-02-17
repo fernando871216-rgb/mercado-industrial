@@ -344,9 +344,12 @@ def cotizar_soloenvios(request):
         
         res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
         
-        if res.status_code in [200, 201]:
-            data = res.json()
-            tarifas = []
+        # SI FALLA, QUEREMOS VER EL TEXTO CRUDO DE LA API
+        if res.status_code != 200 and res.status_code != 201:
+            return JsonResponse({
+                'tarifas': [], 
+                'error': f"Respuesta de SoloEnvíos ({res.status_code}): {res.text}"
+            })
             
             # SoloEnvíos a veces devuelve 'rates' directamente o dentro de un objeto
             rates_list = data.get('rates', []) if isinstance(data, dict) else []
@@ -383,6 +386,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
