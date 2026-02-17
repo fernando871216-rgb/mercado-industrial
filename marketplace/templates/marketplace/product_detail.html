@@ -51,17 +51,12 @@
             <div style="padding: 20px; background: #fff5f5; border: 2px dashed #e74c3c; border-radius: 15px; text-align: center;">
                 <h5 style="margin: 0 0 10px 0; color: #c53030; font-size: 0.95rem;"><i class="fas fa-file-pdf"></i> Documentación Oficial</h5>
                 
-                <a href="https://docs.google.com/viewer?url=https://{{ request.get_host }}{{ product.ficha_tecnica.url }}&embedded=true" 
-                   target="_blank"
-                   style="display: inline-block; background: #002244; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
-                    <i class="fas fa-eye"></i> VER FICHA TÉCNICA
-                </a>
-
                 <a href="{{ product.ficha_tecnica.url }}" 
-                   download
-                   style="color: #e74c3c; text-decoration: underline; font-size: 0.8rem; font-weight: bold;">
-                    <i class="fas fa-download"></i> Descargar archivo PDF
+                   download="{{ product.title }}_Ficha_Tecnica.pdf"
+                   style="display: inline-block; background: #e74c3c; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; width: 100%; box-sizing: border-box;">
+                    DESCARGAR FICHA TÉCNICA
                 </a>
+                <p style="font-size: 0.7rem; color: #7f8c8d; margin-top: 8px;">(Se guardará en las descargas de tu celular)</p>
             </div>
             {% endif %}
         </div>
@@ -202,6 +197,7 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
 
 
