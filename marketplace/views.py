@@ -223,7 +223,43 @@ def panel_administrador(request):
 @login_required
 def marcar_como_pagado(request, venta_id):
     if request.user.is_staff:
-        v = get_object_or_404(Sale, id=venta_id); v.pagado_a_vendedor = True; v.save()
+        # 1. Buscamos la venta
+        v = get_object_or_404(Sale, id=venta_id)
+        
+        # 2. Marcamos como pagado en la base de datos
+        v.pagado_a_vendedor = True
+        v.save()
+        
+        # 3. ENVIAMOS EL EMAIL DE NOTIFICACIÓN AL VENDEDOR
+        try:
+            monto_neto = v.get_net_amount()
+            subject = f"💰 ¡Pago enviado!: {v.product.title}"
+            
+            # Mensaje detallado para el vendedor
+            message = (
+                f"Hola {v.product.user.username},\n\n"
+                f"Te informamos que el administrador de INITRE ha marcado tu venta como LIQUIDADA.\n\n"
+                f"DETALLES DEL DEPÓSITO:\n"
+                f"--------------------------\n"
+                f"Equipo: {v.product.title}\n"
+                f"Monto Neto transferido: ${monto_neto} MXN\n"
+                f"Cuenta destino: CLABE registrada en tu perfil.\n"
+                f"--------------------------\n\n"
+                f"El tiempo en que se refleja el saldo depende de tu institución bancaria.\n\n"
+                f"¡Gracias por vender en Mercado Industrial INITRE!"
+            )
+            
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [v.product.user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            # Si el correo falla, imprimimos el error en los logs pero no bloqueamos la página
+            print(f"Error enviando correo de liquidación: {e}")
+            
     return redirect('panel_administrador')
 
 # --- OTROS ---
@@ -246,6 +282,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
