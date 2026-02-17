@@ -13,20 +13,7 @@
             <div style="background: #fcc419; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 1.4rem; color: #856404;"></i>
             </div>
-            <div>
-                <strong style="display: block; color: #856404; font-size: 1rem;">¿Necesitas cambiar fotos o archivos?</strong>
-                <p style="margin: 5px 0 0 0; color: #92761a; font-size: 0.85rem; line-height: 1.4;">
-                    Debido a restricciones técnicas de la Apk, la carga de fotos y pdf debe hacerse desde el navegador de tu celular. Si ya estas en tu navegador desde tu celular no tendras problemas de carga de imagen y PDF.
-                </p>
-            </div>
-        </div>
-        <a href="https://mercado-industrial.onrender.com/editar-producto/{{ producto.id }}/" 
-           target="_blank" 
-           style="display: block; text-align: center; background: #003366; color: white; text-decoration: none; padding: 12px; border-radius: 10px; margin-top: 15px; font-weight: 800; font-size: 0.9rem;">
-           Visite mercado-industrial.onrender.com desde su navegador <i class="fas fa-external-link-alt" style="margin-left: 5px;"></i>
-        </a>
-    </div>
-
+            
     {% if messages %}
         {% for message in messages %}
             <div style="padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
@@ -100,5 +87,6 @@
     textarea { height: 120px; resize: vertical; }
 </style>
 {% endblock %}
+
 
 
