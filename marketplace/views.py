@@ -134,18 +134,23 @@ def detalle_producto(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
     u = request.user
     
-    # 1. Obtenemos el perfil (usando el nombre de relación correcto)
-    # Según tu código en home, la relación es request.user.profile
+    # 1. Validación usando los nombres de tu Models.py: phone, address, clabe
     try:
+        # Usamos la relación OneToOne (user.profile)
         perfil = u.profile
-        # Validamos que existan los campos (ajusta los nombres si son distintos)
-        # Aquí verifico los que usas en la función home: phone, address, clabe
-        tiene_datos = all([perfil.phone, perfil.address]) 
+        # Verificamos que los campos tengan contenido
+        tiene_datos = all([
+            perfil.phone,    # <-- Antes decía telefono
+            perfil.address,  # <-- Antes decía direccion
+            perfil.clabe
+        ])
         perfil_incompleto = not tiene_datos
-    except:
+    except Exception as e:
+        # Si el usuario no tiene perfil creado aún, marcar como incompleto
+        print(f"Error validando perfil: {e}")
         perfil_incompleto = True
 
-    # 2. Generamos la preferencia
+    # 2. Generar la preferencia de Mercado Pago
     pref_data = {
         "items": [{"title": p.title, "quantity": 1, "unit_price": float(p.price), "currency_id": "MXN"}],
         "external_reference": f"PROD:{p.id}-USER:{u.id}-FLETE:0-CP:00000",
@@ -445,6 +450,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
