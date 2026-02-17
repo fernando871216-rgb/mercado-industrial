@@ -8,12 +8,6 @@
        <i class="fas fa-chevron-left"></i> VOLVER
     </a>
 
-    <div id="apk-warning-edit" style="display: none; background: #fff9db; border: 2px solid #fcc419; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.05);">
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <div style="background: #fcc419; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 1.4rem; color: #856404;"></i>
-            </div>
-            
     {% if messages %}
         {% for message in messages %}
             <div style="padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
@@ -22,8 +16,8 @@
         {% endfor %}
     {% endif %}
 
-    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <h2 style="color: #003366; border-bottom: 3px solid #f39c12; padding-bottom: 10px; font-size: 1.4rem; margin-bottom: 20px;">
+    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #edf2f7;">
+        <h2 style="color: #003366; border-bottom: 3px solid #f39c12; padding-bottom: 10px; font-size: 1.4rem; margin-bottom: 25px;">
             <i class="fas fa-edit"></i> Editar: {{ producto.title }}
         </h2>
 
@@ -31,8 +25,8 @@
             {% csrf_token %}
             
             {% for field in form %}
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: bold; color: #444; margin-bottom: 5px; font-size: 0.9rem;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; color: #444; margin-bottom: 8px; font-size: 0.9rem;">
                         {{ field.label }}
                     </label>
                     <div style="width: 100%;">
@@ -47,27 +41,17 @@
                 </div>
             {% endfor %}
 
-            <div style="display: flex; gap: 10px; margin-top: 25px;">
-                <button type="submit" style="flex: 2; background: #28a745; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;">
-                    GUARDAR CAMBIOS
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" style="flex: 2; background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                    <i class="fas fa-save"></i> GUARDAR CAMBIOS
                 </button>
-                <a href="{% url 'mi_inventario' %}" style="flex: 1; background: #6c757d; color: white; text-decoration: none; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1rem;">
+                <a href="{% url 'mi_inventario' %}" style="flex: 1; background: #6c757d; color: white; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; text-align: center; font-size: 1rem;">
                     CANCELAR
                 </a>
             </div>
         </form>
     </div>
 </div>
-
-<script>
-    // Detectar si el usuario está dentro de la APK (WebView)
-    if (navigator.userAgent.includes('wv') || navigator.userAgent.includes('Android')) {
-        const apkBox = document.getElementById('apk-warning-edit');
-        if (apkBox) {
-            apkBox.style.display = 'block';
-        }
-    }
-</script>
 
 <style>
     input[type="text"], input[type="number"], input[type="file"], textarea, select {
@@ -77,16 +61,13 @@
         border-radius: 8px !important;
         box-sizing: border-box !important;
         font-size: 1rem !important;
-        transition: 0.3s;
+        transition: 0.2s;
     }
     input:focus, textarea:focus {
-        border-color: #f39c12 !important;
+        border-color: #003366 !important;
         outline: none;
-        box-shadow: 0 0 8px rgba(243,156,18,0.1);
+        box-shadow: 0 0 5px rgba(0,51,102,0.1);
     }
-    textarea { height: 120px; resize: vertical; }
+    textarea { height: 120px; }
 </style>
 {% endblock %}
-
-
-
