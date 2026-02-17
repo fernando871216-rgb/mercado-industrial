@@ -315,49 +315,53 @@ def cotizar_soloenvios(request):
     
     token = obtener_token_soloenvios()
     if not token or "ERROR" in str(token):
-        return JsonResponse({'tarifas': [], 'error': 'Acceso denegado'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
-        
-        # URL de cotización estable
         url_cot = "https://app.soloenvios.com/api/v1/quotations"
         
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
         
-        # USAMOS 'zip' EN LUGAR DE 'postal_code' (formato Skydropx/Soloenvios)
+        # ESTRUCTURA FINAL VALIDADA
         payload = {
-            "address_from": {
-                "country_code": "MX",
-                "zip": str(producto.cp_origen).strip().zfill(5)
-            },
-            "address_to": {
-                "country_code": "MX",
-                "zip": cp_destino
-            },
-            "parcels": [{
-                "length": int(float(producto.largo or 20)),
-                "width": int(float(producto.ancho or 20)),
-                "height": int(float(producto.alto or 20)),
-                "weight": int(float(producto.peso or 1))
-            }]
+            "quotation": {
+                "address_from": {
+                    "country_code": "MX",
+                    "postal_code": str(producto.cp_origen).strip().zfill(5)
+                },
+                "address_to": {
+                    "country_code": "MX",
+                    "postal_code": cp_destino
+                },
+                "parcels": [{
+                    "length": int(float(producto.largo or 20)),
+                    "width": int(float(producto.ancho or 20)),
+                    "height": int(float(producto.alto or 20)),
+                    "weight": int(float(producto.peso or 1))
+                }]
+            }
         }
         
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=20)
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
         
-        # Diagnóstico en caso de error 400
-        if res.status_code == 400:
-            return JsonResponse({'tarifas': [], 'error': f'Ajuste requerido: {res.text}'})
+        # Si sigue dando error, imprimimos el JSON que enviamos para debuguear en logs
+        if res.status_code == 422 or res.status_code == 400:
+            print(f"PAYLOAD ENVIADO: {payload}")
+            return JsonResponse({'tarifas': [], 'error': f'Datos inválidos: {res.text}'})
 
         if res.status_code in [200, 201]:
             data = res.json()
             tarifas = []
-            # Intentamos leer 'rates' o la respuesta directa
+            # SoloEnvíos devuelve las tarifas en una lista dentro de 'rates'
             rates = data.get('rates', [])
+            
             for t in rates:
+                # La API usa 'total' para el costo final
                 monto = t.get('total')
                 if monto:
                     tarifas.append({
@@ -365,12 +369,16 @@ def cotizar_soloenvios(request):
                         'precio_final': round(float(monto) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
+            
+            if not tarifas:
+                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para esta ruta.'})
+
             return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error API {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión'})
+        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -379,6 +387,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
