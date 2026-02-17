@@ -149,7 +149,10 @@
                         const item = document.createElement('div');
                         item.className = "tarifa-item";
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer;";
+                        
+                        // OJO AQUÍ: t.precio_final ya trae el 8% desde cotizar_soloenvios
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
+                        
                         item.innerHTML = `
                             <div>
                                 <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
@@ -162,7 +165,6 @@
                         lista.appendChild(item);
                     });
                 } else {
-                    // MENSAJE CON BOTÓN DE REINTENTO
                     lista.innerHTML = `
                         <div style="padding:20px; text-align:center; background:#fff5f5; border-radius:10px;">
                             <p style="color:#e74c3c; font-weight:bold; margin-bottom:10px;">La conexión con las paqueterías tardó demasiado.</p>
@@ -181,7 +183,7 @@
             });
     }
 
-    function seleccionarTarifa(elemento, precio) {
+    function seleccionarTarifa(elemento, precioConComision) {
         const cp = document.getElementById('cp_destino').value.trim();
         const filas = document.querySelectorAll('.tarifa-item');
         const walletContainer = document.getElementById('wallet_container');
@@ -193,7 +195,9 @@
         walletContainer.style.opacity = "0.5";
         walletContainer.style.pointerEvents = "none";
 
-        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+        // IMPORTANTE: precioConComision ya trae el 8% de la lista. 
+        // Lo mandamos tal cual a generar-preferencia
+        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precioConComision}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => { 
                 if (data.preference_id) renderMP(data.preference_id);
