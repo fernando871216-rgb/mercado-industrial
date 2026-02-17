@@ -343,7 +343,6 @@ def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    # 1. Obtención inicial del token
     token = obtener_token_soloenvios()
     if not token or "ERROR" in str(token):
         return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
@@ -385,36 +384,37 @@ def cotizar_soloenvios(request):
             }
         }
 
-        # --- LÓGICA DE 2 INTENTOS ---
-        for intento in range(2):
+        # --- LÓGICA DE REINTENTOS OPTIMIZADA ---
+        for intento in range(3):
             res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
             
-            if res.status_code in [200, 201]:
-                data = res.json()
-                rates = data.get('rates', [])
-                
-                # Si recibimos tarifas, las procesamos y terminamos
-                if rates:
-                    tarifas = []
-                    for t in rates:
-                        monto = t.get('total')
-                        if monto:
-                            tarifas.append({
-                                'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                                'precio_final': round(float(monto) * 1.08, 2), # Aquí aplicamos tu comisión
-                                'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
-                            })
-                    return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
+            # Solo intentamos leer JSON si la respuesta es exitosa
+            data = res.json() if res.status_code in [200, 201] else {}
+            rates = data.get('rates', [])
             
-            # Si el código llega aquí es porque la API respondió vacío (60 chars) o falló
-            if intento == 0:
-                time.sleep(1) # Esperamos 1 segundo
-                # Re-intentamos refrescar el token por si acaso
-                nuevo_token = obtener_token_soloenvios()
-                headers["Authorization"] = f"Bearer {nuevo_token}"
+            if rates:
+                tarifas = []
+                for t in rates:
+                    monto = t.get('total')
+                    if monto:
+                        tarifas.append({
+                            'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
+                            'precio_final': round(float(monto) * 1.08, 2),
+                            'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                        })
+                return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
+            
+            # Si no hay tarifas, aplicamos pausa incremental
+            if intento < 2:
+                # Intento 0 espera 1.5s, Intento 1 espera 2.5s
+                time.sleep(1.5 + intento) 
+                
+                # En el primer fallo, refrescamos token por si acaso
+                if intento == 0:
+                    nuevo_token = obtener_token_soloenvios()
+                    headers["Authorization"] = f"Bearer {nuevo_token}"
         
-        # Si después del segundo intento sigue sin haber tarifas:
-        return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está saturada. Intente de nuevo.'})
+        return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas en este momento. Intente nuevamente en unos segundos.'})
 
     except Exception as e:
         return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
@@ -426,6 +426,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
