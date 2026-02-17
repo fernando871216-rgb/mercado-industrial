@@ -369,35 +369,29 @@ def cotizar_soloenvios(request):
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
-            
-            # PASO 2: Espera estratégica para que los carriers (FedEx, DHL, etc) respondan
             time.sleep(3.0) 
             
-            # PASO 3: Recuperar los resultados de la cotización
             res_final = requests.get(f"{url}/{cotizacion_id}", headers=headers, verify=False)
             data = res_final.json()
             
             tarifas = []
-            # Procesamos las tasas recibidas
             for t in data.get('rates', []):
                 monto_total = t.get('total')
                 if monto_total and float(monto_total) > 0:
                     tarifas.append({
                         'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        # Aquí aplicamos tu margen del 8% sobre el precio de SoloEnvíos
                         'precio_final': round(float(monto_total) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
             
-            # Ordenamos por precio para mostrar las más baratas primero
-            tarifas = sorted(tarifas, key=lambda x: x['precio_final'])
+            # Si después de esperar no hay tarifas, devolvemos el JSON de la API para ver qué pasó
+            if not tarifas:
+                return JsonResponse({'tarifas': [], 'debug_msg': 'La API no devolvió tarifas para estas medidas.', 'api_response': data})
+                
             return JsonResponse({'tarifas': tarifas})
         
-        return JsonResponse({'tarifas': [], 'error': f'API Error: {res.text}'})
-
-    except Exception as e:
-        print(f"Error crítico en cotizador: {e}")
-        return JsonResponse({'tarifas': [], 'error': str(e)})
+        # Si la primera petición falla, ver el error real
+        return JsonResponse({'tarifas': [], 'error': f'Error SoloEnvios: {res.status_code}', 'detalle': res.json()})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -405,6 +399,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
