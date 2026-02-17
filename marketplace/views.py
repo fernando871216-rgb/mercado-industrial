@@ -24,7 +24,7 @@ import socket
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # CONFIGURACIÓN GLOBAL
-MP_ACCESS_TOKEN = "APP_USR-2885162849289081-010612-228b3049d19e3b756b95f319ee9d0011-40588817"
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "TOKEN_NO_CONFIGURADO")
 SDK = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # --- UTILIDADES ---
@@ -446,6 +446,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
