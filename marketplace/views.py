@@ -18,6 +18,8 @@ from django.core.mail import send_mail
 from .utils import enviar_notificacion_venta
 from django.conf import settings
 from django.contrib.staticfiles import finders
+import socket
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -279,31 +281,31 @@ def obtener_token_soloenvios():
     client_id = os.getenv('SOLOENVIOS_CLIENT_ID')
     client_secret = os.getenv('SOLOENVIOS_CLIENT_SECRET')
     
-    # Usamos el dominio principal que es el más estable
+    # Intentamos con la URL que mejor ha respondido en tus logs
     url = "https://app.soloenvios.com/api/v1/auth/token"
     
     try:
-        # Intentamos enviar como DATA (Formulario) que es más compatible
         payload = {
             'grant_type': 'client_credentials',
             'client_id': client_id,
             'client_secret': client_secret
         }
         
-        # Quitamos la verificación SSL temporalmente para asegurar que Render no bloquee
-        res = requests.post(url, data=payload, timeout=15, verify=False)
+        # Forzamos un timeout corto para que no se quede colgado
+        res = requests.post(url, data=payload, timeout=10, verify=False)
         
         if res.status_code == 200:
             return res.json().get('access_token')
         
-        # Si falla, intentamos como JSON
-        res = requests.post(url, json=payload, timeout=15, verify=False)
+        # Segundo intento como JSON si el primero falla
+        res = requests.post(url, json=payload, timeout=10, verify=False)
         if res.status_code == 200:
             return res.json().get('access_token')
 
         return f"ERROR_STATUS_{res.status_code}"
     except Exception as e:
-        return f"ERROR_CONEXION"
+        # Si llegamos aquí, es que Render sigue sin encontrar el dominio
+        return "ERROR_DNS_BLOQUEO"
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
@@ -311,22 +313,22 @@ def cotizar_soloenvios(request):
     
     token = obtener_token_soloenvios()
     
+    # Si hay error de DNS, mostramos un mensaje de espera al usuario
     if "ERROR" in str(token):
-        # Si falla el DNS de nuevo, usamos un valor de flete fijo temporal 
-        # para que NO se detenga tu venta, o mostramos el error
-        return JsonResponse({'tarifas': [], 'error': 'Servicio de paquetería en mantenimiento. Intenta en 5 min.'})
+        return JsonResponse({
+            'tarifas': [], 
+            'error': 'Estamos sincronizando las paqueterías. Por favor, reintenta en 10 segundos.'
+        })
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
         cp_origen = str(producto.cp_origen).strip().zfill(5)
         
-        # URL de cotización vinculada al dominio principal
+        # Usamos la URL que sabemos que existe
         url_cot = "https://app.soloenvios.com/api/v1/quotations"
-        
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Content-Type": "application/json"
         }
         
         payload = {
@@ -342,13 +344,12 @@ def cotizar_soloenvios(request):
             }
         }
         
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=25, verify=False)
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=20, verify=False)
         
         if res.status_code in [200, 201]:
             cotizacion_id = res.json().get('id')
-            time.sleep(3) 
+            time.sleep(3) # Tiempo para que carguen las paqueterías
             
-            # Consultar resultados
             res_final = requests.get(f"{url_cot}/{cotizacion_id}", headers=headers, verify=False)
             data = res_final.json()
             
@@ -361,19 +362,25 @@ def cotizar_soloenvios(request):
                         'precio_final': round(float(monto) * 1.08, 2),
                         'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
                     })
+            
+            if not tarifas:
+                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para este CP.'})
+                
             return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        return JsonResponse({'tarifas': [], 'error': 'No hay rutas disponibles'})
+        return JsonResponse({'tarifas': [], 'error': 'Error en la respuesta de SoloEnvíos.'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': 'Error de comunicación'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de conexión temporal.'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
     return render(request, 'marketplace/home.html', {'products': IndustrialProduct.objects.filter(category=cat), 'category': cat})
+    
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
