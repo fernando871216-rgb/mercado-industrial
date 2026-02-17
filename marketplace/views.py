@@ -323,11 +323,10 @@ def cotizar_soloenvios(request):
         
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Content-Type": "application/json"
         }
         
-        # ESTRUCTURA FINAL VALIDADA
+        # PAYLOAD CON LOS CAMPOS OBLIGATORIOS FALTANTES (quantity y units)
         payload = {
             "quotation": {
                 "address_from": {
@@ -342,26 +341,27 @@ def cotizar_soloenvios(request):
                     "length": int(float(producto.largo or 20)),
                     "width": int(float(producto.ancho or 20)),
                     "height": int(float(producto.alto or 20)),
-                    "weight": int(float(producto.peso or 1))
+                    "weight": int(float(producto.peso or 1)),
+                    "quantity": 1,         # <--- CAMBIO 1: Obligatorio
+                    "mass_unit": "kg",     # <--- CAMBIO 2: Obligatorio
+                    "distance_unit": "cm"   # <--- CAMBIO 3: Obligatorio
                 }]
             }
         }
         
+        print(f"DEBUG PAYLOAD FINAL: {payload}")
         res = requests.post(url_cot, json=payload, headers=headers, timeout=25)
         
-        # Si sigue dando error, imprimimos el JSON que enviamos para debuguear en logs
-        if res.status_code == 422 or res.status_code == 400:
-            print(f"PAYLOAD ENVIADO: {payload}")
-            return JsonResponse({'tarifas': [], 'error': f'Datos inválidos: {res.text}'})
+        if res.status_code == 400:
+            # Si esto sale, el mensaje de 382 caracteres nos dirá el campo exacto
+            return JsonResponse({'tarifas': [], 'error': f'Detalle API: {res.text}'})
 
         if res.status_code in [200, 201]:
             data = res.json()
             tarifas = []
-            # SoloEnvíos devuelve las tarifas en una lista dentro de 'rates'
             rates = data.get('rates', [])
             
             for t in rates:
-                # La API usa 'total' para el costo final
                 monto = t.get('total')
                 if monto:
                     tarifas.append({
@@ -371,14 +371,14 @@ def cotizar_soloenvios(request):
                     })
             
             if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para esta ruta.'})
-
+                return JsonResponse({'tarifas': [], 'error': 'No se encontraron tarifas para estos CPs.'})
+                
             return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        return JsonResponse({'tarifas': [], 'error': f'Error API {res.status_code}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': f'Excepción: {str(e)}'})
+        return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -387,6 +387,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
