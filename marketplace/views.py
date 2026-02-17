@@ -371,3 +371,18 @@ def descargar_ficha(request, product_id):
         response['Content-Disposition'] = f'inline; filename="{product.title}_Ficha_Tecnica.pdf"'
         return response
     except: raise Http404
+
+@login_required
+def cambiar_estado_venta(request, venta_id):
+    v = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    if v.status == 'pendiente':
+        v.status = 'completado'
+        v.save()
+    return redirect('mis_ventas')
+
+@login_required
+def cancelar_venta(request, venta_id):
+    v = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+    v.status = 'cancelado'
+    v.save()
+    return redirect('mis_ventas')
