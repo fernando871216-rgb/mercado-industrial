@@ -277,118 +277,55 @@ def editar_perfil(request):
     if u.is_valid() and p.is_valid(): u.save(); p.save(); return redirect('editar_perfil')
     return render(request, 'marketplace/editar_perfil.html', {'u_form': u, 'p_form': p})
 
-def obtener_token_soloenvios():
-    client_id = "puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA"
-    client_secret = "vzVupeT2PMAktJp5SbXIyivRf8ajqqRD0015Pxhz-Ps"
-    
-    url = "https://api.skydropx.com/v1/auth/token"
-    
-    payload = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-    
-    headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    }
-
-    try:
-        # Timeout de 20 segundos para dar margen al DNS
-        res = requests.post(url, json=payload, headers=headers, timeout=20, verify=False)
-        print(f"DEBUG SKYDROPX: Status {res.status_code}")
-        
-        if res.status_code == 200:
-            return res.json().get('access_token')
-        
-        # Si Skydropx también da error, imprimimos qué dice el servidor
-        print(f"ERROR BODY: {res.text}")
-        return None
-        
-    except Exception as e:
-        print(f"ERROR CRITICO CONEXION: {str(e)}")
-        return None
         
 def cotizar_soloenvios(request):
     product_id = request.GET.get('product_id')
-    # 1. Forzamos el CP a ser un texto de 5 dígitos siempre (rellena con ceros a la izquierda)
     cp_destino = str(request.GET.get('cp_destino', '')).strip().zfill(5)
     
-    token = obtener_token_soloenvios()
-    if "ERROR" in str(token):
-        return JsonResponse({'tarifas': [], 'error': 'Error de autenticación'})
+    # TU API KEY DE SOLOENVIOS (El token largo que sacas de su panel)
+    # Si tienes el Secret, prueba con ese.
+    api_key = os.getenv('puouHyooEp4uBo0Nnov46IUFOf-memYBLGRYhdB1eRA') 
 
     try:
         producto = get_object_or_404(IndustrialProduct, id=product_id)
-
-        payload_peso = int(float(producto.peso or 1))
-        payload_largo = int(producto.largo or 20)
-        payload_ancho = int(producto.ancho or 20)
-        payload_alto = int(producto.alto or 20)
-        payload_cp_origen = str(producto.cp_origen).strip().zfill(5)
-        payload_cp_destino = str(cp_destino).strip().zfill(5)
         
-        # 2. Aseguramos que el CP de origen también sea texto de 5 dígitos
-        cp_origen = str(producto.cp_origen).strip().zfill(5)
-        
-        # 3. CONVERSIÓN DE SEGURIDAD: 
-        # Convertimos a float primero por si el usuario puso decimales, 
-        # y luego a int porque la API de SoloEnvíos prefiere enteros en las medidas.
-        peso = int(float(producto.peso or 1))
-        largo = int(float(producto.largo or 20))
-        ancho = int(float(producto.ancho or 20))
-        alto = int(float(producto.alto or 20))
-
+        # URL de cotización estable
         url_cot = "https://api.skydropx.com/v1/quotations"
+        
         headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Authorization": f"Token token={api_key}", # Formato estándar de Skydropx
+            "Content-Type": "application/json"
         }
         
         payload = {
-            "quotation": {
-                "address_from": {"country_code": "MX", "postal_code": payload_cp_origen},
-                "address_to": {"country_code": "MX", "postal_code": payload_cp_destino},
-                "parcels": [{
-                    "length": payload_largo,
-                    "width": payload_ancho,
-                    "height": payload_alto,
-                    "weight": payload_peso
-                }]
-            }
+            "address_from": {"country_code": "MX", "postal_code": str(producto.cp_origen).zfill(5)},
+            "address_to": {"country_code": "MX", "postal_code": cp_destino},
+            "parcels": [{
+                "length": int(producto.largo or 20),
+                "width": int(producto.ancho or 20),
+                "height": int(producto.alto or 20),
+                "weight": int(producto.peso or 1)
+            }]
         }
         
-        # Enviamos la petición
-        res = requests.post(url_cot, json=payload, headers=headers, timeout=30, verify=False)
+        res = requests.post(url_cot, json=payload, headers=headers, timeout=20)
         
-        if res.status_code in [200, 201]:
-            cotizacion_id = res.json().get('id')
-            time.sleep(3) # Tiempo para que carguen las paqueterías
-            
-            res_final = requests.get(f"{url_cot}/{cotizacion_id}", headers=headers, verify=False)
-            data = res_final.json()
-            
+        if res.status_code == 201 or res.status_code == 200:
+            data = res.json()
             tarifas = []
+            # Skydropx a veces devuelve las tarifas directo o en una lista
             for t in data.get('rates', []):
-                monto = t.get('total')
-                if monto:
-                    tarifas.append({
-                        'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
-                        'precio_final': round(float(monto) * 1.08, 2),
-                        'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
-                    })
-            
-            if not tarifas:
-                return JsonResponse({'tarifas': [], 'error': 'No hay paqueterías disponibles para este CP.'})
-                
+                tarifas.append({
+                    'paqueteria': f"{t.get('provider')} ({t.get('service_level')})",
+                    'precio_final': round(float(t.get('total_price')) * 1.08, 2),
+                    'tiempo': t.get('delivery_estimate', 'N/A')
+                })
             return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
         
-        return JsonResponse({'tarifas': [], 'error': 'Error en la respuesta de SoloEnvíos.'})
+        return JsonResponse({'tarifas': [], 'error': f'Error API: {res.status_code}'})
 
     except Exception as e:
-        return JsonResponse({'tarifas': [], 'error': 'Error de conexión temporal.'})
+        return JsonResponse({'tarifas': [], 'error': 'Error de comunicación'})
     
 def category_detail(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
@@ -397,6 +334,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
