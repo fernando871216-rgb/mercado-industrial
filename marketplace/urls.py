@@ -23,6 +23,7 @@ urlpatterns = [
     path('subir-producto/', views.subir_producto, name='subir_producto'),
     path('editar-producto/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('borrar-producto/<int:pk>/', views.borrar_producto, name='borrar_producto'),
+    path('descargar-ficha/<int:product_id>/', views.descargar_ficha, name='descargar_ficha'),
     
     # --- COMPRAS Y VENTAS ---
     path('mis-compras/', views.mis_compras, name='mis_compras'),
@@ -56,6 +57,7 @@ urlpatterns = [
     path('panel-administrador/', views.panel_administrador, name='panel_administrador'),
     path('finalizar-pago-vendedor/<int:venta_id>/', views.marcar_como_pagado, name='marcar_como_pagado'),
 ]
+
 
 
 
