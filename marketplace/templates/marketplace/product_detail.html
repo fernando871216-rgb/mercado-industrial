@@ -65,10 +65,17 @@
 
             {% if product.stock > 0 %}
                 {% if perfil_incompleto %}
-                    <div style="background: #fff9db; border: 1px solid #fcc419; color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h5 style="margin-top: 0; font-size: 1.1rem;"><i class="fas fa-exclamation-triangle"></i> Perfil Incompleto</h5>
-                        <p style="font-size: 0.9rem; margin-bottom: 15px;">Para comprar, necesitamos tu teléfono y dirección.</p>
-                        <a href="{% url 'editar_perfil' %}" style="font-weight: bold; color: #000; text-decoration: none; background: #fcc419; padding: 10px 15px; border-radius: 8px; display: inline-block;">Configurar mi perfil</a>
+                    <div style="background: #fff9db; border: 1px solid #fcc419; color: #856404; padding: 25px; border-radius: 15px; margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-start;">
+                        <i class="fas fa-user-circle" style="font-size: 2rem; margin-top: 5px;"></i>
+                        <div>
+                            <h5 style="margin: 0 0 8px 0; font-weight: 800;">¡Hola, {{ nombre_usuario }}!</h5>
+                            <p style="font-size: 0.95rem; margin-bottom: 15px; line-height: 1.4;">
+                                Para poder realizar compras y calcular fletes con precisión, necesitamos que completes tu <strong>Nombre, Apellido, Teléfono y Dirección</strong> en tu perfil.
+                            </p>
+                            <a href="{% url 'editar_perfil' %}" style="background: #003366; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 0.9rem;">
+                                <i class="fas fa-edit"></i> Completar mi perfil ahora
+                            </a>
+                        </div>
                     </div>
                 {% else %}
                     <div style="background: #ffffff; padding: 20px; border-radius: 15px; border: 2px solid #0056b3; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,86,179,0.05);">
@@ -150,7 +157,6 @@
                         item.className = "tarifa-item";
                         item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer;";
                         
-                        // OJO AQUÍ: t.precio_final ya trae el 8% desde cotizar_soloenvios
                         item.onclick = () => seleccionarTarifa(item, t.precio_final);
                         
                         item.innerHTML = `
@@ -195,8 +201,6 @@
         walletContainer.style.opacity = "0.5";
         walletContainer.style.pointerEvents = "none";
 
-        // IMPORTANTE: precioConComision ya trae el 8% de la lista. 
-        // Lo mandamos tal cual a generar-preferencia
         fetch(`/generar-preferencia/{{ product.id }}/?envio=${precioConComision}&cp_destino=${cp}`)
             .then(res => res.json())
             .then(data => { 
@@ -210,4 +214,3 @@
     {% endif %}
 </script>
 {% endblock %}
-
