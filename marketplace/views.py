@@ -334,7 +334,7 @@ def crear_intencion_compra(request, product_id):
 # En views.py
 def actualizar_guia(request, venta_id):
     if request.method == 'POST':
-        venta = get_object_or_404(Sale, id=sale_id, product__user=request.user)
+        venta = get_object_or_404(Sale, id=venta_id, product__user=request.user)
         guia = request.POST.get('tracking_number')
         paqueteria = request.POST.get('shipping_company')
         
@@ -554,6 +554,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
