@@ -365,7 +365,7 @@ def enviar_correo_guia(venta):
     
     html_content = render_to_string('emails/guia_enviada.html', contexto)
     
-    msg = EmailMultiAlternatives(asunto, f"Tu guía es: {venta.tracking_number}", 'noreply@initre.com', [email_comprador])
+    msg = EmailMultiAlternatives(asunto, f"Tu guía es: {venta.tracking_number}", 'EMAIL_HOST_USER', [email_comprador])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
     
@@ -554,6 +554,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
