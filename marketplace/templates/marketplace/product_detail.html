@@ -144,7 +144,13 @@
         });
     }
 
-    renderMP("{{ preference_id }}");
+    fetch(`/generar-preferencia/{{ product.id }}/`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.preference_id) {
+            renderMP(data.preference_id);
+        }
+    });
 
     function cotizarFlete() {
         const cp = document.getElementById('cp_destino').value.trim();
@@ -232,4 +238,5 @@
     {% endif %}
 </script>
 {% endblock %}
+
 
