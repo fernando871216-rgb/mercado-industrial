@@ -22,7 +22,6 @@
             flex-direction: column; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6;
-            /* Patrón de puntos sutil que sustituye al logo de fondo anterior */
             background-image: radial-gradient(#d1d5db 0.8px, transparent 0.8px);
             background-size: 24px 24px;
         }
@@ -72,9 +71,30 @@
             border-color: white;
         }
 
+        /* Estilo para el nuevo Botón de Usuario Identificado */
+        .user-pill {
+            background: white !important;
+            color: var(--primary-blue) !important;
+            border: none !important;
+            padding: 4px 12px 4px 6px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .user-avatar {
+            width: 26px;
+            height: 26px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.75rem;
+        }
+
         .btn-como-funciona { color: #ffcc00 !important; border: 1.5px solid #ffcc00 !important; }
-        .btn-perfil { background: #f39c12 !important; border: none !important; color: white !important; }
-        .logout-btn { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #ff9f94; }
+        .logout-btn { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #ff9f94; margin: 0; }
 
         .footer-static {
             position: fixed;
@@ -134,10 +154,10 @@
 <body>
 
     {% if perfil_incompleto %}
-    <div style="background: #fff3cd; color: #856404; padding: 12px; text-align: center; border-bottom: 1px solid #ffeeba; font-size: 0.9rem; font-weight: bold;">
-    <i class="fas fa-exclamation-triangle me-2"></i> 
-    Tu perfil no está completo (falta Teléfono, CLABE o Dirección). 
-    <a href="{% url 'editar_perfil' %}" style="color: #856404; text-decoration: underline;">Completar ahora</a>
+    <div style="background: #fff3cd; color: #856404; padding: 12px; text-align: center; border-bottom: 1px solid #ffeeba; font-size: 0.9rem; font-weight: bold; z-index: 4000; position: relative;">
+        <i class="fas fa-exclamation-triangle me-2"></i> 
+        Tu perfil no está completo (falta Teléfono o Dirección). 
+        <a href="{% url 'editar_perfil' %}" style="color: #856404; text-decoration: underline;">Completar ahora</a>
     </div>
     {% endif %}
 
@@ -159,15 +179,19 @@
                 <a href="{% url 'mi_inventario' %}"><i class="fas fa-boxes"></i> Mis Productos</a>
                 <a href="{% url 'mis_ventas' %}"><i class="fas fa-hand-holding-usd"></i> Mis Ventas</a>
                 <a href="{% url 'mis_compras' %}"><i class="fas fa-shopping-cart"></i> Mis Compras</a>
-                <a href="{% url 'editar_perfil' %}" class="btn-perfil"><i class="fas fa-user-circle"></i> Perfil / Pagos</a>
+                
+                <a href="{% url 'editar_perfil' %}" class="user-pill">
+                    <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
+                    <span style="font-weight: 800;">{{ user.first_name|default:user.username|upper }}</span>
+                </a>
 
                 {% if user.is_staff %}
                     <a href="{% url 'panel_administrador' %}" style="color: #f39c12; border-color: #f39c12;"><i class="fas fa-tools"></i> <b>ADMIN</b></a>
                 {% endif %}
 
-                <form action="{% url 'logout' %}" method="post" style="display: block; width: 100%;">
+                <form action="{% url 'logout' %}" method="post" style="display: inline-block; margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="logout-btn" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                    <button type="submit" class="logout-btn" style="height: 38px; border-radius: 25px;"><i class="fas fa-sign-out-alt"></i></button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
@@ -215,4 +239,3 @@
     </script>
 </body>
 </html>
-
