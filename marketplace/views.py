@@ -66,9 +66,9 @@ def generar_preferencia_pago(request, producto_id):
         "back_urls": {
             "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
-            "pending": request.build_absolute_uri('/pago-pendiente/'),
+            "pending": request.build_absolute_uri('/pago-exitoso/{producto.id}/'),
         },
-        "auto_return": "approved", # Obliga a volver al sitio
+        "auto_return": "approved", 
         "binary_mode": True,       # Evita pagos "pendientes", o es éxito o es falla
         "notification_url": request.build_absolute_uri('/webhook/mercadopago/'),
     }
@@ -560,6 +560,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
