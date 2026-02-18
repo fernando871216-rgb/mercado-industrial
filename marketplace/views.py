@@ -194,16 +194,7 @@ def detalle_producto(request, product_id):
         perfil_incompleto = True
 
     # 2. Generar la preferencia de Mercado Pago
-    pref_data = {
-        "items": [{"title": p.title, "quantity": 1, "unit_price": float(p.price), "currency_id": "MXN"}],
-        "external_reference": f"PROD:{p.id}-USER:{u.id}-FLETE:0-CP:00000",
-        "binary_mode": True,
-    }
-    
-    try:
-        pref_id = SDK.preference().create(pref_data)["response"]["id"]
-    except:
-        pref_id = None
+    pref_id = None
 
     context = {
         'product': p,
@@ -560,6 +551,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
