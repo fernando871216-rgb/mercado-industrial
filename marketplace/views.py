@@ -90,27 +90,72 @@ def mercadopago_webhook(request):
     if payment_id:
         headers = {'Authorization': f'Bearer {MP_ACCESS_TOKEN}'}
         res = requests.get(f"https://api.mercadopago.com/v1/payments/{payment_id}", headers=headers)
+        
         if res.status_code == 200:
             data = res.json()
             if data.get('status') == 'approved':
-                parts = str(data.get('external_reference', '')).split('-')
-                if len(parts) >= 2:
-                    flete = Decimal(parts[2]) if len(parts) > 2 else Decimal('0')
-                    cp = parts[3] if len(parts) > 3 else "00000"
+                ext_ref = str(data.get('external_reference', ''))
+                parts = ext_ref.split('-')
+                
+                # Diccionario para extraer datos limpios (PROD, USER, FLETE, CP)
+                ref_data = {}
+                for part in parts:
+                    if ':' in part:
+                        key, value = part.split(':', 1)
+                        ref_data[key.upper()] = value
+
+                try:
+                    # Extraer y limpiar valores
+                    p_id = ref_data.get('PROD')
+                    u_id = ref_data.get('USER')
+                    flete_str = ref_data.get('FLETE', '0')
+                    cp = ref_data.get('CP', '00000')
+
+                    # Conversión segura a Decimal
                     try:
-                        prod = IndustrialProduct.objects.get(id=parts[0])
-                        user = User.objects.get(id=parts[1])
-                        ganancia = (Decimal(str(prod.price)) * Decimal('0.05') + flete * Decimal('0.074')).quantize(Decimal('0.01'))
+                        flete = Decimal(flete_str)
+                    except:
+                        flete = Decimal('0')
+
+                    if p_id and u_id:
+                        prod = IndustrialProduct.objects.get(id=p_id)
+                        user = User.objects.get(id=u_id)
+                        
+                        # Cálculo de ganancia
+                        precio_prod = Decimal(str(prod.price))
+                        ganancia = (precio_prod * Decimal('0.05') + flete * Decimal('0.074')).quantize(Decimal('0.01'))
+                        
+                        total_pagado = Decimal(str(data.get('transaction_amount', '0')))
+
                         venta, created = Sale.objects.update_or_create(
                             payment_id=payment_id,
-                            defaults={'product':prod, 'buyer':user, 'price':Decimal(str(data.get('transaction_amount'))),
-                                     'shipping_cost':flete, 'shipping_cp':cp, 'status':'approved', 'ganancia_neta':ganancia}
+                            defaults={
+                                'product': prod, 
+                                'buyer': user, 
+                                'price': total_pagado,
+                                'shipping_cost': flete, 
+                                'shipping_cp': cp, 
+                                'status': 'approved', 
+                                'ganancia_neta': ganancia
+                            }
                         )
+                        
                         if created:
-                            prod.stock -= 1; prod.save()
-                            try: enviar_notificacion_venta(venta)
-                            except: pass
-                    except: pass
+                            # Descontar stock solo si es nueva la venta en nuestra DB
+                            if prod.stock > 0:
+                                prod.stock -= 1
+                                prod.save()
+                            
+                            try: 
+                                enviar_notificacion_venta(venta)
+                            except: 
+                                pass
+                                
+                except Exception as e:
+                    # Log del error para depuración si algo más falla
+                    print(f"Error procesando webhook: {e}")
+                    pass
+
     return HttpResponse(status=200)
 
 # --- VISTAS DE USUARIO ---
@@ -479,6 +524,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
