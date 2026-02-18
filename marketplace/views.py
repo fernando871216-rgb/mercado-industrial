@@ -330,15 +330,26 @@ def crear_intencion_compra(request, product_id):
     return redirect('mis_compras')
 
 @login_required
-def actualizar_guia(request, venta_id):
-    v = get_object_or_404(Sale, id=venta_id, product__user=request.user)
+# En views.py
+def actualizar_guia(request, sale_id):
     if request.method == 'POST':
-        v.shipping_company, v.tracking_number, v.status = request.POST.get('shipping_company'), request.POST.get('tracking_number'), 'enviado'
-        v.save()
-        try: send_mail("🚀 Pedido enviado", f"Tu equipo va en camino. Guía: {v.tracking_number}", settings.DEFAULT_FROM_EMAIL, [v.buyer.email])
-        except: pass
-    return redirect('mis_ventas')
-
+        venta = get_object_or_404(Sale, id=sale_id, product__user=request.user)
+        guia = request.POST.get('tracking_number')
+        paqueteria = request.POST.get('shipping_company')
+        
+        venta.tracking_number = guia
+        venta.shipping_company = paqueteria
+        venta.status = 'shipped' # Cambiamos el estatus a enviado
+        venta.save()
+        
+        # --- ESTO ES LO QUE FALTA: DISPARAR EL CORREO ---
+        try:
+            enviar_correo_guia(venta)
+            print(f"DEBUG: Correo de guía para venta {venta.id} enviado.")
+        except Exception as e:
+            print(f"DEBUG: Error enviando correo de guía: {e}")
+            
+        return redirect('mis_ventas')
 # --- PANEL ADMINISTRADOR (Faltaba sincronizar con URLs) ---
 @login_required
 def panel_administrador(request):
@@ -524,6 +535,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
