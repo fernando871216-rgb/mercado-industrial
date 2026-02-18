@@ -176,10 +176,29 @@ def mi_inventario(request): return render(request, 'marketplace/mi_inventario.ht
 
 @login_required
 def subir_producto(request):
-    form = ProductForm(request.POST or None, request.FILES or None)
-    if form.is_valid():
-        p = form.save(commit=False); p.user = request.user; p.save()
-        return redirect('mi_inventario')
+    # Verificamos si tiene la CLABE para poder pagarle sus futuras ventas
+    try:
+        perfil = request.user.profile
+        if not perfil.clabe:
+            messages.warning(
+                request, 
+                "Nota: No has configurado tu CLABE interbancaria. "
+                "Podrás subir productos, pero la necesitarás para recibir tus pagos."
+            )
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            p = form.save(commit=False)
+            p.user = request.user
+            p.save()
+            messages.success(request, "Producto publicado con éxito.")
+            return redirect('mi_inventario')
+    else:
+        form = ProductForm()
+        
     return render(request, 'marketplace/subir_producto.html', {'form': form})
 
 @login_required
@@ -450,6 +469,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
