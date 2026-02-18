@@ -46,18 +46,12 @@ def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
     
     try:
-        # Recibimos el flete. 
-        # Si la lista decía 132, aquí llega 132.
         flete_recibido = float(request.GET.get('envio', 0))
         cp = request.GET.get('cp_destino') or '00000'
     except (TypeError, ValueError):
         flete_recibido, cp = 0, '00000'
 
-    # EXPLICACIÓN:
-    # Si en cotizar_soloenvios ya multiplicaste por 1.08, el flete_recibido ya es 142.56 (si el original era 132)
-    # Por lo tanto, esta suma ya es correcta:
     total_con_flete = round(float(producto.price) + flete_recibido, 2)
-    
     titulo = f"{producto.title} (Envío a CP {cp})" if flete_recibido > 0 else producto.title
 
     pref_data = {
@@ -68,13 +62,15 @@ def generar_preferencia_pago(request, producto_id):
             "unit_price": total_con_flete,
             "currency_id": "MXN"
         }],
-        # Guardamos el flete por separado en la referencia para saber cuánto cobrar de envío luego
         "external_reference": f"PROD:{producto.id}-USER:{request.user.id}-FLETE:{flete_recibido}-CP:{cp}",
         "back_urls": {
+            # Importante: Asegúrate de que esta URL coincida con tu path en urls.py
             "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/?envio={flete_recibido}&cp={cp}'),
             "failure": request.build_absolute_uri('/pago-fallido/'),
+            "pending": request.build_absolute_uri('/pago-pendiente/'),
         },
-        "auto_return": "approved",
+        # ESTA LÍNEA ES LA QUE ACTIVA EL REDIRECCIONAMIENTO AUTOMÁTICO
+        "auto_return": "approved", 
         "binary_mode": True,
     }
     
@@ -282,7 +278,18 @@ def mis_compras(request):
 @login_required
 def pago_exitoso(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    return render(request, 'marketplace/pago_exitoso.html', {'producto': producto, 'mostrar_contacto': True})
+    
+    # Capturamos el ID de pago que envía Mercado Pago en la URL por si quieres mostrarlo
+    payment_id = request.GET.get('payment_id') or request.GET.get('collection_id')
+    
+    contexto = {
+        'producto': producto, 
+        'mostrar_contacto': True,
+        'payment_id': payment_id  # Esto llenará el campo "Transacción" en tu HTML
+    }
+    
+    return render(request, 'marketplace/pago_exitoso.html', contexto)
+
 
 def pago_fallido(request): return render(request, 'marketplace/pago_fallido.html')
 
@@ -554,6 +561,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
