@@ -134,7 +134,10 @@
         const bricksBuilder = mp.bricks();
         if (walletBrickController) await walletBrickController.unmount();
         walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { preferenceId: preferenceId, redirectMode: "modal" },
+            initialization: { 
+                preferenceId: preferenceId, 
+                redirectMode: "self"  // CAMBIO CLAVE: Cambiado de "modal" a "self" para forzar redirección
+            },
             callbacks: {
                 onError: (error) => { console.error("Error MP:", error); }
             }
@@ -229,4 +232,3 @@
     {% endif %}
 </script>
 {% endblock %}
-
