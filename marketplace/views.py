@@ -140,8 +140,10 @@ def detalle_producto(request, product_id):
         perfil = u.profile
         # Verificamos que los campos tengan contenido
         tiene_datos = all([
-            perfil.phone,    # <-- Antes decía telefono
-            perfil.address,  # <-- Antes decía direccion
+            perfil.phone,    
+            perfil.address,
+            u.first_name,
+            u.last_name
             
         ])
         perfil_incompleto = not tiene_datos
@@ -469,6 +471,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
