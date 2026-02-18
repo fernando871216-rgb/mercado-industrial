@@ -435,7 +435,6 @@ def cotizar_soloenvios(request):
             }
         }
 
-        # --- LÓGICA DE 3 INTENTOS ---
         for intento in range(3):
             res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
             data = res.json() if res.status_code in [200, 201] else {}
@@ -446,10 +445,20 @@ def cotizar_soloenvios(request):
                 for t in rates:
                     monto = t.get('total')
                     if monto:
+                        # --- NUEVA LÓGICA DE DETALLE ---
+                        # Detectamos si es recolección a domicilio o entrega en sucursal
+                        tiene_recoleccion = t.get('pick_up', False)
+                        tipo_entrega = t.get('delivery_type', 'home_delivery') # home_delivery o station_delivery
+                        
+                        txt_recoleccion = "Recolección incluida" if tiene_recoleccion else "Dejar en sucursal"
+                        txt_entrega = "Entrega a domicilio" if tipo_entrega == 'home_delivery' else "Recoger en sucursal (Ocurre)"
+                        
                         tarifas.append({
                             'paqueteria': f"{t.get('provider_display_name')} ({t.get('provider_service_name')})",
                             'precio_final': round(float(monto) * 1.08, 2),
-                            'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A"
+                            'tiempo': f"{t.get('days')} días" if t.get('days') else "N/A",
+                            # Enviamos el detalle combinado para el frontend
+                            'detalle_servicio': f"{txt_recoleccion} | {txt_entrega}"
                         })
                 return JsonResponse({'tarifas': sorted(tarifas, key=lambda x: x['precio_final'])})
             
@@ -458,10 +467,9 @@ def cotizar_soloenvios(request):
                 if intento == 0:
                     headers["Authorization"] = f"Bearer {obtener_token_soloenvios()}"
 
-        return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está tardando en responder. Intente de nuevo.'})
+        return JsonResponse({'tarifas': [], 'error': 'No hay cobertura o la paquetería está tardando en responder.'})
 
     except Exception as e:
-        # Este es el bloque que faltaba para corregir el SyntaxError
         return JsonResponse({'tarifas': [], 'error': f'Error de sistema: {str(e)}'})
     
 def category_detail(request, category_id):
@@ -471,6 +479,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
