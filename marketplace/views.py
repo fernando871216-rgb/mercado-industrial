@@ -19,7 +19,8 @@ from .utils import enviar_notificacion_venta
 from django.conf import settings
 from django.contrib.staticfiles import finders
 import socket
-
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -350,6 +351,24 @@ def actualizar_guia(request, sale_id):
             print(f"DEBUG: Error enviando correo de guía: {e}")
             
         return redirect('mis_ventas')
+
+def enviar_correo_guia(venta):
+    asunto = f"¡Tu pedido de {venta.product.title} va en camino!"
+    email_comprador = venta.buyer.email
+    
+    contexto = {
+        'comprador': venta.buyer.first_name or venta.buyer.username,
+        'producto': venta.product.title,
+        'guia': venta.tracking_number,
+        'paqueteria': venta.shipping_company,
+    }
+    
+    html_content = render_to_string('emails/guia_enviada.html', contexto)
+    
+    msg = EmailMultiAlternatives(asunto, f"Tu guía es: {venta.tracking_number}", 'noreply@initre.com', [email_comprador])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+    
 # --- PANEL ADMINISTRADOR (Faltaba sincronizar con URLs) ---
 @login_required
 def panel_administrador(request):
@@ -535,6 +554,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
