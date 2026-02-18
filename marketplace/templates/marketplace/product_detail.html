@@ -30,7 +30,7 @@
                 <h5 style="margin: 0 0 15px 0; color: #002244; font-size: 1rem; border-bottom: 2px solid #f39c12; width: fit-content; padding-bottom: 4px;">
                     <i class="fas fa-truck-loading"></i> Datos de Logística
                 </h5>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; color: #4a5568;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; color: #4a5568; margin-bottom: 15px;">
                     <span><strong>Peso:</strong> {{ product.peso }} kg</span>
                     <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
                     <span><strong>Alto:</strong> {{ product.alto }} cm</span>
@@ -39,6 +39,16 @@
                         <strong>Origen:</strong> C.P. {{ product.cp_origen }}
                     </div>
                 </div>
+
+                {% if product.ficha_tecnica %}
+                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; color: #e74c3c; border: 1.5px solid #e74c3c; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.85rem; transition: 0.3s;">
+                        <i class="fas fa-file-pdf" style="font-size: 1.1rem;"></i> DESCARGAR FICHA TÉCNICA
+                    </a>
+                {% else %}
+                    <div style="text-align: center; color: #94a3b8; font-size: 0.75rem; padding: 8px; border: 1px dashed #cbd5e0; border-radius: 10px;">
+                        Sin ficha técnica disponible
+                    </div>
+                {% endif %}
             </div>
         </div>
 
