@@ -10,7 +10,26 @@
             </h2>
             <p style="color: #7f8c8d; font-size: 1rem;">Llega a más compradores con información detallada</p>
         </div>
-
+{% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+            <div style="padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; 
+                {% if message.tags == 'warning' %} background: #fff3cd; color: #856404; border: 1px solid #ffeeba;
+                {% elif message.tags == 'success' %} background: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+                {% else %} background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
+                
+                {% if message.tags == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                {% elif message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
+                
+                <span style="flex: 1;">{{ message }}</span>
+                
+                {% if "CLABE" in message.message %}
+                    <a href="{% url 'editar_perfil' %}" style="background: #856404; color: white; padding: 5px 12px; border-radius: 8px; text-decoration: none; font-size: 0.8rem;">Configurar ahora</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}    
         <form method="POST" enctype="multipart/form-data" id="productForm">
             {% csrf_token %}
             
@@ -167,3 +186,4 @@
     label { display: block; font-weight: 600; margin-bottom: 5px; color: #34495e; font-size: 0.85rem; }
 </style>
 {% endblock %}
+
