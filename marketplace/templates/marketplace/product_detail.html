@@ -46,7 +46,7 @@
                     </a>
                     
                     <a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25d366; color: white; border: none; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.85rem; transition: 0.3s;">
-                        <i class="fab fa-whatsapp"></i> ENVIAR LIGA POR WHATSAPP
+                        <i class="fab fa-whatsapp"></i> ENVIAR FICHA POR WHATSAPP
                     </a>
                 {% else %}
                     <div style="text-align: center; color: #94a3b8; font-size: 0.75rem; padding: 8px; border: 1px dashed #cbd5e0; border-radius: 10px;">
@@ -229,3 +229,4 @@
     {% endif %}
 </script>
 {% endblock %}
+
