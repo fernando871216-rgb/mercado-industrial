@@ -44,15 +44,19 @@ def descargar_ficha(request, product_id):
 @login_required
 def generar_preferencia_pago(request, producto_id):
     producto = get_object_or_404(IndustrialProduct, id=producto_id)
-    
+
     try:
         flete_recibido = float(request.GET.get('envio', 0))
         cp = request.GET.get('cp_destino') or '00000'
     except (TypeError, ValueError):
-        flete_recibido, cp = 0, '00000'
+        flete_recibido = 0
+        cp = '00000'
 
     total_con_flete = round(float(producto.price) + flete_recibido, 2)
     titulo = f"{producto.title} (Envío a CP {cp})" if flete_recibido > 0 else producto.title
+
+    # 🔐 Forzar HTTPS (IMPORTANTE en Render)
+    base_url = request.build_absolute_uri('/').replace("http://", "https://").rstrip('/')
 
     pref_data = {
         "items": [{
@@ -64,20 +68,30 @@ def generar_preferencia_pago(request, producto_id):
         }],
         "external_reference": f"PROD:{producto.id}-USER:{request.user.id}-FLETE:{flete_recibido}-CP:{cp}",
         "back_urls": {
-            "success": request.build_absolute_uri(f'/pago-exitoso/{producto.id}/'),
-            "failure": request.build_absolute_uri('/pago-fallido/'),
-            "pending": request.build_absolute_uri('/pago-exitoso/{producto.id}/'),
+            "success": f"{base_url}/pago-exitoso/{producto.id}/",
+            "failure": f"{base_url}/pago-fallido/",
+            "pending": f"{base_url}/pago-exitoso/{producto.id}/",
         },
-        "auto_return": "approved", 
-        "binary_mode": True,       # Evita pagos "pendientes", o es éxito o es falla
-        "notification_url": request.build_absolute_uri('/webhook/mercadopago/'),
+        "auto_return": "approved",
+        "notification_url": f"{base_url}/webhook/mercadopago/",
     }
-    
-    res_mp = SDK.preference().create(pref_data)
-    return JsonResponse({
-        'preference_id': res_mp["response"]["id"], 
-        'total_final': f"{total_con_flete:,.2f}"
-    })
+
+    try:
+        res_mp = SDK.preference().create(pref_data)
+
+        if "response" not in res_mp:
+            return JsonResponse({"error": "Error creando preferencia"}, status=500)
+
+        return JsonResponse({
+            'preference_id': res_mp["response"]["id"],
+            'total_final': f"{total_con_flete:,.2f}"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "error": "Error conectando con Mercado Pago",
+            "detalle": str(e)
+        }, status=500)
 
 
 @csrf_exempt
@@ -551,6 +565,7 @@ def category_detail(request, category_id):
 def como_funciona(request): return render(request, 'marketplace/como_funciona.html')
 def privacidad(request): return render(request, 'marketplace/privacidad.html')
 def procesar_pago(request, producto_id): return render(request, 'marketplace/pago.html', {'producto': get_object_or_404(IndustrialProduct, id=producto_id)})
+
 
 
 
