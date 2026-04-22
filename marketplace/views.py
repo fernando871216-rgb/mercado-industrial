@@ -518,7 +518,7 @@ def cotizar_soloenvios(request):
                     "length": int(float(producto.largo or 20)),
                     "width": int(float(producto.ancho or 20)),
                     "height": int(float(producto.alto or 20)),
-                    "weight": int(float(producto.peso or 1)),
+                    "weight": max(1, int(float(producto.peso or 1))),
                     "quantity": 1,
                     "mass_unit": "kg",
                     "distance_unit": "cm"
