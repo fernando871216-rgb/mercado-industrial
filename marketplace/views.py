@@ -528,8 +528,29 @@ def cotizar_soloenvios(request):
 
         for intento in range(3):
             res = requests.post(url_cot, json=payload, headers=headers, timeout=30)
-            data = res.json() if res.status_code in [200, 201] else {}
+
+            print("STATUS SOLOENVIOS:", res.status_code)
+            print("BODY SOLOENVIOS:", res.text)
+
+            if res.status_code not in [200, 201]:
+                print("ERROR INTENTO:", intento + 1)
+                if intento == 2:
+                    return JsonResponse({
+                        'tarifas': [],
+                        'error': f"Error API: {res.status_code}",
+                        'detalle': res.text
+                    })
+ 
+                time.sleep(1.5 + intento)
+                continue
+
+            try:
+                data = res.json()
+            except:
+                data = {}
+
             rates = data.get('rates', [])
+            print("RATES:", rates)
             
             if rates:
                 tarifas = []
