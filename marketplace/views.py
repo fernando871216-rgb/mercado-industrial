@@ -213,7 +213,7 @@ def detalle_producto(request, product_id):
     context = {
         'product': p,
         'preference_id': pref_id,
-        'public_key': "APP_USR-bab958ea-ede4-49f7-b072-1fd682f9e1b9",
+        'public_key': os.environ.get("MP_PUBLIC_KEY"),
         'perfil_incompleto': perfil_incompleto
     }
     return render(request, 'marketplace/product_detail.html', context)
