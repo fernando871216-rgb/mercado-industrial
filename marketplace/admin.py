@@ -69,6 +69,7 @@ class SaleAdmin(admin.ModelAdmin):
     list_display = (
         'id', 
         'product', 
+        'display_product_name',
         'buyer', 
         'price', 
         'status', 
@@ -76,6 +77,14 @@ class SaleAdmin(admin.ModelAdmin):
         'pagado_a_vendedor', 
         'created_at'
     )
+    def display_product_name(self, obj):
+        # Si el producto existe, lo muestra. Si no, muestra el nombre que guardamos.
+        if obj.product:
+            return obj.product.title
+        return obj.product_title_snapshot or "Producto no registrado"
+    
+    # Le ponemos un nombre a la columna en el admin
+    display_product_name.short_description = 'Producto'
     
     # NUEVO: Esto permite editar las casillas sin entrar al detalle de la venta
     list_editable = ('pagado_a_vendedor', 'recibido_por_comprador', 'status')
