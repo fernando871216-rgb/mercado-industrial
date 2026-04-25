@@ -25,13 +25,11 @@ class IndustrialProduct(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
-    CONDICION_CHOICES = [
-    ('nuevo', 'Nuevo'),
-    ('usado', 'Usado'),
-    ]
-
-    condicion = models.CharField(max_length=10, choices=CONDICION_CHOICES, default='nuevo')
-    
+    estado = models.CharField(
+    max_length=10,
+    choices=[('nuevo', 'Nuevo'), ('usado', 'Usado')],
+    default='nuevo'
+    )    
     image = CloudinaryField('image', blank=True, null=True, folder='productos/')
     image2 = CloudinaryField('image', blank=True, null=True, folder='productos/')
     image3 = CloudinaryField('image', blank=True, null=True, folder='productos/')
