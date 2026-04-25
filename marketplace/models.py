@@ -26,9 +26,9 @@ class IndustrialProduct(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     stock = models.IntegerField(default=1)
     estado = models.CharField(
-    max_length=10,
-    choices=[('nuevo', 'Nuevo'), ('usado', 'Usado')],
-    default='nuevo'
+        max_length=10,
+        choices=[('nuevo', 'Nuevo'), ('usado', 'Usado')],
+        default='nuevo'
     )    
     image = CloudinaryField('image', blank=True, null=True, folder='productos/')
     image2 = CloudinaryField('image', blank=True, null=True, folder='productos/')
@@ -68,8 +68,13 @@ class Profile(models.Model):
 
 # --- MODELO DE VENTA (SALE) ---
 class Sale(models.Model):
+    # SET_NULL es correcto para no perder el registro
     product = models.ForeignKey(IndustrialProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='compras')
+    buyer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
+    
+    # IMPORTANTE: Guardamos el nombre del producto por si el original se borra
+    product_title_snapshot = models.CharField(max_length=200, blank=True, null=True, help_text="Copia del título al momento de la venta")
+    
     price = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='pendiente')
@@ -84,17 +89,22 @@ class Sale(models.Model):
     is_delivery = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Venta de {self.product.title}"
+        # Manejo de error si el producto ya no existe
+        nombre = self.product.title if self.product else self.product_title_snapshot or "Producto Eliminado"
+        return f"Venta #{self.id} - {nombre}"
+
+    def save(self, *args, **kwargs):
+        # Al guardar por primera vez, respaldamos el nombre del producto
+        if not self.product_title_snapshot and self.product:
+            self.product_title_snapshot = self.product.title
+        super().save(*args, **kwargs)
         
     def get_gateway_cost(self):
-        # Aseguramos que shipping_cost no sea None
         flete = self.shipping_cost if self.shipping_cost else Decimal('0.00')
         precio_producto_original = self.price - flete
-        
         comision_porcentaje = precio_producto_original * Decimal('0.0349')
         fijo = Decimal('4.00')
         iva = (comision_porcentaje + fijo) * Decimal('0.16')
-        
         return (comision_porcentaje + fijo + iva).quantize(Decimal('0.01'))
 
     def get_platform_commission(self):
@@ -120,5 +130,3 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-
-
