@@ -104,7 +104,7 @@
                         
                         <div style="display: flex; flex-direction: column; margin-top: 10px;">
                             {% if venta.product.user.profile.phone %}
-                            <a href="https://wa.me/52{{ venta.product.user.profile.phone }}" target="_blank" class="btn-ws" style="background: #25D366;">
+                            <a href="https://wa.me/52{{ venta.product.seller.profile.phone }}" target="_blank" class="btn-ws" style="background: #25D366;">
                                 <i class="fab fa-whatsapp"></i> {{ venta.product.user.username|upper }} (VENDEDOR)
                             </a>
                             {% endif %}
@@ -118,7 +118,7 @@
 
                         <div class="info-clabe-box">
                             <small style="display: block; color: #007bff; font-weight: bold; font-size: 0.65rem;">CLABE PARA LIQUIDAR:</small>
-                            <strong style="font-family: monospace; font-size: 0.95rem;">{{ venta.product.user.profile.clabe|default:"PENDIENTE" }}</strong>
+                            <strong style="font-family: monospace; font-size: 0.95rem;">{{ venta.seller.user.profile.clabe|default:"PENDIENTE" }}</strong>
                         </div>
                     </td>
 
