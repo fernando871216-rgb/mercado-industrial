@@ -17,23 +17,40 @@
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
                 <div style="display: flex; gap: 20px; flex: 1; min-width: 280px;">
-                    {% if c.product.image %}
+                    {% if c.product and c.product.image %}
                         <img src="{{ c.product.image.url }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 12px; border: 1px solid #edf2f7;">
                     {% else %}
                         <div style="width: 100px; height: 100px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
-                            <i class="fas fa-image" style="color: #bdc3c7; font-size: 2.5rem;"></i>
+                            <i class="fas fa-box" style="color: #bdc3c7; font-size: 2.5rem;"></i>
                         </div>
                     {% endif %}
                     <div>
                         <span style="font-size: 0.7rem; color: #a0aec0; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Orden #{{ c.payment_id|truncatechars:12 }}</span>
-                        <h3 style="margin: 5px 0; color: #1a202c; font-size: 1.25rem; font-weight: 700;">{{ c.product.title }}</h3>
-                        <p style="margin: 0; color: #4a5568; font-size: 0.9rem;">Vendido por: <strong style="color: #003366;">{{ c.product.user.username|upper }}</strong></p>
+                        
+                        <h3 style="margin: 5px 0; color: #1a202c; font-size: 1.25rem; font-weight: 700;">
+                            {% if c.product %}
+                                {{ c.product.title }}
+                            {% else %}
+                                {{ c.product_title_snapshot|default:"Producto Eliminado" }}
+                            {% endif %}
+                        </h3>
+
+                        <p style="margin: 0; color: #4a5568; font-size: 0.9rem;">
+                            Vendido por: 
+                            <strong style="color: #003366;">
+                                {% if c.seller %}
+                                    {{ c.seller.username|upper }}
+                                {% else %}
+                                    {{ c.product.user.username|upper|default:"VENDEDOR" }}
+                                {% endif %}
+                            </strong>
+                        </p>
                         
                         <div style="margin-top: 12px;">
-                            <a href="https://wa.me/52{{ c.product.user.profile.phone }}?text=Hola,%20soy%20el%20comprador%20de%20tu%20equipo:%20{{ c.product.title }}" 
+                            <a href="https://wa.me/52{% if c.seller %}{{ c.seller.profile.phone }}{% else %}{{ c.product.user.profile.phone }}{% endif %}?text=Hola,%20soy%20el%20comprador%20del%20equipo:%20{% if c.product %}{{ c.product.title }}{% else %}{{ c.product_title_snapshot }}{% endif %}" 
                                target="_blank" 
                                style="display: inline-flex; align-items: center; gap: 8px; background: #25D366; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; transition: 0.3s;">
-                                <i class="fab fa-whatsapp"></i> CONTACTAR VENDEDOR
+                                 <i class="fab fa-whatsapp"></i> CONTACTAR VENDEDOR
                             </a>
                         </div>
                     </div>
@@ -108,4 +125,3 @@
 }
 </style>
 {% endblock %}
-
