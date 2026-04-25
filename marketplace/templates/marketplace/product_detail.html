@@ -1,246 +1,236 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    
-    <a href="javascript:history.back()" style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
-        <i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
+<div class="container-main">
+
+    <a href="javascript:history.back()" class="btn-back">
+        <i class="fas fa-chevron-left"></i> VOLVER
     </a>
 
-    <div style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
-        
-        <div style="flex: 1; min-width: 320px;">
-            <div style="text-align: center; margin-bottom: 20px; background: #fff; border: 1px solid #f1f4f8; border-radius: 15px; overflow: hidden; height: 400px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.02);">
+    <div class="card-main">
+
+        <!-- IZQUIERDA -->
+        <div class="col-left">
+
+            <!-- IMAGEN PRINCIPAL -->
+            <div class="image-box">
                 {% if product.image %}
-                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.3s;">
+                    <img id="mainImage" src="{{ product.image.url }}">
                 {% else %}
-                    <div style="width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
+                    <div class="no-image">
+                        <i class="fas fa-image fa-3x"></i>
                     </div>
                 {% endif %}
-          
-            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
-                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #0056b3;" class="thumb">{% endif %}
-                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">{% endif %}
-                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">{% endif %}
             </div>
 
-            <div style="padding: 20px; background: #fcfdfd; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                <h5 style="margin: 0 0 15px 0; color: #002244; font-size: 1rem; border-bottom: 2px solid #f39c12; width: fit-content; padding-bottom: 4px;">
-                    <i class="fas fa-truck-loading"></i> Datos de Logística
-                </h5>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; color: #4a5568; margin-bottom: 15px;">
-                    <span><strong>Peso:</strong> {{ product.peso }} kg</span>
-                    <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
-                    <span><strong>Alto:</strong> {{ product.alto }} cm</span>
-                    <span><strong>Largo:</strong> {{ product.largo }} cm</span>
-                    <div style="grid-column: span 2; background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #edf2f7;">
-                        <strong>Origen:</strong> C.P. {{ product.cp_origen }}
-                    </div>
+            <!-- THUMBS -->
+            <div class="thumbs">
+                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)">{% endif %}
+                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)">{% endif %}
+                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)">{% endif %}
+            </div>
+
+            <!-- LOGISTICA -->
+            <div class="box">
+                <h4>Logística</h4>
+                <div class="grid">
+                    <span>Peso: {{ product.peso }} kg</span>
+                    <span>Ancho: {{ product.ancho }} cm</span>
+                    <span>Alto: {{ product.alto }} cm</span>
+                    <span>Largo: {{ product.largo }} cm</span>
+                    <span class="full">CP Origen: {{ product.cp_origen }}</span>
                 </div>
 
                 {% if product.ficha_tecnica %}
-                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; color: #e74c3c; border: 1.5px solid #e74c3c; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.85rem; transition: 0.3s; margin-bottom: 10px;">
-                        <i class="fas fa-file-pdf"></i> DESCARGAR FICHA TÉCNICA
-                    </a>
-                    
-                    <a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #25d366; color: white; border: none; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.85rem; transition: 0.3s;">
-                        <i class="fab fa-whatsapp"></i> ENVIAR FICHA POR WHATSAPP
-                    </a>
-                {% else %}
-                    <div style="text-align: center; color: #94a3b8; font-size: 0.75rem; padding: 8px; border: 1px dashed #cbd5e0; border-radius: 10px;">
-                        Sin documentación disponible
-                    </div>
+                <a href="{% url 'descargar_ficha' product.id %}" class="btn-pdf">📄 Ficha técnica</a>
                 {% endif %}
             </div>
+
         </div>
 
-        <div style="flex: 1.2; min-width: 320px;">
-            <span style="background: #e1effe; color: #1e429f; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">{{ product.brand|default:"Industrial" }}</span>
-            <h1 style="color: #002244; font-size: 2rem; margin: 10px 0 5px 0; line-height: 1.2;">{{ product.title }}</h1>
-            <div style="margin: 5px 0 10px 0;">
-                <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                    {{ product.estado|title }}
-                </span>
-            </div>
-            <p style="color: #64748b; font-size: 1rem;">Num. de Parte: <strong style="color: #334155;">{{ product.part_number|default:"N/A" }}</strong></p>
+        <!-- DERECHA -->
+        <div class="col-right">
 
-            <div style="margin: 25px 0;">
-                <span style="font-size: 2.8rem; font-weight: 800; color: #27ae60;">${{ product.price }} <small style="font-size: 1rem; color: #94a3b8; font-weight: normal;">MXN</small></span>
-                {% if product.stock > 0 %}
-                    <div style="color: #087f5b; font-weight: bold; margin-top: 5px;"><i class="fas fa-check-circle"></i> Stock: {{ product.stock }} unidades</div>
-                {% else %}
-                    <div style="color: #e74c3c; font-weight: bold; margin-top: 5px;"><i class="fas fa-times-circle"></i> AGOTADO</div>
-                {% endif %}
-            </div>
+            <h1>{{ product.title }}</h1>
 
-            <div style="margin-bottom: 30px;">
-                <h5 style="color: #002244; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Descripción del Equipo</h5>
-                <div style="color: #475569; line-height: 1.7; font-size: 1rem; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">
-                    {{ product.description|linebreaks }}
-                </div>
+            <span class="badge {% if product.estado == 'nuevo' %}nuevo{% else %}usado{% endif %}">
+                {{ product.estado|title }}
+            </span>
+
+            <p><strong>Marca:</strong> {{ product.brand }}</p>
+            <p><strong>Parte:</strong> {{ product.part_number }}</p>
+
+            <div class="price">${{ product.price }} MXN</div>
+
+            <div class="desc">
+                {{ product.description|linebreaks }}
             </div>
 
-            {% if product.stock > 0 %}
-                {% if perfil_incompleto %}
-                    <div style="background: #fff9db; border: 1px solid #fcc419; color: #856404; padding: 25px; border-radius: 15px; margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-start;">
-                        <i class="fas fa-user-circle" style="font-size: 2rem; margin-top: 5px;"></i>
-                        <div>
-                            <h5 style="margin: 0 0 8px 0; font-weight: 800;">¡Hola, {{ nombre_usuario }}!</h5>
-                            <p style="font-size: 0.95rem; margin-bottom: 15px; line-height: 1.4;">
-                                Para poder realizar compras y calcular fletes con precisión, necesitamos que completes tu <strong>Nombre, Apellido, Teléfono y Dirección</strong> en tu perfil.
-                            </p>
-                            <a href="{% url 'editar_perfil' %}" style="background: #003366; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 0.9rem;">
-                                <i class="fas fa-edit"></i> Completar mi perfil ahora
-                            </a>
-                        </div>
-                    </div>
-                {% else %}
-                    <div style="background: #ffffff; padding: 20px; border-radius: 15px; border: 2px solid #0056b3; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,86,179,0.05);">
-                        <h4 style="margin: 0 0 15px 0; color: #0056b3; font-size: 1.1rem; font-weight: 800;"><i class="fas fa-shipping-fast"></i> Cotizador de Flete</h4>
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <input type="text" id="cp_destino" maxlength="5" placeholder="C.P. Destino" style="flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; outline: none;">
-                            <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #0056b3; color: white; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold;">COTIZAR</button>
-                        </div>
-                        <div id="lista-tarifas" style="display: none; max-height: 250px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 10px; background: #f8fafc;"></div>
-                    </div>
-
-                    <div id="wallet_container"></div>
-                {% endif %}
-            {% endif %}
-
-            <div style="margin-top: 30px; padding: 15px; background-color: #f0f7ff; border-radius: 12px; display: flex; gap: 15px;">
-                <i class="fas fa-shield-alt" style="color: #0056b3; font-size: 1.5rem; margin-top: 5px;"></i>
-                <p style="margin: 0; font-size: 0.85rem; color: #1e429f; line-height: 1.5;">
-                    <strong>Protección INITRE:</strong> Si no recibe su producto, se le hará <strong>reembolso</strong> total pagado en un plazo se 2 a 5 dias habiles. Si usa el <strong>COTIZADOR DE FLETE</strong> el Pago total = <strong>FLETE + Producto</strong>.
-                </p>
-            </div>
         </div>
+
     </div>
 </div>
 
-<script src="https://sdk.mercadopago.com/js/v2"></script>
+<style>
+
+/* CONTENEDOR */
+.container-main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 15px;
+}
+
+/* CARD */
+.card-main {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+/* COLUMNAS */
+.col-left, .col-right {
+    flex: 1;
+    min-width: 0;
+}
+
+/* IMAGEN */
+.image-box {
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.image-box img {
+    max-width: 100%;
+    max-height: 100%;
+    transition: transform 0.3s;
+}
+
+.image-box img:hover {
+    transform: scale(1.1);
+}
+
+/* THUMBS */
+.thumbs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.thumbs img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.full {
+    grid-column: span 2;
+}
+
+/* BOTONES */
+.btn-pdf {
+    display: block;
+    margin-top: 10px;
+    padding: 10px;
+    background: #e74c3c;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+}
+
+/* TEXTO */
+.price {
+    font-size: 2rem;
+    color: green;
+    margin: 15px 0;
+}
+
+.desc {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* BADGE */
+.nuevo {
+    background: green;
+    color: white;
+    padding: 5px 10px;
+}
+
+.usado {
+    background: orange;
+    padding: 5px 10px;
+}
+
+/* 📱 MOBILE */
+@media (max-width: 768px) {
+    .card-main {
+        flex-direction: column;
+    }
+
+    .image-box {
+        height: 250px;
+    }
+
+    .thumbs img {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+</style>
+
 <script>
-    function changeImage(src) {
-        const mainImg = document.getElementById('mainImage');
-        mainImg.style.opacity = '0';
-        setTimeout(() => {
-            mainImg.src = src;
-            mainImg.style.opacity = '1';
-        }, 200);
-    }
+function changeImage(src) {
+    document.getElementById('mainImage').src = src;
+}
 
-    {% if product.stock > 0 and not perfil_incompleto %}
-    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
-    let walletBrickController = null;
+/* SWIPE EN CELULAR */
+let startX = 0;
 
-    async function renderMP(preferenceId) {
-        const bricksBuilder = mp.bricks();
-        if (walletBrickController) await walletBrickController.unmount();
-        walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { 
-                preferenceId: preferenceId, 
-                redirectMode: "redirect"  // CAMBIO CLAVE: Cambiado de "modal" a "self" para forzar redirección
-            },
-            callbacks: {
-                onError: (error) => { console.error("Error MP:", error); }
-            }
-        });
-    }
+const img = document.getElementById("mainImage");
 
-    fetch(`/generar-preferencia/{{ product.id }}/`)
-    .then(res => res.json())
-    .then(data => {
-        if (data.preference_id) {
-            renderMP(data.preference_id);
-        }
+if (img) {
+    img.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
     });
 
-    function cotizarFlete() {
-        const cp = document.getElementById('cp_destino').value.trim();
-        const btn = document.getElementById('btn-cotizar');
-        const lista = document.getElementById('lista-tarifas');
+    img.addEventListener("touchend", e => {
+        let endX = e.changedTouches[0].clientX;
 
-        if (!cp || cp.length < 5) {
-            alert("Por favor ingresa un Código Postal válido.");
-            return;
-        }
+        if (endX - startX > 50) prevImage();
+        if (startX - endX > 50) nextImage();
+    });
+}
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
-        
-        lista.innerHTML = '<div style="padding:20px; text-align:center; color:#0056b3;">' +
-                          '<i class="fas fa-sync fa-spin"></i> Consultando paqueterías...<br>' +
-                          '<small style="color:#666;">Esto puede tardar unos segundos.</small></div>';
-        lista.style.display = 'block';
+const images = [
+    {% if product.image %}"{{ product.image.url }}",{% endif %}
+    {% if product.image2 %}"{{ product.image2.url }}",{% endif %}
+    {% if product.image3 %}"{{ product.image3.url }}",{% endif %}
+];
 
-        fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
-            .then(res => res.json())
-            .then(data => {
-                lista.innerHTML = "";
-                if (data.tarifas && data.tarifas.length > 0) {
-                    data.tarifas.forEach(t => {
-                        const item = document.createElement('div');
-                        item.className = "tarifa-item";
-                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; cursor: pointer;";
-                        
-                        item.onclick = () => seleccionarTarifa(item, t.precio_final);
-                        
-                        item.innerHTML = `
-                            <div>
-                                <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
-                                <small style="color: #718096;"><i class="fas fa-clock"></i> Entrega: ${t.tiempo}</small><br>
-                                <small style="color: #0056b3; font-weight: 600;"><i class="fas fa-info-circle"></i> ${t.detalle_servicio}</small>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: 800; color: #27ae60; font-size: 1.1rem;">$${t.precio_final}</div>
-                                <small style="color: #a0aec0; font-size: 0.7rem;">Final</small>
-                            </div>`;
-                        lista.appendChild(item);
-                    });
-                } else {
-                    lista.innerHTML = `
-                        <div style="padding:20px; text-align:center; background:#fff5f5; border-radius:10px;">
-                            <p style="color:#e74c3c; font-weight:bold; margin-bottom:10px;">La conexión con las paqueterías tardó demasiado.</p>
-                            <button onclick="cotizarFlete()" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">
-                                <i class="fas fa-sync"></i> INTENTAR DE NUEVO
-                            </button>
-                        </div>`;
-                }
-            })
-            .catch(err => {
-                lista.innerHTML = '<div style="padding:15px; color:#e74c3c;">Error de conexión.</div>';
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerText = "COTIZAR";
-            });
-    }
+let current = 0;
 
-    function seleccionarTarifa(elemento, precioConComision) {
-        const cp = document.getElementById('cp_destino').value.trim();
-        const filas = document.querySelectorAll('.tarifa-item');
-        const walletContainer = document.getElementById('wallet_container');
+function nextImage() {
+    current = (current + 1) % images.length;
+    img.src = images[current];
+}
 
-        filas.forEach(f => { f.style.backgroundColor = "transparent"; f.style.borderLeft = "none"; });
-        elemento.style.backgroundColor = "#f0fff4";
-        elemento.style.borderLeft = "5px solid #27ae60";
-
-        walletContainer.style.opacity = "0.5";
-        walletContainer.style.pointerEvents = "none";
-
-        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precioConComision}&cp_destino=${cp}`)
-            .then(res => res.json())
-            .then(data => { 
-                if (data.preference_id) renderMP(data.preference_id);
-            })
-            .finally(() => {
-                walletContainer.style.opacity = "1";
-                walletContainer.style.pointerEvents = "all";
-            });
-    }
-    {% endif %}
+function prevImage() {
+    current = (current - 1 + images.length) % images.length;
+    img.src = images[current];
+}
 </script>
+
 {% endblock %}
-
-
