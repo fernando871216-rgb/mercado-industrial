@@ -71,6 +71,7 @@ class Sale(models.Model):
     # SET_NULL es correcto para no perder el registro
     product = models.ForeignKey(IndustrialProduct, on_delete=models.SET_NULL, null=True, blank=True)
     buyer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
+    seller = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ventas_realizadas')
     
     # IMPORTANTE: Guardamos el nombre del producto por si el original se borra
     product_title_snapshot = models.CharField(max_length=200, blank=True, null=True, help_text="Copia del título al momento de la venta")
@@ -94,9 +95,12 @@ class Sale(models.Model):
         return f"Venta #{self.id} - {nombre}"
 
     def save(self, *args, **kwargs):
-        # Al guardar por primera vez, respaldamos el nombre del producto
-        if not self.product_title_snapshot and self.product:
-            self.product_title_snapshot = self.product.title
+        # Al crear la venta, guardamos el nombre del producto Y al vendedor
+        if self.product:
+            if not self.product_title_snapshot:
+                self.product_title_snapshot = self.product.title
+            if not self.seller:
+                self.seller = self.product.user  # Guardamos al dueño del producto
         super().save(*args, **kwargs)
         
     def get_gateway_cost(self):
