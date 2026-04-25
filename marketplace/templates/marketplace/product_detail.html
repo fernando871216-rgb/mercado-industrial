@@ -1,207 +1,218 @@
-
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    <div style="display: flex; flex-wrap: wrap; gap: 20px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+<div class="container main-container">
+    
+    <a href="javascript:history.back()" class="btn-back">
+        <i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
+    </a>
+
+    <div class="product-wrapper">
         
-        <div style="flex: 1; min-width: 300px;">
-            <div style="text-align: center; margin-bottom: 15px; background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 350px; display: flex; align-items: center; justify-content: center;">
+        <!-- IZQUIERDA -->
+        <div class="col-left">
+            <div class="image-box">
                 {% if product.image %}
-                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.3s;">
+                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}">
                 {% else %}
-                    <div style="width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-image fa-4x" style="color: #ccc;"></i>
+                    <div class="no-image">
+                        <i class="fas fa-image fa-4x"></i>
                     </div>
                 {% endif %}
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #003366; transition: 0.2s;" class="thumb">
-                {% endif %}
-                {% if product.image2 %}
-                    <img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
-                {% endif %}
-                {% if product.image3 %}
-                    <img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: 0.2s;" class="thumb">
-                {% endif %}
+            <div class="thumbs">
+                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" class="thumb active">{% endif %}
+                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" class="thumb">{% endif %}
+                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" class="thumb">{% endif %}
             </div>
-            
-            {% if product.ficha_tecnica %}
-            <div style="margin-bottom: 20px; padding: 15px; background: #fff5f5; border: 2px dashed #e74c3c; border-radius: 10px; text-align: center;">
-                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.95rem;"><i class="fas fa-file-pdf" style="color: #e74c3c;"></i> Documentación Técnica</h5>
-                <a href="{{ product.ficha_tecnica.url }}" class="btn btn-outline-danger" target="_blank">Descargar Ficha Técnica</a>
-            </div>
-            {% endif %}
 
-            <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #f39c12; margin-bottom: 15px;">
-                <h5 style="margin: 0 0 10px 0; color: #003366; font-size: 0.9rem;"><i class="fas fa-microchip"></i> Especificaciones de Envío</h5>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; color: #444;">
+            <div class="box">
+                <h5><i class="fas fa-truck-loading"></i> Datos de Logística</h5>
+
+                <div class="grid">
                     <span><strong>Peso:</strong> {{ product.peso }} kg</span>
                     <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
                     <span><strong>Alto:</strong> {{ product.alto }} cm</span>
                     <span><strong>Largo:</strong> {{ product.largo }} cm</span>
-                    <span style="grid-column: span 2;"><strong>Origen (CP):</strong> {{ product.cp_origen }}</span>
+                    <div class="full">
+                        <strong>Origen:</strong> C.P. {{ product.cp_origen }}
+                    </div>
                 </div>
+
+                {% if product.ficha_tecnica %}
+                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank" class="btn-pdf">
+                        <i class="fas fa-file-pdf"></i> DESCARGAR FICHA TÉCNICA
+                    </a>
+
+                    <a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}" target="_blank" class="btn-wa">
+                        <i class="fab fa-whatsapp"></i> ENVIAR FICHA POR WHATSAPP
+                    </a>
+                {% endif %}
             </div>
         </div>
 
-        <div style="flex: 1.2; min-width: 300px;">
-            <h1 style="color: #003366; font-size: 1.7rem; margin-bottom: 5px;">{{ product.title }}</h1>
-            <p style="color: #7f8c8d; font-size: 0.9rem;">Modelo: <strong>{{ product.part_number }}</strong></p>
-            
-            <div style="margin-bottom: 20px;">
-                <span style="font-size: 2.2rem; font-weight: bold; color: #27ae60;">${{ product.price }} <small style="font-size: 0.9rem; color: #7f8c8d;">MXN</small></span>
-                {% if product.stock <= 0 %}
-                    <span style="display: block; color: #e74c3c; font-weight: bold; margin-top: 10px;"><i class="fas fa-times-circle"></i> AGOTADO</span>
-                {% endif %}
+        <!-- DERECHA -->
+        <div class="col-right">
+            <span class="brand">{{ product.brand|default:"Industrial" }}</span>
+
+            <h1>{{ product.title }}</h1>
+
+            <div class="estado">
+                <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                    {{ product.estado|title }}
+                </span>
             </div>
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p>Num. de Parte: <strong>{{ product.part_number|default:"N/A" }}</strong></p>
+
+            <div class="price">
+                ${{ product.price }} <small>MXN</small>
+            </div>
 
             {% if product.stock > 0 %}
-                <div style="background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e0e6ed; margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                    <h4 style="margin: 0 0 12px 0; color: #003366; font-size: 1rem;"><i class="fas fa-shipping-fast"></i> Cotizador de Flete</h4>
-                    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                        <input type="text" id="cp_destino" placeholder="C.P. de destino" style="flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px;">
-                        <button onclick="cotizarFlete()" id="btn-cotizar" style="background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">COTIZAR</button>
-                    </div>
-                    <div id="lista-tarifas" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 8px; background: #fdfdfd;"></div>
-                </div>
-
-                <div id="wallet_container" style="min-height: 50px;"></div>
+                <div class="stock ok">Stock: {{ product.stock }}</div>
             {% else %}
-                <div style="background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 20px; border-radius: 12px; text-align: center;">
-                    <i class="fas fa-info-circle fa-2x" style="margin-bottom: 10px;"></i>
-                    <h4 style="margin: 0;">Producto No Disponible</h4>
-                    <p style="font-size: 0.9rem; margin: 10px 0 0 0;">Este equipo no tiene stock actualmente. Por favor, contacta al vendedor para consultar disponibilidad futura.</p>
-                </div>
+                <div class="stock no">AGOTADO</div>
             {% endif %}
 
-            <div style="margin-top: 20px; padding: 15px; background-color: #f0f7ff; border: 1px solid #d0e3ff; border-radius: 10px; display: flex; align-items: flex-start; gap: 12px;">
-                <i class="fas fa-info-circle" style="color: #0056b3; margin-top: 3px;"></i>
-                <p style="margin: 0; font-size: 0.88rem; color: #004085; line-height: 1.4;">
-                    <strong>Importante:</strong> Puedes acordar la logistica directamente con el vendedor si prefieres no usar el sistema de flete automático INITRE. Las cotizaciones son de parte de <strong>SoloEnvios.com</strong>. Si se usa el servicio de FLETE dentro de la pagina <strong>INITRE</strong> genera un <strong>8%</strong> de <strong>comision</strong> sobre el monto del FLETE cotizado por <strong>SoloEnvios.com</strong>.
-                </p>
+            <div class="desc">
+                {{ product.description|linebreaks }}
             </div>
+
+            {% if product.stock > 0 %}
+                {% if perfil_incompleto %}
+                    <!-- SIN CAMBIOS -->
+                {% else %}
+                    <div class="box">
+                        <h4>Cotizador de Flete</h4>
+
+                        <div class="flex">
+                            <input type="text" id="cp_destino" maxlength="5" placeholder="C.P. Destino">
+                            <button onclick="cotizarFlete()" id="btn-cotizar">COTIZAR</button>
+                        </div>
+
+                        <div id="lista-tarifas"></div>
+                    </div>
+
+                    <div id="wallet_container"></div>
+                {% endif %}
+            {% endif %}
+
         </div>
     </div>
 </div>
 
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-<script>
-    // 1. CAMBIO DE IMÁGENES
-    function changeImage(src) {
-        const mainImg = document.getElementById('mainImage');
-        mainImg.style.opacity = '0';
-        setTimeout(() => {
-            mainImg.src = src;
-            mainImg.style.opacity = '1';
-        }, 200);
+<style>
+
+/* CONTENEDOR */
+.main-container {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+/* BACK */
+.btn-back {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #eee;
+    border-radius: 20px;
+    margin-bottom: 15px;
+}
+
+/* FLEX PRINCIPAL */
+.product-wrapper {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+/* COLUMNAS */
+.col-left, .col-right {
+    flex: 1;
+    min-width: 0; /* 🔥 FIX CLAVE */
+}
+
+/* IMAGEN */
+.image-box {
+    height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-box img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* THUMBS */
+.thumbs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* CAJAS */
+.box {
+    padding: 15px;
+    margin-top: 15px;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.full {
+    grid-column: span 2;
+}
+
+/* BOTONES */
+.btn-pdf, .btn-wa {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+/* PRECIO */
+.price {
+    font-size: 2rem;
+    color: green;
+}
+
+/* MOBILE 🔥 */
+@media (max-width: 768px) {
+    .product-wrapper {
+        flex-direction: column;
     }
 
-    // 2. CONFIGURACIÓN MERCADO PAGO
-    {% if product.stock > 0 %}
-    const mp = new MercadoPago('{{ public_key }}', { locale: 'es-MX' });
-    let walletBrickController = null;
-
-    async function renderMP(preferenceId) {
-        const bricksBuilder = mp.bricks();
-        if (walletBrickController) {
-            await walletBrickController.unmount();
-        }
-        walletBrickController = await bricksBuilder.create("wallet", "wallet_container", {
-            initialization: { 
-                preferenceId: preferenceId, 
-                redirectMode: "modal" 
-            },
-            callbacks: {
-                onReady: () => { console.log("Brick de Mercado Pago listo"); },
-                onError: (error) => { console.error("Error en Brick:", error); }
-            }
-        });
+    .image-box {
+        height: 250px; /* 🔥 menor en celular */
     }
 
-    // Render inicial con la preferencia base
-    renderMP("{{ preference_id }}");
-    {% endif %}
-
-    // 3. COTIZADOR DE FLETE (SOLO ENVIOS)
-    function cotizarFlete() {
-        const cp = document.getElementById('cp_destino').value;
-        const btn = document.getElementById('btn-cotizar');
-        const lista = document.getElementById('lista-tarifas');
-
-        if (!cp || cp.length < 5) {
-            return alert("Por favor ingresa un código postal válido");
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
-
-        // Asegúrate que esta URL coincida con tu urls.py
-        fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
-            .then(res => res.json())
-            .then(data => {
-                lista.innerHTML = "";
-                if (data.tarifas && data.tarifas.length > 0) {
-                    data.tarifas.forEach(t => {
-                        const item = document.createElement('div');
-                        item.style = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f1f1; cursor: pointer;";
-                        item.onclick = () => seleccionarTarifa(item, t.precio_final);
-                        item.innerHTML = `
-                            <div style="font-size: 0.85rem;">
-                                <strong style="color: #2d3748;">${t.paqueteria}</strong><br>
-                                <small style="color: #718096;">Llega en: ${t.tiempo}</small>
-                            </div>
-                            <div style="font-weight: bold; color: #38a169;">$${t.precio_final}</div>
-                        `;
-                        lista.appendChild(item);
-                    });
-                    lista.style.display = 'block';
-                } else {
-                    alert("No hay tarifas disponibles para este CP o error en la API.");
-                }
-            })
-            .catch(err => {
-                console.error("Error en la petición:", err);
-                alert("Hubo un error al conectar con el servidor.");
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerText = "COTIZAR";
-            });
+    .grid {
+        grid-template-columns: 1fr;
     }
 
-    // 4. SELECCIÓN DE TARIFA Y ACTUALIZACIÓN DE PAGO
-    function seleccionarTarifa(elemento, precio) {
-        const filas = document.getElementById('lista-tarifas').children;
-        for(let f of filas) {
-            f.style.backgroundColor = "transparent";
-            f.style.borderLeft = "none";
-        }
-        elemento.style.backgroundColor = "#f0fff4";
-        elemento.style.borderLeft = "4px solid #38a169";
-
-        // Llamada para actualizar la preferencia de Mercado Pago con el flete incluido
-        fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.preference_id) {
-                    renderMP(data.preference_id);
-                }
-            })
-            .catch(error => console.error("Error actualizando preferencia:", error));
+    .full {
+        grid-column: span 1;
     }
-</script>
-{% endblock %}
 
+    .flex {
+        flex-direction: column;
+    }
+}
 
-
-
-
-
-
-
-
+</style>
