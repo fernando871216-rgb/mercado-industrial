@@ -40,7 +40,6 @@
         font-weight: bold;
         text-transform: uppercase;
     }
-    /* Colores para estados */
     .status-approved { background: #e8f5e9; color: #2e7d32; }
     .status-pendiente { background: #fff3e0; color: #ef6c00; }
     .status-enviado { background: #e3f2fd; color: #1565c0; }
@@ -65,7 +64,7 @@
         background: #f8fafc;
         border-radius: 10px;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #007bff;
+        border-left: 4px solid #2ecc71; /* Color verde para indicar dinero/pago */
     }
 </style>
 
@@ -125,13 +124,18 @@
                         </div>
 
                         <div class="info-clabe-box">
-                            <small style="display: block; color: #007bff; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Institución Bancaria:</small>
-                            <strong style="display: block; font-size: 1rem; color: #1a202c; margin-bottom: 6px;">
+                            <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Beneficiario:</small>
+                            <strong style="display: block; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px;">
+                                {{ venta.seller.get_full_name|default:venta.seller.username|upper }}
+                            </strong>
+
+                            <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Banco:</small>
+                            <strong style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 5px;">
                                 {{ venta.seller.profile.banco|default:"NO ESPECIFICADO"|upper }}
                             </strong>
                             
-                            <small style="display: block; color: #007bff; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">CLABE Interbancaria:</small>
-                            <strong style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #2d3748; letter-spacing: 1px;">
+                            <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">CLABE:</small>
+                            <strong style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #1a202c; letter-spacing: 1px;">
                                 {{ venta.seller.profile.clabe|default:"PENDIENTE" }}
                             </strong>
                         </div>
@@ -192,7 +196,7 @@
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 50px; color: #7f8c8d;">
                         <i class="fas fa-folder-open fa-3x"></i><br><br>
-                        No hay ventas registradas actualmente.
+                        Aún no hay ventas registradas.
                     </td>
                 </tr>
                 {% endfor %}
