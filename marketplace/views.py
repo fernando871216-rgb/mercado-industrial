@@ -142,11 +142,13 @@ def mercadopago_webhook(request):
                             defaults={
                                 'product': prod, 
                                 'buyer': user, 
+                                'seller': prod.user,
                                 'price': total_pagado,
                                 'shipping_cost': flete, 
                                 'shipping_cp': cp, 
                                 'status': 'approved', 
-                                'ganancia_neta': ganancia
+                                'ganancia_neta': ganancia,
+                                'product_title_snapshot': prod.title
                             }
                         )
                         
