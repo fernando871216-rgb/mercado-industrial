@@ -68,7 +68,7 @@ class Profile(models.Model):
 
 # --- MODELO DE VENTA (SALE) ---
 class Sale(models.Model):
-    product = models.ForeignKey(IndustrialProduct, on_delete=models.CASCADE)
+    product = models.ForeignKey(IndustrialProduct, on_delete=models.SET_NULL, null=True, blank=True)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='compras')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
