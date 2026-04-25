@@ -149,7 +149,7 @@ const btn = document.getElementById('btn-cotizar');
 const lista = document.getElementById('lista-tarifas');
 
 btn.disabled = true;
-btn.innerHTML = `<i class="fas fa-sync fa-spin"></i>`;
+btn.innerHTML = `<i class="fas fa-sync fa-spin"></i> Cotizando...`;
 
 lista.innerHTML = `<div style="padding:15px;text-align:center;">Consultando...</div>`;
 
@@ -192,15 +192,15 @@ btn.innerText = "COTIZAR";
 
 function seleccionarTarifa(elemento, precio){
 const cp = document.getElementById('cp_destino').value;
-const filas = document.querySelectorAll('#lista-tarifas > div');
+const filas = document.querySelectorAll('#lista-tarifas div');
 const resumen = document.getElementById('resumen_total');
 const envioSpan = document.getElementById('envio_precio');
 const totalSpan = document.getElementById('total_precio');
 
 const precioProducto = parseFloat("{{ product.price }}");
 
-envioSpan.innerText = `$${precioConComision.toFixed(2)}`;
-totalSpan.innerText = `$${(precioProducto + precioConComision).toFixed(2)}`;
+envioSpan.innerText = `$${parseFloat(precio).toFixed(2)}`;
+totalSpan.innerText = `$${(precioProducto + parseFloat(precio)).toFixed(2)}`;
 
 resumen.style.display = "block";
 
