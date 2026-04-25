@@ -1,104 +1,106 @@
 {% extends 'marketplace/base.html' %}
-
 {% block content %}
+
 <div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
-    
-    <a href="javascript:history.back()" style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
-        <i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
-    </a>
 
-    <div class="product-wrapper" style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
-        
-        <!-- IZQUIERDA -->
-        <div style="flex: 1; min-width: 0;">
-            <div class="image-box" style="text-align: center; margin-bottom: 20px; background: #fff; border: 1px solid #f1f4f8; border-radius: 15px; overflow: hidden; height: 400px; display: flex; align-items: center; justify-content: center;">
-                {% if product.image %}
-                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                {% else %}
-                    <div style="width: 100%; height: 100%; display:flex; align-items:center; justify-content:center;">
-                        <i class="fas fa-image fa-4x" style="color:#ccc;"></i>
-                    </div>
-                {% endif %}
-            </div>
+<a href="javascript:history.back()" style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
+<i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
+</a>
 
-            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
-                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
-                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
-                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
-            </div>
+<div class="product-wrapper" style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
 
-            <div style="padding: 20px; background: #fcfdfd; border-radius: 15px; border: 1px solid #e2e8f0;">
-                <h5><i class="fas fa-truck-loading"></i> Datos de Logística</h5>
+<div style="flex: 1; min-width: 0;">
+<div class="image-box" style="text-align: center; margin-bottom: 20px; background: #fff; border: 1px solid #f1f4f8; border-radius: 15px; overflow: hidden; height: 400px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.02);">
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <span><strong>Peso:</strong> {{ product.peso }} kg</span>
-                    <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
-                    <span><strong>Alto:</strong> {{ product.alto }} cm</span>
-                    <span><strong>Largo:</strong> {{ product.largo }} cm</span>
-                    <div style="grid-column: span 2;">
-                        <strong>Origen:</strong> C.P. {{ product.cp_origen }}
-                    </div>
-                </div>
+{% if product.image %}
+<img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.3s;">
+{% else %}
+<div style="width: 100%; height: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+<i class="fas fa-image fa-4x" style="color: #ccc;"></i>
+</div>
+{% endif %}
 
-                {% if product.ficha_tecnica %}
-                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank">DESCARGAR FICHA</a>
-                    <a href="https://wa.me/?text={{ product.title }}">WHATSAPP</a>
-                {% endif %}
-            </div>
-        </div>
+</div> <!-- 🔥 FIX: cierre correcto -->
 
-        <!-- DERECHA -->
-        <div style="flex: 1.2; min-width: 0;">
-            <h1>{{ product.title }}</h1>
+<div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
+{% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #0056b3;">{% endif %}
+{% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;">{% endif %}
+{% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;">{% endif %}
+</div>
 
-            <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning{% endif %}">
-                {{ product.estado }}
-            </span>
+<div style="padding: 20px; background: #fcfdfd; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+<h5 style="margin: 0 0 15px 0; color: #002244; font-size: 1rem; border-bottom: 2px solid #f39c12; width: fit-content; padding-bottom: 4px;">
+<i class="fas fa-truck-loading"></i> Datos de Logística
+</h5>
 
-            <p>{{ product.part_number }}</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+<span><strong>Peso:</strong> {{ product.peso }} kg</span>
+<span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
+<span><strong>Alto:</strong> {{ product.alto }} cm</span>
+<span><strong>Largo:</strong> {{ product.largo }} cm</span>
 
-            <div style="font-size: 2rem;">${{ product.price }}</div>
+<div style="grid-column: span 2;">
+<strong>Origen:</strong> C.P. {{ product.cp_origen }}
+</div>
+</div>
 
-            {% if product.stock > 0 %}
-                <div>Stock: {{ product.stock }}</div>
-            {% endif %}
+{% if product.ficha_tecnica %}
+<a href="{% url 'descargar_ficha' product.id %}" target="_blank">DESCARGAR FICHA</a>
+<a href="https://wa.me/?text={{ product.title }}">WHATSAPP</a>
+{% endif %}
+</div>
+</div>
 
-            {% if product.stock > 0 and not perfil_incompleto %}
-                <input type="text" id="cp_destino">
-                <button onclick="cotizarFlete()">Cotizar</button>
-                <div id="lista-tarifas"></div>
+<div style="flex: 1.2; min-width: 0;">
+<h1>{{ product.title }}</h1>
 
-                <div id="wallet_container"></div>
-            {% endif %}
-        </div>
-    </div>
+<span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning{% endif %}">
+{{ product.estado }}
+</span>
+
+<p>{{ product.part_number }}</p>
+
+<div style="font-size: 2rem;">${{ product.price }}</div>
+
+{% if product.stock > 0 %}
+<div>Stock: {{ product.stock }}</div>
+{% endif %}
+
+{% if product.stock > 0 and not perfil_incompleto %}
+<input type="text" id="cp_destino">
+<button onclick="cotizarFlete()">Cotizar</button>
+<div id="lista-tarifas"></div>
+
+<div id="wallet_container"></div>
+{% endif %}
+</div>
+
+</div>
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 
 <script>
 function changeImage(src){
-    document.getElementById('mainImage').src = src;
-}
-
-function cotizarFlete(){
-    console.log("cotizando...");
+document.getElementById('mainImage').src = src;
 }
 </script>
 
 <style>
 @media (max-width: 768px){
-    .product-wrapper{
-        flex-direction: column !important;
-    }
 
-    .image-box{
-        height: 250px !important;
-    }
+.product-wrapper{
+flex-direction: column !important;
+}
 
-    div[style*="grid-template-columns: 1fr 1fr"]{
-        grid-template-columns: 1fr !important;
-    }
+.image-box{
+height: 250px !important;
+}
+
+div[style*="grid-template-columns: 1fr 1fr"]{
+grid-template-columns: 1fr !important;
+}
+
 }
 </style>
 
