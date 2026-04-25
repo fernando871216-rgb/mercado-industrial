@@ -1,218 +1,105 @@
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
-<div class="container main-container">
+<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
     
-    <a href="javascript:history.back()" class="btn-back">
+    <a href="javascript:history.back()" style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
         <i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
     </a>
 
-    <div class="product-wrapper">
+    <div class="product-wrapper" style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
         
         <!-- IZQUIERDA -->
-        <div class="col-left">
-            <div class="image-box">
+        <div style="flex: 1; min-width: 0;">
+            <div class="image-box" style="text-align: center; margin-bottom: 20px; background: #fff; border: 1px solid #f1f4f8; border-radius: 15px; overflow: hidden; height: 400px; display: flex; align-items: center; justify-content: center;">
                 {% if product.image %}
-                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}">
+                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 {% else %}
-                    <div class="no-image">
-                        <i class="fas fa-image fa-4x"></i>
+                    <div style="width: 100%; height: 100%; display:flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-image fa-4x" style="color:#ccc;"></i>
                     </div>
                 {% endif %}
             </div>
 
-            <div class="thumbs">
-                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" class="thumb active">{% endif %}
-                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" class="thumb">{% endif %}
-                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" class="thumb">{% endif %}
+            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
+                {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
+                {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
+                {% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer;">{% endif %}
             </div>
 
-            <div class="box">
+            <div style="padding: 20px; background: #fcfdfd; border-radius: 15px; border: 1px solid #e2e8f0;">
                 <h5><i class="fas fa-truck-loading"></i> Datos de Logística</h5>
 
-                <div class="grid">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <span><strong>Peso:</strong> {{ product.peso }} kg</span>
                     <span><strong>Ancho:</strong> {{ product.ancho }} cm</span>
                     <span><strong>Alto:</strong> {{ product.alto }} cm</span>
                     <span><strong>Largo:</strong> {{ product.largo }} cm</span>
-                    <div class="full">
+                    <div style="grid-column: span 2;">
                         <strong>Origen:</strong> C.P. {{ product.cp_origen }}
                     </div>
                 </div>
 
                 {% if product.ficha_tecnica %}
-                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank" class="btn-pdf">
-                        <i class="fas fa-file-pdf"></i> DESCARGAR FICHA TÉCNICA
-                    </a>
-
-                    <a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}" target="_blank" class="btn-wa">
-                        <i class="fab fa-whatsapp"></i> ENVIAR FICHA POR WHATSAPP
-                    </a>
+                    <a href="{% url 'descargar_ficha' product.id %}" target="_blank">DESCARGAR FICHA</a>
+                    <a href="https://wa.me/?text={{ product.title }}">WHATSAPP</a>
                 {% endif %}
             </div>
         </div>
 
         <!-- DERECHA -->
-        <div class="col-right">
-            <span class="brand">{{ product.brand|default:"Industrial" }}</span>
-
+        <div style="flex: 1.2; min-width: 0;">
             <h1>{{ product.title }}</h1>
 
-            <div class="estado">
-                <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                    {{ product.estado|title }}
-                </span>
-            </div>
+            <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning{% endif %}">
+                {{ product.estado }}
+            </span>
 
-            <p>Num. de Parte: <strong>{{ product.part_number|default:"N/A" }}</strong></p>
+            <p>{{ product.part_number }}</p>
 
-            <div class="price">
-                ${{ product.price }} <small>MXN</small>
-            </div>
+            <div style="font-size: 2rem;">${{ product.price }}</div>
 
             {% if product.stock > 0 %}
-                <div class="stock ok">Stock: {{ product.stock }}</div>
-            {% else %}
-                <div class="stock no">AGOTADO</div>
+                <div>Stock: {{ product.stock }}</div>
             {% endif %}
 
-            <div class="desc">
-                {{ product.description|linebreaks }}
-            </div>
+            {% if product.stock > 0 and not perfil_incompleto %}
+                <input type="text" id="cp_destino">
+                <button onclick="cotizarFlete()">Cotizar</button>
+                <div id="lista-tarifas"></div>
 
-            {% if product.stock > 0 %}
-                {% if perfil_incompleto %}
-                    <!-- SIN CAMBIOS -->
-                {% else %}
-                    <div class="box">
-                        <h4>Cotizador de Flete</h4>
-
-                        <div class="flex">
-                            <input type="text" id="cp_destino" maxlength="5" placeholder="C.P. Destino">
-                            <button onclick="cotizarFlete()" id="btn-cotizar">COTIZAR</button>
-                        </div>
-
-                        <div id="lista-tarifas"></div>
-                    </div>
-
-                    <div id="wallet_container"></div>
-                {% endif %}
+                <div id="wallet_container"></div>
             {% endif %}
-
         </div>
     </div>
 </div>
 
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
+<script>
+function changeImage(src){
+    document.getElementById('mainImage').src = src;
+}
+
+function cotizarFlete(){
+    console.log("cotizando...");
+}
+</script>
+
 <style>
-
-/* CONTENEDOR */
-.main-container {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 10px;
-}
-
-/* BACK */
-.btn-back {
-    display: inline-block;
-    padding: 8px 16px;
-    background: #eee;
-    border-radius: 20px;
-    margin-bottom: 15px;
-}
-
-/* FLEX PRINCIPAL */
-.product-wrapper {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-/* COLUMNAS */
-.col-left, .col-right {
-    flex: 1;
-    min-width: 0; /* 🔥 FIX CLAVE */
-}
-
-/* IMAGEN */
-.image-box {
-    height: 350px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.image-box img {
-    max-width: 100%;
-    max-height: 100%;
-}
-
-/* THUMBS */
-.thumbs {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.thumb {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    cursor: pointer;
-}
-
-/* CAJAS */
-.box {
-    padding: 15px;
-    margin-top: 15px;
-}
-
-/* GRID */
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.full {
-    grid-column: span 2;
-}
-
-/* BOTONES */
-.btn-pdf, .btn-wa {
-    display: block;
-    text-align: center;
-    margin-top: 10px;
-    padding: 10px;
-}
-
-/* PRECIO */
-.price {
-    font-size: 2rem;
-    color: green;
-}
-
-/* MOBILE 🔥 */
-@media (max-width: 768px) {
-    .product-wrapper {
-        flex-direction: column;
+@media (max-width: 768px){
+    .product-wrapper{
+        flex-direction: column !important;
     }
 
-    .image-box {
-        height: 250px; /* 🔥 menor en celular */
+    .image-box{
+        height: 250px !important;
     }
 
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .full {
-        grid-column: span 1;
-    }
-
-    .flex {
-        flex-direction: column;
+    div[style*="grid-template-columns: 1fr 1fr"]{
+        grid-template-columns: 1fr !important;
     }
 }
-
 </style>
+
+{% endblock %}
