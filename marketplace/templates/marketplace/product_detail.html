@@ -39,7 +39,7 @@ style="display:flex;justify-content:center;align-items:center;margin-top:10px;pa
 <i class="fas fa-file-pdf"></i> DESCARGAR FICHA
 </a>
 
-<a href="https://wa.me/?text={{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}"
+<a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}"
 target="_blank"
 style="display:flex;justify-content:center;align-items:center;margin-top:10px;padding:10px;border-radius:10px;background:#25d366;color:white;font-weight:bold;">
 <i class="fab fa-whatsapp"></i> ENVIAR POR WHATSAPP
@@ -51,6 +51,20 @@ style="display:flex;justify-content:center;align-items:center;margin-top:10px;pa
 <!-- DERECHA -->
 <div style="flex:1; min-width:300px;">
 <h2>{{ product.title }}</h2>
+
+<!-- ESTADO -->
+<div style="margin: 5px 0 10px 0;">
+    <span style="
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: {% if product.estado == 'nuevo' %}#d4edda; color:#155724;
+                   {% else %}#fff3cd; color:#856404;{% endif %}">
+        {{ product.estado|title }}
+    </span>
+</div>
+
 <p>{{ product.description }}</p>
 <h2 style="color:#27ae60;">${{ product.price }} MXN</h2>
 
@@ -70,6 +84,16 @@ COTIZAR
 
 <!-- MERCADO PAGO -->
 <div id="wallet_container"></div>
+
+<!-- PROTECCIÓN -->
+<div style="margin-top: 20px; padding: 15px; background-color: #f0f7ff; border-radius: 12px; display: flex; gap: 15px;">
+    <i class="fas fa-shield-alt" style="color: #0056b3; font-size: 1.5rem; margin-top: 5px;"></i>
+    <p style="margin: 0; font-size: 0.85rem; color: #1e429f; line-height: 1.5;">
+        <strong>Protección INITRE:</strong>
+        Si no recibe su producto, se le hará <strong>reembolso</strong> total pagado en un plazo de 2 a 5 días hábiles.
+        Si usa el <strong>COTIZADOR DE FLETE</strong> el pago total = <strong>FLETE + Producto</strong>.
+    </p>
+</div>
 
 {% endif %}
 
@@ -153,6 +177,15 @@ btn.innerText = "COTIZAR";
 
 function seleccionarTarifa(elemento, precio){
 const cp = document.getElementById('cp_destino').value;
+const filas = document.querySelectorAll('#lista-tarifas > div');
+
+filas.forEach(f=>{
+f.style.backgroundColor="transparent";
+f.style.borderLeft="none";
+});
+
+elemento.style.backgroundColor="#f0fff4";
+elemento.style.borderLeft="5px solid #27ae60";
 
 fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
 .then(res=>res.json())
