@@ -266,12 +266,11 @@ def borrar_producto(request, pk):
 # --- COMPRAS Y VENTAS ---
 @login_required
 def mis_ventas(request):
-    # Traemos las ventas del vendedor actual
-    ventas = Sale.objects.filter(product__user=request.user).order_by('-created_at')
+    # Ahora filtramos por el campo 'seller' que creamos, 
+    # el cual NO desaparece aunque borres el producto.
+    ventas = Sale.objects.filter(seller=request.user).order_by('-created_at')
     
     for v in ventas:
-        # Usamos el método del modelo que ya tiene los "seguros" contra valores nulos
-        # Esto asegura que v.monto_limpio_vendedor SIEMPRE tenga un valor
         v.monto_limpio_vendedor = v.get_net_amount()
         
     return render(request, 'marketplace/mis_ventas.html', {'ventas': ventas})
