@@ -19,7 +19,12 @@
                     </div>
                 {% endif %}
             </div>
-
+            <p>
+                <strong>Estado:</strong> 
+                <span class="badge {% if product.estado == 'nuevo' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                    {{ product.estado|title }}
+                </span>
+            </p>
             <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
                 {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #0056b3;" class="thumb">{% endif %}
                 {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid #eee;" class="thumb">{% endif %}
