@@ -69,7 +69,7 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = IndustrialProduct
         fields = [
-            'title', 'brand', 'part_number', 'description', 'price', 'ficha_tecnica', 
+            'title', 'brand', 'estado', 'part_number', 'description', 'price', 'ficha_tecnica', 
             'stock', 'category', 'image','image2', 'image3', 'peso', 'largo', 'ancho', 'alto', 'cp_origen'
         ]
         widgets = {
