@@ -4,7 +4,7 @@
 <div class="container-main">
 
     <a href="javascript:history.back()" class="btn-back">
-        <i class="fas fa-chevron-left"></i> VOLVER
+        ← Volver
     </a>
 
     <div class="card-main">
@@ -12,18 +12,14 @@
         <!-- IZQUIERDA -->
         <div class="col-left">
 
-            <!-- IMAGEN PRINCIPAL -->
             <div class="image-box">
                 {% if product.image %}
                     <img id="mainImage" src="{{ product.image.url }}">
                 {% else %}
-                    <div class="no-image">
-                        <i class="fas fa-image fa-3x"></i>
-                    </div>
+                    <div class="no-image">Sin imagen</div>
                 {% endif %}
             </div>
 
-            <!-- THUMBS -->
             <div class="thumbs">
                 {% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)">{% endif %}
                 {% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)">{% endif %}
@@ -33,6 +29,7 @@
             <!-- LOGISTICA -->
             <div class="box">
                 <h4>Logística</h4>
+
                 <div class="grid">
                     <span>Peso: {{ product.peso }} kg</span>
                     <span>Ancho: {{ product.ancho }} cm</span>
@@ -42,7 +39,7 @@
                 </div>
 
                 {% if product.ficha_tecnica %}
-                <a href="{% url 'descargar_ficha' product.id %}" class="btn-pdf">📄 Ficha técnica</a>
+                    <a href="{% url 'descargar_ficha' product.id %}" class="btn-pdf">📄 Descargar ficha</a>
                 {% endif %}
             </div>
 
@@ -66,170 +63,185 @@
                 {{ product.description|linebreaks }}
             </div>
 
+            {% if product.stock > 0 %}
+
+                {% if perfil_incompleto %}
+                    <div class="alert">
+                        Completa tu perfil para comprar
+                        <a href="{% url 'editar_perfil' %}">Ir a perfil</a>
+                    </div>
+                {% else %}
+
+                    <!-- COTIZADOR -->
+                    <div class="cotizador">
+                        <input type="text" id="cp_destino" placeholder="Código Postal">
+                        <button onclick="cotizarFlete()">Cotizar</button>
+                        <div id="lista-tarifas"></div>
+                    </div>
+
+                    <!-- MERCADO PAGO -->
+                    <div id="wallet_container"></div>
+
+                {% endif %}
+            {% endif %}
+
         </div>
 
     </div>
 </div>
 
 <style>
+.container-main { max-width:1100px; margin:auto; padding:15px; }
 
-/* CONTENEDOR */
-.container-main {
-    max-width: 1100px;
-    margin: auto;
-    padding: 15px;
-}
-
-/* CARD */
 .card-main {
-    display: flex;
-    gap: 25px;
-    flex-wrap: wrap;
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
 }
 
-/* COLUMNAS */
 .col-left, .col-right {
-    flex: 1;
-    min-width: 0;
+    flex:1;
+    min-width:0;
 }
 
 /* IMAGEN */
 .image-box {
-    height: 400px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    height:350px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
 }
 
 .image-box img {
-    max-width: 100%;
-    max-height: 100%;
-    transition: transform 0.3s;
+    max-width:100%;
+    max-height:100%;
+    transition:0.3s;
 }
 
 .image-box img:hover {
-    transform: scale(1.1);
+    transform:scale(1.1);
 }
 
 /* THUMBS */
 .thumbs {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 10px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-top:10px;
 }
 
 .thumbs img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    cursor: pointer;
+    width:60px;
+    height:60px;
+    object-fit:cover;
+    cursor:pointer;
 }
 
 /* GRID */
 .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display:grid;
+    grid-template-columns:1fr 1fr;
 }
 
-.full {
-    grid-column: span 2;
-}
+.full { grid-column:span 2; }
 
-/* BOTONES */
-.btn-pdf {
-    display: block;
-    margin-top: 10px;
-    padding: 10px;
-    background: #e74c3c;
-    color: white;
-    text-align: center;
-    border-radius: 8px;
-}
-
-/* TEXTO */
-.price {
-    font-size: 2rem;
-    color: green;
-    margin: 15px 0;
-}
+/* UI */
+.price { font-size:2rem; color:green; margin:10px 0; }
 
 .desc {
-    background: #f5f5f5;
-    padding: 15px;
-    border-radius: 10px;
+    background:#f5f5f5;
+    padding:15px;
+    border-radius:10px;
 }
 
-/* BADGE */
-.nuevo {
-    background: green;
-    color: white;
-    padding: 5px 10px;
+.cotizador input {
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
 }
 
-.usado {
-    background: orange;
-    padding: 5px 10px;
+.cotizador button {
+    width:100%;
+    padding:10px;
 }
 
-/* 📱 MOBILE */
-@media (max-width: 768px) {
-    .card-main {
-        flex-direction: column;
-    }
-
-    .image-box {
-        height: 250px;
-    }
-
-    .thumbs img {
-        width: 50px;
-        height: 50px;
-    }
+/* MOBILE */
+@media(max-width:768px){
+    .card-main { flex-direction:column; }
+    .image-box { height:250px; }
 }
-
 </style>
 
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
 <script>
-function changeImage(src) {
+function changeImage(src){
     document.getElementById('mainImage').src = src;
 }
 
-/* SWIPE EN CELULAR */
-let startX = 0;
+/* SWIPE */
+let startX=0;
+const img=document.getElementById("mainImage");
 
-const img = document.getElementById("mainImage");
-
-if (img) {
-    img.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-    });
-
-    img.addEventListener("touchend", e => {
-        let endX = e.changedTouches[0].clientX;
-
-        if (endX - startX > 50) prevImage();
-        if (startX - endX > 50) nextImage();
+if(img){
+    img.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
+    img.addEventListener("touchend",e=>{
+        let endX=e.changedTouches[0].clientX;
+        if(endX-startX>50) prevImage();
+        if(startX-endX>50) nextImage();
     });
 }
 
-const images = [
+const images=[
     {% if product.image %}"{{ product.image.url }}",{% endif %}
     {% if product.image2 %}"{{ product.image2.url }}",{% endif %}
     {% if product.image3 %}"{{ product.image3.url }}",{% endif %}
 ];
 
-let current = 0;
+let current=0;
+function nextImage(){ current=(current+1)%images.length; img.src=images[current]; }
+function prevImage(){ current=(current-1+images.length)%images.length; img.src=images[current]; }
 
-function nextImage() {
-    current = (current + 1) % images.length;
-    img.src = images[current];
+/* MERCADO PAGO */
+{% if product.stock > 0 and not perfil_incompleto %}
+const mp = new MercadoPago('{{ public_key }}');
+let wallet;
+
+async function renderMP(pref){
+    const bricks = mp.bricks();
+    if(wallet) await wallet.unmount();
+    wallet = await bricks.create("wallet","wallet_container",{ initialization:{ preferenceId:pref } });
 }
 
-function prevImage() {
-    current = (current - 1 + images.length) % images.length;
-    img.src = images[current];
+fetch(`/generar-preferencia/{{ product.id }}/`)
+.then(r=>r.json())
+.then(d=>{ if(d.preference_id) renderMP(d.preference_id); });
+{% endif %}
+
+/* COTIZADOR */
+function cotizarFlete(){
+    const cp=document.getElementById('cp_destino').value;
+
+    fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
+    .then(r=>r.json())
+    .then(data=>{
+        const lista=document.getElementById('lista-tarifas');
+        lista.innerHTML="";
+
+        data.tarifas.forEach(t=>{
+            let div=document.createElement('div');
+            div.innerHTML = `${t.paqueteria} - $${t.precio_final}`;
+            div.onclick=()=>selectTarifa(t.precio_final,cp);
+            lista.appendChild(div);
+        });
+    });
+}
+
+function selectTarifa(precio,cp){
+    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+    .then(r=>r.json())
+    .then(d=>{ if(d.preference_id) renderMP(d.preference_id); });
 }
 </script>
 
