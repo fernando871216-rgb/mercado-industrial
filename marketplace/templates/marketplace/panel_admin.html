@@ -64,7 +64,7 @@
         background: #f8fafc;
         border-radius: 10px;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #2ecc71; /* Color verde para indicar dinero/pago */
+        border-left: 4px solid #2ecc71;
     }
 </style>
 
@@ -125,13 +125,13 @@
 
                         <div class="info-clabe-box">
                             <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Beneficiario:</small>
-                            <strong style="display: block; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px;">
-                                {{ venta.seller.get_full_name|default:venta.seller.username|upper }}
+                            <strong style="display: block; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase;">
+                                {{ venta.seller.first_name }} {{ venta.seller.last_name }}{% if not venta.seller.first_name %}{{ venta.seller.username }}{% endif %}
                             </strong>
 
                             <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Banco:</small>
-                            <strong style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 5px;">
-                                {{ venta.seller.profile.banco|default:"NO ESPECIFICADO"|upper }}
+                            <strong style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 5px; text-transform: uppercase;">
+                                {{ venta.seller.profile.banco|default:"NO ESPECIFICADO" }}
                             </strong>
                             
                             <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">CLABE:</small>
