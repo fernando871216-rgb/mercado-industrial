@@ -126,7 +126,7 @@
                         <div class="info-clabe-box">
                             <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Beneficiario:</small>
                             <strong style="display: block; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase;">
-                                {{ venta.seller.first_name }} {{ venta.seller.last_name }}{% if not venta.seller.first_name %}{{ venta.seller.username }}{% endif %}
+                                {{ venta.seller.profile.beneficiario|default:"NOMBRE NO REGISTRADO" }}
                             </strong>
 
                             <small style="display: block; color: #27ae60; font-weight: 800; font-size: 0.65rem; text-transform: uppercase;">Banco:</small>
@@ -196,7 +196,7 @@
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 50px; color: #7f8c8d;">
                         <i class="fas fa-folder-open fa-3x"></i><br><br>
-                        Aún no hay ventas registradas.
+                        No hay ventas registradas actualmente.
                     </td>
                 </tr>
                 {% endfor %}
