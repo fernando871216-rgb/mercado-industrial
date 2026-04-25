@@ -18,7 +18,7 @@ class Category(models.Model):
 
 # --- MODELO DE PRODUCTO INDUSTRIAL ---
 class IndustrialProduct(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=200)
     brand = models.CharField(max_length=100, blank=True, null=True)
     part_number = models.CharField(max_length=100, blank=True, null=True)
