@@ -193,7 +193,7 @@ function cotizarFlete(){
                 lista.appendChild(item);
             });
         }else{
-            lista.innerHTML = `<div style="text-align:center;color:#e53e3e; padding:10px;">${data.error || 'No hay cobertura para este CP.'}</div>`;
+            lista.innerHTML = `<div style="text-align:center;color:#e53e3e; padding:10px;">${data.error || 'Intente de Nuevo.'}</div>`;
         }
     })
     .finally(()=>{
