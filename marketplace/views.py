@@ -37,7 +37,7 @@ def descargar_apk(request):
 def descargar_ficha(request, product_id):
     p = get_object_or_404(IndustrialProduct, id=product_id)
     if not p.ficha_tecnica: raise Http404
-    return FileResponse(p.ficha_tecnica.open(), content_type='application/pdf')
+    return redirect(p.ficha_tecnica.url)
 
 # --- MERCADO PAGO Y WEBHOOK ---
 
