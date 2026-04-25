@@ -83,6 +83,21 @@ COTIZAR
 </div>
 
 <!-- MERCADO PAGO -->
+<div id="resumen_total" style="display:none; background:#f0fff4; border:2px solid #27ae60; padding:15px; border-radius:12px; margin-bottom:15px;">
+    <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+        <span>Producto:</span>
+        <strong>${{ product.price }} MXN</strong>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+        <span>Envío:</span>
+        <strong id="envio_precio">$0.00</strong>
+    </div>
+    <hr>
+    <div style="display:flex; justify-content:space-between; font-size:1.2rem; font-weight:800; color:#27ae60;">
+        <span>Total:</span>
+        <span id="total_precio">$0.00</span>
+    </div>
+</div>
 <div id="wallet_container"></div>
 
 <!-- PROTECCIÓN -->
@@ -178,6 +193,16 @@ btn.innerText = "COTIZAR";
 function seleccionarTarifa(elemento, precio){
 const cp = document.getElementById('cp_destino').value;
 const filas = document.querySelectorAll('#lista-tarifas > div');
+const resumen = document.getElementById('resumen_total');
+const envioSpan = document.getElementById('envio_precio');
+const totalSpan = document.getElementById('total_precio');
+
+const precioProducto = parseFloat("{{ product.price }}");
+
+envioSpan.innerText = `$${precioConComision.toFixed(2)}`;
+totalSpan.innerText = `$${(precioProducto + precioConComision).toFixed(2)}`;
+
+resumen.style.display = "block";
 
 filas.forEach(f=>{
 f.style.backgroundColor="transparent";
