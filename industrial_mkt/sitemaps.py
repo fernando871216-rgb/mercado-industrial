@@ -1,6 +1,6 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from marketplace.models import Producto
+from marketplace.models import IndustrialProduct
 
 
 class StaticViewSitemap(Sitemap):
@@ -19,7 +19,7 @@ class ProductSitemap(Sitemap):
     priority = 0.9
 
     def items(self):
-        return Producto.objects.all()
+        return IndustrialProduct.objects.all()
 
     def location(self, obj):
         return f"/producto/{obj.id}/"
