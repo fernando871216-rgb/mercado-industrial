@@ -10,10 +10,9 @@ sitemaps = {
     'static': StaticViewSitemap,
 }
 
+
 urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
-]
-urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('marketplace.urls')),
     
