@@ -22,4 +22,4 @@ class ProductSitemap(Sitemap):
         return IndustrialProduct.objects.all()
 
     def location(self, obj):
-        return f"/producto/{obj.id}/"
+        return reverse('detalle_producto', args=[obj.id])
