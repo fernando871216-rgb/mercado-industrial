@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'marketplace/base.html' %}
 {% load static %}
 
@@ -144,3 +145,151 @@
 </div>
 {% endblock %}
 
+=======
+{% extends 'marketplace/base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        {{ message }}
+        <a href="{% url 'editar_perfil' %}" class="alert-link">Configurar perfil ahora</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+
+    <div style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; border-left: 8px solid #0056b3; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 280px;">
+                <h2 style="color: #002244; margin: 0 0 15px 0; font-size: clamp(1.4rem, 4vw, 1.8rem); font-weight: 800;">
+                    <i class="fas fa-handshake" style="color: #f39c12;"></i> Comercio Directo y Seguro
+                </h2>
+                <p style="color: #5d6d7e; line-height: 1.6; margin: 0 0 20px 0; font-size: 1rem;">
+                    Compra y Venta de equipos Industriales Nuevos o Usados. Contacto técnico y pago seguro. 
+                    <span style="color: #0056b3;">¡Usa nuestra App para gestionar tus ventas!</span>
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; border: 1px solid #edf2f7;">
+                        <i class="fas fa-search" style="color: #3498db; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: 800; color: #2c3e50;">BUSCA</span>
+                    </div>
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; border: 1px solid #edf2f7;">
+                        <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: 800; color: #2c3e50;">CONTACTA</span>
+                    </div>
+                    <div style="text-align: center; background: #f8f9fa; padding: 15px 5px; border-radius: 15px; border: 1px solid #edf2f7;">
+                        <i class="fas fa-truck" style="color: #002244; font-size: 1.1rem; margin-bottom: 5px;"></i>
+                        <span style="display: block; font-size: 0.65rem; font-weight: 800; color: #2c3e50;">ACUERDA</span>
+                    </div>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 280px; display: flex; justify-content: center;">
+                <div style="max-width: 320px; width: 100%; border-radius: 15px; overflow: hidden; background: #000; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 4px solid white;">
+                    <video autoplay loop muted playsinline style="width: 100%; display: block;">
+                        <source src="{% static 'video_promo_initre.mp4' %}" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: sticky; top: 70px; z-index: 1500; background-color: rgba(244, 247, 246, 0.98); padding: 10px 0; margin-bottom: 25px; backdrop-filter: blur(8px); border-bottom: 1px solid rgba(0,0,0,0.05);">
+        
+        <form method="GET" action="{% url 'home' %}" style="max-width: 700px; margin: 0 auto 12px; display: flex; flex-direction: row; gap: 10px; padding: 0 10px;">
+            <div style="flex: 1; position: relative; display: flex; align-items: center;">
+                <i class="fas fa-search" style="position: absolute; left: 18px; color: #95a5a6;"></i>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="¿Qué equipo buscas hoy?" 
+                       style="width: 100%; padding: 12px 20px 12px 45px; border: 1px solid #dcdde1; border-radius: 30px; font-size: 0.95rem; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; background: white;">
+            </div>
+            <button type="submit" style="background: #002244; color: white; border: none; padding: 0 20px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 0.85rem;">
+                BUSCAR
+            </button>
+        </form>
+
+        <div style="display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding: 5px 15px 10px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+            <style>
+                .cat-btn:hover { background: #0056b3 !important; color: white !important; }
+            </style>
+            
+            <a href="?q=Bomba" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-tools"></i> Bombas
+            </a>
+            
+            <a href="?q=Auto" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-car-side"></i> Auto partes
+            </a>
+            
+            <a href="?q=Valvula" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-dharmachakra"></i> Válvulas
+            </a>
+            
+            <a href="?q=PLC" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-microchip"></i> PLC's
+            </a>
+
+            <a href="?q=Laboratorio" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-flask"></i> Laboratorio
+            </a>
+
+            <a href="?q=Sensor" class="cat-btn" style="text-decoration: none; background: white; color: #5d6d7e; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #dcdde1; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-broadcast-tower"></i> Sensores
+            </a>
+            
+            <a href="{% url 'home' %}" class="cat-btn" style="text-decoration: none; background: #edf2f7; color: #0056b3; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #0056b3; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-sync-alt"></i> OTROS
+            </a>
+        </div>
+    </div>
+
+    <h3 style="color: #2c3e50; border-bottom: 3px solid #0056b3; width: fit-content; padding-bottom: 5px; margin-bottom: 25px; font-size: 1.3rem; font-weight: 800;">
+        {% if query %} <i class="fas fa-filter"></i> Resultados para "{{ query }}" {% else %} <i class="fas fa-bolt" style="color: #f39c12;"></i> Equipos Recientes {% endif %}
+    </h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
+        {% for product in products %}
+            <div class="product-card" style="background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid #edf2f7; position: relative; transition: 0.3s; {% if product.stock <= 0 %} opacity: 0.6; {% endif %}">
+                {% if product.ficha_tecnica %}
+                <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
+                    <span style="background: #e74c3c; color: white; padding: 5px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: bold; box-shadow: 0 4px 8px rgba(231,76,60,0.3);">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </span>
+                </div>
+                {% endif %}
+                <a href="{% url 'detalle_producto' product.id %}" style="text-decoration: none; color: inherit;">
+                    <div style="height: 180px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 15px; border-bottom: 1px solid #f8f9fa;">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        {% else %}
+                            <i class="fas fa-image" style="font-size: 3rem; color: #d5d8dc;"></i>
+                        {% endif %}
+                    </div>
+                    <div style="padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #0056b3; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">{{ product.brand|default:"INDUSTRIAL" }}</span>
+                            <span style="font-size: 0.65rem; background: #e6fcf5; color: #087f5b; padding: 2px 6px; border-radius: 6px; font-weight: bold;">Stock: {{ product.stock }}</span>
+                        </div>
+                        <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #1a202c; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700;">{{ product.title }}</h4>
+                        <div style="display: flex; align-items: baseline; gap: 4px;">
+                            <span style="font-size: 1.2rem; font-weight: 800; color: #27ae60;">${{ product.price }}</span>
+                            <span style="font-size: 0.75rem; color: #95a5a6;">MXN</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: white; border-radius: 20px; border: 2px dashed #d5d8dc;">
+                <i class="fas fa-box-open" style="font-size: 3rem; color: #d5d8dc; margin-bottom: 15px;"></i>
+                <h3 style="color: #5d6d7e;">No hay productos disponibles</h3>
+            </div>
+        {% endfor %} 
+    </div> 
+</div>
+{% endblock %}
+
+>>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
@@ -218,3 +219,225 @@
 </script>
 
 {% endblock %}
+=======
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="inventario-container">
+    <a href="javascript:history.back()" 
+       style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
+        <i class="fas fa-chevron-left"></i> VOLVER
+    </a>
+
+    <style>
+        .inventario-container {
+            max-width: 1000px; 
+            margin: 30px auto; 
+            font-family: 'Segoe UI', sans-serif;
+            padding: 0 15px;
+        }
+
+        .header-inventario {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px;
+        }
+
+        .table-responsive {
+            background: white; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: left;
+        }
+
+        /* Estilos del Modal */
+        #deleteModal {
+            display: none; 
+            position: fixed; 
+            z-index: 5000; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white; 
+            margin: 15% auto; 
+            padding: 30px; 
+            border-radius: 20px; 
+            width: 85%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .header-inventario {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            thead { display: none; }
+            tr {
+                display: block;
+                border-bottom: 1px solid #eee;
+                padding: 15px;
+            }
+            td {
+                display: block;
+                padding: 5px 0 !important;
+                border: none;
+            }
+            .acciones-div {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 15px;
+                background: #f8f9fa;
+                padding: 12px;
+                border-radius: 12px;
+            }
+        }
+    </style>
+
+    <div class="header-inventario">
+        <h2 style="color: #2c3e50; margin: 0; font-weight: 800;">📦 Mi Inventario</h2>
+        <a href="{% url 'subir_producto' %}" style="background: #27ae60; color: white; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; display: inline-block; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">
+            <i class="fas fa-plus"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                <tr>
+                    <th style="padding: 15px;">Producto</th>
+                    <th style="padding: 15px;">Precio</th>
+                    <th style="padding: 15px;">Stock</th>
+                    <th style="padding: 15px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td style="padding: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            {% if p.image %}
+                                <img src="{{ p.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee;">
+                            {% else %}
+                                <div style="width: 60px; height: 60px; background: #f1f2f6; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image" style="color: #ccc; font-size: 1.5rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <span style="font-weight: 700; display: block; color: #2c3e50; font-size: 1rem;">{{ p.title }}</span>
+                                {% if p.ficha_tecnica %}
+                                    <span style="font-size: 0.75rem; color: #27ae60; font-weight: bold; background: #e6fcf5; padding: 2px 6px; border-radius: 4px;">
+                                        <i class="fas fa-file-pdf"></i> PDF Técnico
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.75rem; color: #95a5a6;">Sin ficha</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+
+                    <td style="padding: 15px;">
+                        <span style="color: #27ae60; font-weight: 800; font-size: 1.1rem;">${{ p.price }}</span>
+                    </td>
+
+                    <td style="padding: 15px;">
+                        <span style="background: #f1f2f6; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: #5d6d7e;">
+                            {{ p.stock }} pza(s)
+                        </span>
+                    </td>
+
+                    <td style="padding: 15px;">
+                        <div class="acciones-div">
+                            <a href="{% url 'editar_producto' p.pk %}" style="color: #3498db; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            
+                            <button type="button" onclick="openDeleteModal('{% url 'borrar_producto' p.pk %}', '{{ p.title|escapejs }}')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-family: inherit; font-weight: 700; padding: 0; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-trash-alt"></i> Borrar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 60px; text-align: center; color: #95a5a6;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.5;"></i>
+                        No tienes productos publicados todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="deleteModal">
+    <div class="modal-content">
+        <div style="background: #fff5f5; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-trash-alt" style="font-size: 2rem; color: #e74c3c;"></i>
+        </div>
+        <h3 style="color: #2c3e50; margin-bottom: 10px; font-weight: 800;">¿Eliminar equipo?</h3>
+        <p id="deleteProductName" style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.4;"></p>
+        
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button onclick="closeDeleteModal()" style="flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #dcdde1; background: white; font-weight: bold; color: #5d6d7e; cursor: pointer;">
+                Cancelar
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1; margin: 0;">
+                {% csrf_token %}
+                <button type="submit" style="width: 100%; padding: 14px; border-radius: 12px; border: none; background: #e74c3c; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);">
+                    Sí, borrar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(deleteUrl, productName) {
+        // Asignar la URL al formulario
+        document.getElementById('deleteForm').action = deleteUrl;
+        // Poner el nombre del producto en el mensaje
+        document.getElementById('deleteProductName').innerText = "Estás por eliminar \"" + productName + "\". Esta acción no se puede deshacer.";
+        // Mostrar el modal
+        document.getElementById('deleteModal').style.display = 'block';
+        // Bloquear scroll del body al estar abierto
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        // Restaurar scroll
+        document.body.style.overflow = 'auto';
+    }
+
+    // Cerrar si hacen clic fuera del cuadro blanco
+    window.onclick = function(event) {
+        let modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeDeleteModal();
+        }
+    }
+</script>
+
+{% endblock %}
+>>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be

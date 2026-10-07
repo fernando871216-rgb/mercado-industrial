@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'marketplace/base.html' %}
 
 {% block content %}
@@ -104,3 +105,111 @@
     });
 </script>
 {% endblock %}
+=======
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 60px auto; padding: 0 20px;">
+    
+    <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #edf2f7;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: #e6fffa; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fas fa-user-plus" style="font-size: 2rem; color: #27ae60;"></i>
+            </div>
+            <h2 style="color: #2c3e50; margin: 0;">Crear Nueva Cuenta</h2>
+            <p style="color: #7f8c8d; margin-top: 5px;">Únete a la red de comercio industrial más grande.</p>
+        </div>
+
+        <form method="POST" id="registroForm">
+            {% csrf_token %}
+            
+            <div class="form-registro">
+                {% for field in form %}
+                    <div style="margin-bottom: 20px; position: relative;">
+                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568;">
+                            {{ field.label }}
+                        </label>
+                        
+                        <div style="position: relative;" class="input-group-custom">
+                            {{ field }}
+                            </div>
+
+                        {% if field.help_text %}
+                            <small style="color: #a0aec0; display: block; margin-top: 5px; font-size: 0.8rem;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p style="color: #e74c3c; font-size: 0.8rem; margin-top: 5px;">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" style="width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; margin-top: 10px;">
+                Finalizar Registro
+            </button>
+        </form>
+
+        <div style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="color: #7f8c8d; font-size: 0.9rem;">
+                ¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color: #2c3e50; text-decoration: none; font-weight: bold;">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-registro input {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e0;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    .form-registro input:focus {
+        outline: none;
+        border-color: #27ae60;
+        box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+    }
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #a0aec0;
+        z-index: 10;
+        padding: 5px;
+    }
+    button:hover { background: #219150 !important; transform: translateY(-1px); }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Buscamos todos los inputs de tipo password
+        const passwordFields = document.querySelectorAll('input[type="password"]');
+        
+        passwordFields.forEach(field => {
+            // Creamos el icono del ojo
+            const icon = document.createElement('i');
+            icon.classList.add('fas', 'fa-eye', 'toggle-password');
+            
+            // Lo insertamos justo después del input
+            field.parentNode.appendChild(icon);
+            
+            // Evento para mostrar/ocultar
+            icon.addEventListener('click', function() {
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    field.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+>>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 ASGI config for industrial_mkt project.
 
@@ -14,3 +15,21 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'industrial_mkt.settings')
 
 application = get_asgi_application()
+=======
+"""
+ASGI config for industrial_mkt project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+"""
+
+import os
+
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'industrial_mkt.settings')
+
+application = get_asgi_application()
+>>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be
