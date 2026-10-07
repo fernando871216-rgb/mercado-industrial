@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 django
 mercadopago
 gunicorn
@@ -14,20 +13,3 @@ requests
 
 
 
-=======
-django
-mercadopago
-gunicorn
-whitenoise
-psycopg2-binary
-Pillow
-whitenoise==6.6.0
-dj-database-url
-psycopg2-binary
-cloudinary
-django-cloudinary-storage
-requests
-
-
-
->>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be

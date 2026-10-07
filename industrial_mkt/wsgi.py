@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 WSGI config for industrial_mkt project.
 
@@ -15,21 +14,3 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'industrial_mkt.settings')
 
 application = get_wsgi_application()
-=======
-"""
-WSGI config for industrial_mkt project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
-"""
-
-import os
-
-from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'industrial_mkt.settings')
-
-application = get_wsgi_application()
->>>>>>> 1107540eac062862fea2ec2a7befbce2f83905be
