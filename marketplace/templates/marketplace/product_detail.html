@@ -1,0 +1,238 @@
+{% extends 'marketplace/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px; font-family: 'Segoe UI', sans-serif;">
+
+<a href="javascript:history.back()" style="display: inline-block; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
+<i class="fas fa-chevron-left"></i> VOLVER AL CATÁLOGO
+</a>
+
+<div style="display: flex; flex-wrap: wrap; gap: 30px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
+
+<div style="flex: 1; min-width: 300px;">
+
+<div style="text-align: center; margin-bottom: 20px; background: #fff; border: 1px solid #f1f4f8; border-radius: 15px; overflow: hidden; height: auto; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+{% if product.image %}
+<img id="mainImage" src="{{ product.image.url }}" style="max-width:100%; max-height:350px; object-fit:contain;">
+{% endif %}
+</div>
+
+<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;">
+{% if product.image %}<img src="{{ product.image.url }}" onclick="changeImage(this.src)" style="width:65px;height:65px;border-radius:10px;cursor:pointer;border: 1px solid #ddd;">{% endif %}
+{% if product.image2 %}<img src="{{ product.image2.url }}" onclick="changeImage(this.src)" style="width:65px;height:65px;border-radius:10px;cursor:pointer;border: 1px solid #ddd;">{% endif %}
+{% if product.image3 %}<img src="{{ product.image3.url }}" onclick="changeImage(this.src)" style="width:65px;height:65px;border-radius:10px;cursor:pointer;border: 1px solid #ddd;">{% endif %}
+</div>
+
+<div style="padding:20px; background:#fcfdfd; border-radius:15px; border:1px solid #e2e8f0;">
+    <h4 style="margin-top:0; font-size: 0.9rem; color: #003366;">DATOS DE ENVÍO</h4>
+    <strong>Peso:</strong> {{ product.weight|default:product.peso }} kg<br>
+    <strong>Dimensiones:</strong> {{ product.largo }} x {{ product.ancho }} x {{ product.alto }} cm<br>
+    <strong>CP Origen:</strong> {{ product.cp_origen }}
+</div>
+
+{% if product.ficha_tecnica %}
+<a href="{% url 'descargar_ficha' product.id %}" target="_blank"
+style="display:flex;justify-content:center;align-items:center;margin-top:10px;padding:10px;border-radius:10px;background:#fff;border:1.5px solid #e74c3c;color:#e74c3c;font-weight:bold;text-decoration:none;">
+<i class="fas fa-file-pdf"></i> &nbsp; DESCARGAR FICHA
+</a>
+
+<a href="https://wa.me/?text=Aquí%20tienes%20la%20liga%20de%20descarga%20de%20la%20ficha%20técnica%20de:%20{{ product.title }}%0A%0A{{ request.scheme }}://{{ request.get_host }}{% url 'descargar_ficha' product.id %}"
+target="_blank"
+style="display:flex;justify-content:center;align-items:center;margin-top:10px;padding:10px;border-radius:10px;background:#25d366;color:white;font-weight:bold;text-decoration:none;">
+<i class="fab fa-whatsapp"></i> &nbsp; ENVIAR POR WHATSAPP
+</a>
+{% endif %}
+
+</div>
+
+<div style="flex:1; min-width:300px;">
+    <h2 style="margin-bottom: 5px; color: #1a202c;">{{ product.title }}</h2>
+
+    <div style="margin-bottom: 15px;">
+        {% if product.part_number %}
+            <span style="color: #718096; font-size: 0.9rem; font-weight: 600; margin-right: 15px;">
+                P/N: {{ product.part_number }}
+            </span>
+        {% endif %}
+        
+        {% if product.brand %}
+            <span style="color: #003366; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; background: #eef2ff; padding: 2px 8px; border-radius: 4px;">
+                {{ product.brand }}
+            </span>
+        {% endif %}
+    </div>
+
+    <div style="margin: 5px 0 15px 0;">
+        <span style="
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: {% if product.estado == 'nuevo' %}#d4edda; color:#155724;
+                       {% else %}#fff3cd; color:#856404;{% endif %}">
+            {{ product.estado|title }}
+        </span>
+    </div>
+
+    <p style="color: #4a5568; line-height: 1.6;">{{ product.description }}</p>
+    <h2 style="color:#27ae60; font-size: 2rem;">${{ product.price }} <span style="font-size: 1rem;">MXN</span></h2>
+
+    {% if product.stock > 0 and not perfil_incompleto %}
+
+    <div style="margin:25px 0; padding: 20px; background: #f8fafc; border-radius: 15px; border: 1px solid #e2e8f0;">
+        <label style="display:block; margin-bottom:10px; font-weight:bold; color:#2d3748; font-size:0.9rem;">CALCULAR ENVÍO A TU CIUDAD:</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="cp_destino" placeholder="Introduce tu CP" style="flex:1;padding:12px;border-radius:10px;border:1px solid #cbd5e0; font-size: 1rem;">
+            <button onclick="cotizarFlete()" id="btn-cotizar" style="background:#003366;color:white;padding:10px 25px;border:none;border-radius:10px; font-weight:bold; cursor:pointer;">
+                COTIZAR
+            </button>
+        </div>
+        <div id="lista-tarifas" style="margin-top:15px; max-height: 250px; overflow-y: auto;"></div>
+    </div>
+
+    <div id="resumen_total" style="display:none; background:#f0fff4; border:2px solid #27ae60; padding:20px; border-radius:15px; margin-bottom:20px; transition: 0.3s;">
+        <div style="display:flex; justify-content:space-between; font-size:1rem; margin-bottom: 5px;">
+            <span>Subtotal Producto:</span>
+            <strong>${{ product.price }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:1rem; margin-bottom: 10px;">
+            <span>Costo de Envío:</span>
+            <strong id="envio_precio">$0.00</strong>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #27ae60; opacity: 0.2;">
+        <div style="display:flex; justify-content:space-between; font-size:1.4rem; font-weight:800; color:#27ae60;">
+            <span>TOTAL A PAGAR:</span>
+            <span id="total_precio">$0.00</span>
+        </div>
+    </div>
+
+    <div id="wallet_container"></div>
+
+    <div style="margin-top: 25px; padding: 15px; background-color: #f0f7ff; border-radius: 12px; display: flex; gap: 15px; border: 1px solid #d1e3f8;">
+        <i class="fas fa-shield-alt" style="color: #0056b3; font-size: 1.5rem; margin-top: 5px;"></i>
+        <p style="margin: 0; font-size: 0.85rem; color: #1e429f; line-height: 1.5;">
+            <strong>Protección INITRE:</strong>
+            Si no recibe su producto, se le hará un <strong>reembolso total</strong>. Al usar nuestro cotizador, nosotros gestionamos la guía y el seguro del flete por usted.
+        </p>
+    </div>
+
+    {% elif perfil_incompleto %}
+    <div style="margin-top: 20px; padding: 20px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; text-align: center;">
+        <p style="color: #c53030; font-weight: bold;">Debes completar tu perfil (Teléfono y Dirección) para poder comprar.</p>
+        <a href="{% url 'editar_perfil' %}" style="color: #c53030; text-decoration: underline;">Ir a mi perfil</a>
+    </div>
+    {% else %}
+    <div style="margin-top: 20px; padding: 20px; background: #f7fafc; border-radius: 12px; text-align: center; border: 1px solid #edf2f7;">
+        <h3 style="color: #a0aec0;">PRODUCTO AGOTADO</h3>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
+<script>
+function changeImage(src){
+    document.getElementById('mainImage').src = src;
+}
+
+{% if product.stock > 0 and not perfil_incompleto %}
+
+const mp = new MercadoPago('{{ public_key }}');
+let walletBrickController = null;
+
+async function renderMP(preferenceId){
+    const bricksBuilder = mp.bricks();
+    if(walletBrickController) await walletBrickController.unmount();
+
+    walletBrickController = await bricksBuilder.create("wallet","wallet_container",{
+        initialization:{ preferenceId: preferenceId }
+    });
+}
+
+// Carga inicial sin flete
+fetch(`/generar-preferencia/{{ product.id }}/`)
+.then(res=>res.json())
+.then(data=>{
+    if(data.preference_id){ renderMP(data.preference_id); }
+});
+
+function cotizarFlete(){
+    const cp = document.getElementById('cp_destino').value;
+    const btn = document.getElementById('btn-cotizar');
+    const lista = document.getElementById('lista-tarifas');
+
+    if(cp.length < 5){ alert("Ingresa un CP válido"); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-sync fa-spin"></i>...`;
+    lista.innerHTML = `<div style="padding:15px;text-align:center;">Buscando las mejores tarifas...</div>`;
+
+    fetch(`/cotizar-soloenvios/?product_id={{ product.id }}&cp_destino=${cp}`)
+    .then(res=>res.json())
+    .then(data=>{
+        lista.innerHTML = "";
+        if(data.tarifas && data.tarifas.length){
+            data.tarifas.forEach(t=>{
+                const item = document.createElement('div');
+                item.style = "display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px; cursor:pointer; background:white; transition: 0.2s;";
+                
+                item.innerHTML = `
+                    <div>
+                        <strong style="color:#2d3748;">${t.paqueteria}</strong><br>
+                        <small style="color:#718096;">Entrega: ${t.tiempo}</small><br>
+                        <small style="color:#3182ce; font-size:0.7rem;">${t.detalle_servicio}</small>
+                    </div>
+                    <div style="font-weight:bold; color:#27ae60; font-size:1.1rem;">$${t.precio_final}</div>
+                `;
+
+                item.onclick = ()=>seleccionarTarifa(item, t.precio_final);
+                lista.appendChild(item);
+            });
+        }else{
+            lista.innerHTML = `<div style="text-align:center;color:#e53e3e; padding:10px;">${data.error || 'Intente de Nuevo.'}</div>`;
+        }
+    })
+    .finally(()=>{
+        btn.disabled = false;
+        btn.innerText = "COTIZAR";
+    });
+}
+
+function seleccionarTarifa(elemento, precio){
+    const cp = document.getElementById('cp_destino').value;
+    const filas = document.querySelectorAll('#lista-tarifas div');
+    const resumen = document.getElementById('resumen_total');
+    const envioSpan = document.getElementById('envio_precio');
+    const totalSpan = document.getElementById('total_precio');
+
+    const precioProducto = parseFloat("{{ product.price }}");
+
+    envioSpan.innerText = `$${parseFloat(precio).toFixed(2)}`;
+    totalSpan.innerText = `$${(precioProducto + parseFloat(precio)).toFixed(2)}`;
+
+    resumen.style.display = "block";
+
+    filas.forEach(f=>{
+        f.style.borderColor = "#e2e8f0";
+        f.style.background = "white";
+    });
+
+    elemento.style.background = "#f0fff4";
+    elemento.style.borderColor = "#27ae60";
+
+    // Actualizar preferencia con flete
+    fetch(`/generar-preferencia/{{ product.id }}/?envio=${precio}&cp_destino=${cp}`)
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.preference_id){ renderMP(data.preference_id); }
+    });
+}
+
+{% endif %}
+</script>
+
+{% endblock %}
